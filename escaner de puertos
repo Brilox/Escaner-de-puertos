@@ -1,0 +1,42 @@
+import nmap
+import socket
+
+def escanerPuertos(direccionIP, puertoInicial, puertoFinal):
+    puertosAbiertos = []
+    for puerto in range(puertoInicial,puertoFinal+ 1):
+        conexion = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        conexion.settimeout(0.5)
+        resultado = conexion.connect_ex((direccionIP, puerto))
+        if resultado == 0:
+           puertosAbiertos.append(puerto)
+        conexion.close()
+    return puertosAbiertos
+
+def escanerServicios(direccionIP, puertosAbiertos):
+    escaner = nmap.PortScanner()
+    listaServicios = []
+    for puerto in puertosAbiertos:
+        resultado = escaner.scan(direccionIP, str(puerto))
+        servicio = resultado['scan'][direccionIP]['tcp'][puerto]['name']
+        listaServicios.append((puerto, servicio))
+    return listaServicios
+
+def main():
+    direccionIP = input("\nIngresa la dirección IP del host a escanear: ")
+    print("\nAVISO: Este proceso puede tomar varios minutos dependiendo del rango de puertos que usted elija.\nSe recomienda un rango no mayor a 1000.")
+    puertoInicial = int(input("\nIngresa el puerto inicial del rango a escanear: "))
+    puertoFinal = int(input("Ingresa el puerto final del rango a escanear: "))
+    print("\nIniciando escaneo de puertos")
+    puertosAbiertos = escanerPuertos(direccionIP, puertoInicial, puertoFinal)
+    print("Escaneo de puertos finalizado")
+    print("\nIniciando escaneo de los servicios en los puertos abiertos encontrados.")
+    print("\nAVISO: Este proceso puede tomar varios minutos dependiendo del rango de puertos que a elejido escanear.\nPor favor espere...")
+    listaServicios = escanerServicios(direccionIP, puertosAbiertos)
+    print("Escaneo de servicios en puertos abiertos finalizado")
+    print(f"\nPuertos abiertos en {direccionIP}: {puertosAbiertos}\n")
+    print("Servicios ejecutándose en los puertos abiertos:")
+    for servicio in listaServicios:
+        print(f"Puerto {servicio[0]}: {servicio[1]}")
+
+if __name__ == '__main__':
+    main()

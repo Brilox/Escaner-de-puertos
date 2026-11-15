@@ -92,6 +92,29 @@ Conclusión: un relay KCP/UDP de salas de 2 jugadores es un programa pequeño.
 - Login: `LoginRequest` lleva `OpenId`, `Token`, `MsdkPf`, `GameVersion`, etc. Nuestro servidor puede aceptar cualquier
   valor; el mod ya responde al login con un `LoginGameSvrRsp` grabado (cmd 1).
 
+## Corrección importante: el canal del juego NO usa GCloud ni cifrado
+
+Al leer el servidor local del mod (`serve()` en `libgame.so`) quedó claro que por el puerto 8080 llegan dos clases
+de conexión y el mod las distingue por el primer byte:
+
+- `0xAA`: TGCP (handshake SYN/ACK, AUTH/AUTHRSP+BINGO, respuestas constantes de 63/54/55 bytes) y dentro, en
+  paquetes de comando `0x4013`, peticiones **Pebble RPC** (Thrift binario) del directorio: `DirService:get_server_dirtree_by_id`,
+  `QueryAddrSvr:QueryAddrInfo`, `VersionUpdate:ReqUpdateVersion`. Es la parte que usa `libgcloud.so`.
+- `0x00 0x01`: el protocolo del juego, **TCP plano** con el framing propio (`den.TcpConnector` en C#), sin TGCP
+  y sin cifrado. El `EncMethod = QQ` de `GCloudNetBase::InitConnector` no afecta a este canal.
+
+Por tanto no hace falta parchear `libil2cpp.so`. El único cambio en el cliente es la dirección del directorio,
+que está en `assets/bin/Data/sharedassets0.assets`, objeto `GCloudConfig` (clase `MetalFury.VersionUpdate.GCloudGameOptions`),
+entrada del mercado 643839105: el mod puso `127.0.0.1` en `updateUrlRelease`, `tDirUrlPreview` y `tDirUrlRelease`
+(el original tenía `pre-dir.3.643839105.dmp-jsdj.gtarcade.com`). `tools/parchear_cliente.py` lo cambia por nuestro host.
+
+## Fase 1 implementada: `server/`
+
+`server/mr_server.py` reproduce el comportamiento del servidor local del mod en una IP pública (ver `server/README.md`).
+Probado con un cliente sintético: handshake TGCP, las tres respuestas del directorio con la dirección parcheada
+y longitudes recalculadas, canal del juego con `seq` copiado, hora del servidor actualizada y `EmptyRsp` genérico.
+Pendiente de probar con el juego real.
+
 ## Selección del relay (confirmado)
 
 `BaseMatchNetworkHandler::InitRelayServerClient` construye `RollbackRelayServerClient` o `FrameSyncRelayServerClient`

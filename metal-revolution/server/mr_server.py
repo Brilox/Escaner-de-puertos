@@ -201,8 +201,10 @@ async def main():
     ap.add_argument('--port', type=int, default=8080)
     ap.add_argument('--listen', default='0.0.0.0')
     ap.add_argument('--blobs', default=os.path.join(HERE, 'blobs'))
+    ap.add_argument('--log', default='mr_server.log', help='archivo donde se guarda una copia del log')
     a = ap.parse_args()
-    logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s')
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s',
+                        handlers=[logging.StreamHandler(), logging.FileHandler(a.log, encoding='utf-8')])
     proto = json.load(open(os.path.join(HERE, 'protocolo.json')))
     names = {i: n for i, n in enumerate(proto['GameSvrReqUnion'])}
     blobs = Blobs(a.blobs)

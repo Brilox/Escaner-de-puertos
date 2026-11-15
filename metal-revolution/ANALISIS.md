@@ -43,9 +43,14 @@ y los campos de cada mensaje salen de los accessors `get_*` de cada clase `Metal
 (ej. `RelayServerInfo`: Id, Port, KcpConv, RelayId, Host, NetCode, InnerHost, InnerPort, TcpInnerPort, TcpOuterPort, UseRudp).
 Con eso se puede regenerar el `.fbs` y escribir el servidor en Python/Go/Node.
 
-Pendiente de verificar: si el Connector de GCloud usa cifrado (`GCloud.EncryptMethod`: None/Tea/Aes;
-`KeyMaking`: None/Auth/Server/RawDH/EncDH). El mod sirve respuestas grabadas sin librería criptográfica,
-lo que sugiere canal en claro o cifrado anulado por su hook.
+**Cifrado confirmado (leído del código máquina).** `GCloudNetBase::InitConnector` escribe
+`EncMethod = 3 (QQ)` y `KeyMakingMethod = 2 (Server)` en el `ConnectorInitInfo`
+(instrucciones `mov x8,#0x200000002 ; movk x8,#3 ; stur x8,[x20,#0x1c]` en `0x42e6d8c` del build 1.0.23).
+Es decir, el canal TConnd va cifrado con la variante TEA "QQ" de Tencent y la clave la fija el servidor en el handshake.
+Dos salidas: (a) implementar el handshake GCP + TEA en nuestro servidor (todo el código está en `libgcloud.so`,
+con nombres de archivo fuente intactos: `tdrcrypt.cpp`, `gcpapi.g.cpp`), o (b) parchear esas dos instrucciones
+del cliente a `EncMethod = 0, KeyMaking = 0` y hablar en claro. La opción (b) es la rápida, ya que de todos modos
+distribuimos un APK modificado. Dato útil: la tabla de offsets de campos de IL2CPP está ofuscada con XOR `0xB6B6B6B6`.
 
 ## Batalla online: cómo está hecho el netcode
 
@@ -70,12 +75,36 @@ Conclusión: un relay KCP/UDP de salas de 2 jugadores es un programa pequeño.
 5. **Cliente**: parchear el host en `libgame.so` (o un APK con el hook apuntando al VPS) y firmar.
 6. Probar con 2 jugadores, luego 10.
 
-Qué no sabemos todavía y hay que mirar con el APK **original** sin modificar: cifrado del Connector, qué exactamente
-parchea el hook en `libil2cpp.so`, y si el login exige token MSDK válido (campos `OpenId`, `Token`, `MsdkPf`...).
+## Comparación con el APK original (`metal-revolution-1-0-20.xapk`, release del repo)
+
+- Original: `com.gtarcade.next.mrglo` 1.0.20 (build 997), firmado por NEXT Studios (Shenzhen). El mod parte de **1.0.23**
+  (build 1300), una versión posterior; por eso `libil2cpp.so` y `global-metadata.dat` difieren, pero el conjunto de clases
+  es el mismo (solo cambian clases generadas por el compilador). Las clases Java son idénticas byte a byte en nombres y métodos.
+- El mod **reemplazó** `libgame.so`: el original (1,3 MB) es el verificador de firma del SDK Youzu
+  (`checkSignatureByJava`), cargado por `com.youzu.gamexy.Game.<clinit>` con `System.loadLibrary("game")`.
+  El modder puso su librería con el mismo nombre, así se carga sola y de paso anula la verificación de firma.
+- El mod **eliminó** `libLocalAIService.so` (IA local con TensorFlow Lite, `AvatarAIEngine`) y cambió `MSDK_URL`
+  a `us.itopsdk.com`. Nada más cambió, salvo configs del SDK de pagos.
+- El hook del mod se instala sobre `MetalFury.Logic.GameApp::InitAssetsAndSettings` (los 64 bytes de `kAnchor`
+  son el prólogo de esa función, en `0x220b20c` del build 1.0.23).
+- OBB (865 MB): `assets/first_source.png` es en realidad un paquete NIFS de GCloud IIPS (844 MB) con los recursos
+  del juego. No contiene lógica de red.
+- Login: `LoginRequest` lleva `OpenId`, `Token`, `MsdkPf`, `GameVersion`, etc. Nuestro servidor puede aceptar cualquier
+  valor; el mod ya responde al login con un `LoginGameSvrRsp` grabado (cmd 1).
+
+## Selección del relay (confirmado)
+
+`BaseMatchNetworkHandler::InitRelayServerClient` construye `RollbackRelayServerClient` o `FrameSyncRelayServerClient`
+y elige el conector según `RelayServerInfo`: `GCloudRelayServerConnector`, `KcpRelayServerConnector`,
+`RawUdpRelayServerConnector` o `LocalRelayServerConnector`. Los conectores Kcp/RawUdp usan sockets propios
+(namespace `den`: `TcpConnector`, `UdpConnector`), sin pasar por GCloud. Para nuestro servidor conviene
+devolver un `RelayServerInfo` que fuerce **RawUdp o Kcp**: así el relay es un programa UDP simple y evitamos
+el protocolo LockStep de Tencent.
 
 ## Herramientas en este directorio
 
 - `tools/extraer_tipos_il2cpp.py`: clases/campos/métodos desde `global-metadata.dat` (sin .NET).
 - `tools/extraer_blobs_mod.py`: extrae los mensajes grabados de `libgame.so`.
+- `tools/resolver_direcciones_il2cpp.py`: direcciones de métodos C# en `libil2cpp.so` para desensamblar con capstone.
 - `datos/comandos_grabados.txt`: tabla cmd ↔ mensaje.
 - `datos/fbtypes_mensajes.txt`: los 1 388 tipos FlatBuffers del protocolo.

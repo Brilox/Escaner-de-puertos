@@ -129,19 +129,24 @@ class Blobs:
 
 # ---------------------------------------------------------------- servidor
 class Server:
-    def __init__(self, blobs, host, port, names):
-        self.b = blobs; self.dir = blobs.dir_responses(host, port); self.names = names; self.conns = 0
+    def __init__(self, blobs, host, port, names, debug=False):
+        self.debug = debug; self.b = blobs; self.dir = blobs.dir_responses(host, port); self.names = names; self.conns = 0
 
     async def handle(self, reader, writer):
         peer = writer.get_extra_info('peername'); self.conns += 1; cid = self.conns
         log.info('[%d] conexion de %s', cid, peer)
         try:
-            first = await reader.readexactly(1)
+            first = await asyncio.wait_for(reader.readexactly(1), 60)
+            log.info('[%d] primer byte %s -> modo %s', cid, first.hex(), 'TGCP' if first == b'\xaa' else 'DIRECTO' if first == b'\x00' else '?')
             if first == b'\xaa': await self.tgcp(cid, reader, writer, first)
             elif first == b'\x00': await self.direct(cid, reader, writer, first)
-            else: log.warning('[%d] primer byte desconocido %s', cid, first.hex())
-        except (asyncio.IncompleteReadError, ConnectionResetError):
-            pass
+            else:
+                rest = await asyncio.wait_for(reader.read(4096), 5)
+                log.warning('[%d] primer byte desconocido; datos: %s', cid, (first + rest).hex())
+        except asyncio.TimeoutError:
+            log.warning('[%d] sin datos durante 60 s, cierro', cid)
+        except (asyncio.IncompleteReadError, ConnectionResetError) as e:
+            log.info('[%d] cliente cerro la conexion (%s)', cid, type(e).__name__)
         except Exception:
             log.exception('[%d] error', cid)
         finally:
@@ -150,11 +155,19 @@ class Server:
     async def tgcp(self, cid, reader, writer, first):
         n = 0
         while True:
-            head = first + await reader.readexactly(4); first = b''
-            total = be32(head, 1); pkt = head + await reader.readexactly(total - 5)
-            h = tgcp_head(pkt); extra = await reader.readexactly(h.get(9, 0)) if h.get(9) else b''
+            if first != b'\xaa':
+                junk = first + await asyncio.wait_for(reader.read(4096), 5)
+                log.warning('[%d] TGCP desincronizado, bytes: %s', cid, junk.hex())
+                return
+            head = first + await asyncio.wait_for(reader.readexactly(4), 60); first = b''
+            total = be32(head, 1)
+            if not 5 <= total <= 65536:
+                log.warning('[%d] TGCP largo invalido %d (cabecera %s)', cid, total, head.hex()); return
+            pkt = head + await asyncio.wait_for(reader.readexactly(total - 5), 60)
+            h = tgcp_head(pkt); extra = await asyncio.wait_for(reader.readexactly(h.get(9, 0)), 60) if h.get(9) else b''
             n += 1; cmd = h.get(4)
-            log.info('[%d] TGCP #%d cmd=%s largo=%d datos=%d', cid, n, hex(cmd) if cmd is not None else '?', total, len(extra))
+            log.info('[%d] TGCP #%d cmd=%s largo=%d datos=%d cabecera=%s', cid, n, hex(cmd) if cmd is not None else '?', total, len(extra), h)
+            if self.debug: log.info('[%d] RX %s %s', cid, pkt.hex(), extra.hex())
             for name, rsp in self.dir.items():
                 if name in pkt or name in extra:
                     writer.write(rsp); log.info('[%d] -> %s (%d bytes)', cid, name.decode(), len(rsp)); break
@@ -167,16 +180,19 @@ class Server:
                     log.warning('[%d] TGCP sin respuesta: %s %s', cid, pkt.hex(), extra.hex())
             await writer.drain()
             if reader.at_eof(): return
-            first = await reader.readexactly(1)
+            first = await asyncio.wait_for(reader.readexactly(1), 120)
 
     async def direct(self, cid, reader, writer, first):
         buf = bytearray(first)
         while True:
-            data = await reader.read(65536)
+            data = await asyncio.wait_for(reader.read(65536), 300)
             if not data: return
+            if self.debug: log.info('[%d] RX %s', cid, data.hex())
             buf += data
             while True:
-                p = parse_direct(buf)
+                try: p = parse_direct(buf)
+                except ValueError as e:
+                    log.warning('[%d] paquete directo invalido (%s): %s', cid, e, bytes(buf[:64]).hex()); return
                 if not p: break
                 total, seq, cmd, flag, payload = p; del buf[:total]
                 name = self.names.get(cmd, '?')
@@ -202,6 +218,7 @@ async def main():
     ap.add_argument('--listen', default='0.0.0.0')
     ap.add_argument('--blobs', default=os.path.join(HERE, 'blobs'))
     ap.add_argument('--log', default='mr_server.log', help='archivo donde se guarda una copia del log')
+    ap.add_argument('--debug', action='store_true', help='registra en hexadecimal todo lo recibido')
     a = ap.parse_args()
     logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s',
                         handlers=[logging.StreamHandler(), logging.FileHandler(a.log, encoding='utf-8')])
@@ -209,7 +226,7 @@ async def main():
     names = {i: n for i, n in enumerate(proto['GameSvrReqUnion'])}
     blobs = Blobs(a.blobs)
     log.info('%d respuestas grabadas para %d comandos', len(blobs.raw), len(blobs.rsp))
-    srv = Server(blobs, a.host, a.port, names)
+    srv = Server(blobs, a.host, a.port, names, a.debug)
     server = await asyncio.start_server(srv.handle, a.listen, a.port)
     log.info('escuchando en %s:%d (los clientes usaran %s:%d)', a.listen, a.port, a.host, a.port)
     async with server: await server.serve_forever()

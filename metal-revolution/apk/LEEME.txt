@@ -1,0 +1,11 @@
+APK "Metal Online" apuntando al servidor en 192.168.100.78:8080 (prueba local).
+
+Para unir las partes en Windows (cmd, dentro de esta carpeta):
+    copy /b metal_online.apk.part00 + metal_online.apk.part01 metal_online.apk
+
+Para comprobar que quedo bien (opcional):
+    certutil -hashfile metal_online.apk SHA256
+y comparar con el contenido de metal_online.apk.sha256.
+
+Firmado con tools/mr.keystore (clave: metalrevolution). Las proximas versiones se firman con el mismo keystore
+para poder actualizar sin desinstalar.

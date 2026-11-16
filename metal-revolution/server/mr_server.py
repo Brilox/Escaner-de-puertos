@@ -10,7 +10,8 @@ Ademas un socket UDP (relay) que por ahora solo registra lo que llega, para la f
 
 Uso: python3 mr_server.py --host <ip-publica> [--port 8080] [--debug] [--nombre-automatico]
 """
-import argparse, asyncio, json, logging, os, struct, time
+import argparse, asyncio, json, logging, os, struct, sys, time
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))   # usa la copia local de flatbuffers
 from fb_codec import Codec
 from juego import Juego
 
@@ -145,34 +146,42 @@ class Sesion:
                 self.procesar(seq, cmd, payload)
             await self.writer.drain()
     def procesar(self, seq, cmd, payload):
-        srv = self.srv; nombre = srv.req_names.get(cmd, '?')
-        try: req = srv.codec.decode('GameSvrRequest', payload)
-        except Exception as e:
-            req = None; log.warning('[%d] no pude decodificar cmd=%d %s: %s', self.cid, cmd, nombre, e)
-        tipo = req['DataType'] if req else nombre; datos = (req or {}).get('Data') or {}
-        log.info('[%d] <- %s seq=%d %s', self.cid, tipo, seq, json.dumps(datos, ensure_ascii=False)[:400])
-        handler = srv.juego.handlers.get(tipo)
-        rsp_payload = None; como = ''
-        if handler and (self.jugador or tipo == 'LoginRequest'):
-            self.en_handler = True
-            try:
-                r = handler(self, datos)
-                if r is None: r = ('EmptyRsp', {})
-                rsp_payload = srv.codec.encode('GameSvrRsp', dict(DataType=r[0], Data=r[1])); como = r[0]
-            except Exception:
-                log.exception('[%d] error en handler %s', self.cid, tipo); rsp_payload = None
-            finally:
-                self.en_handler = False
-        if rsp_payload is None:
-            if cmd in srv.blobs.rsp:
+        """Nunca deja caer la conexion: cualquier fallo termina en una respuesta EmptyRsp."""
+        srv = self.srv; nombre = srv.req_names.get(cmd, '?'); como = ''
+        try:
+            try: req = srv.codec.decode('GameSvrRequest', payload)
+            except Exception as e:
+                req = None; log.warning('[%d] no pude decodificar cmd=%d %s: %s', self.cid, cmd, nombre, e)
+            tipo = (req or {}).get('DataType') or nombre; datos = (req or {}).get('Data') or {}
+            log.info('[%d] <- %s seq=%d %s', self.cid, tipo, seq, json.dumps(datos, ensure_ascii=False, default=str)[:400])
+            handler = srv.juego.handlers.get(tipo); rsp_payload = None
+            if handler and (self.jugador or tipo in srv.juego.PUBLICOS):
+                self.en_handler = True
+                try:
+                    r = handler(self, datos) or ('EmptyRsp', {})
+                    rsp_payload = srv.codec.encode('GameSvrRsp', dict(DataType=r[0], Data=r[1])); como = r[0]
+                except Exception:
+                    log.exception('[%d] error en handler %s', self.cid, tipo); rsp_payload = None
+                finally:
+                    self.en_handler = False
+            if rsp_payload is None and cmd in srv.blobs.rsp:
                 rsp_payload = bytearray(srv.blobs.rsp[cmd]); como = 'grabado'
-                if cmd == 92: i = rsp_payload.find(b'\xc0\x72\x5a\x63'); struct.pack_into('<I', rsp_payload, i, int(time.time()))
-            else:
-                rsp_payload = srv.codec.encode('GameSvrRsp', dict(DataType='EmptyRsp', Data={})); como = 'EmptyRsp'
+                if cmd == 92:
+                    i = rsp_payload.find(b'\xc0\x72\x5a\x63')
+                    if i >= 0: struct.pack_into('<I', rsp_payload, i, int(time.time()))
+            if rsp_payload is None: rsp_payload = srv.empty; como = 'EmptyRsp'
+        except Exception:
+            log.exception('[%d] error procesando cmd=%d', self.cid, cmd); rsp_payload = srv.empty; como = 'EmptyRsp (error)'
         self.writer.write(build_direct(RESPONSE, seq, cmd, bytes(rsp_payload)))
         log.info('[%d] -> %s (%d bytes)', self.cid, como, len(rsp_payload))
         pend = self.pendientes + self.despues; self.pendientes = []; self.despues = []
-        for tipo_n, datos_n in pend: self.enviar_notificacion(tipo_n, datos_n)
+        for tipo_n, datos_n in pend:
+            try:
+                if tipo_n == '__emparejar__': srv.juego.emparejar(datos_n)
+                elif tipo_n == '__estado__': srv.juego.estado_partida(datos_n)
+                else: self.enviar_notificacion(tipo_n, datos_n)
+            except Exception:
+                log.exception('[%d] error enviando %s', self.cid, tipo_n)
 
 # ---------------------------------------------------------------- servidor
 class Server:
@@ -181,6 +190,7 @@ class Server:
         self.codec = Codec(json.load(open(os.path.join(HERE, 'esquema_fb.json'))))
         self.req_names = {v: k for k, v in self.codec.E['GameSvrReqUnion']['values'].items()}
         self.notice_ids = self.codec.E['GameSvrNoticeUnion']['values']
+        self.empty = self.codec.encode('GameSvrRsp', dict(DataType='EmptyRsp', Data={}))   # falla aqui si falta flatbuffers
         self.blobs = Blobs(a.blobs); self.dir = self.blobs.dir_responses(a.host, a.port)
         cat = json.load(open(os.path.join(HERE, '..', 'datos', 'catalogo_mensajes_grabados.json'), encoding='utf-8'))
         plantilla = cat['mroffline_assets_kGameLoginMikeKimSkinsRsp843']['msg']['Data']
@@ -224,6 +234,7 @@ class Server:
                 else:
                     if n == 1: writer.write(self.blobs.ack); log.info('[%d] -> ACK63 (por orden)', cid)
                     elif n == 2: writer.write(self.blobs.authrsp + self.blobs.bingo); log.info('[%d] -> AUTHRSP54 + BINGO55 (por orden)', cid)
+                    elif cmd == 0x5001: log.info('[%d] TGCP fin de sesion', cid)
                     else: log.warning('[%d] TGCP sin respuesta: %s %s', cid, pkt.hex(), extra.hex())
             await writer.drain()
             if reader.at_eof(): return

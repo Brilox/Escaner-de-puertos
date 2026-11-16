@@ -55,22 +55,33 @@ para la siguiente iteración.
   El payload es FlatBuffers (`GameSvrReq` / `GameSvrRsp`, ver `protocolo.json`). Se responde con el blob grabado
   del mismo cmd copiando el seq; sin blob, un `EmptyRsp` (tipo de unión 2).
 
-## Fase 2 (actual): cuentas, mesas y partidas reales
+## Fase 2 (actual): cuentas, mesas, búsqueda de rival y clasificatoria
 
-`mr_server.py` ya no reproduce grabaciones para el juego: decodifica cada petición con el esquema FlatBuffers
-(`esquema_fb.json`, extraído del cliente) y la despacha a `juego.py`:
+`mr_server.py` decodifica cada petición con el esquema FlatBuffers (`esquema_fb.json`, extraído del cliente) y la
+despacha a `juego.py`. No hace falta instalar nada: la librería `flatbuffers` va incluida en `server/flatbuffers/`.
 
-- **Cuentas** en `cuentas.db` (SQLite), identificadas por el OpenId del dispositivo. La primera vez el servidor
-  devuelve el jugador sin nombre, para que el juego muestre la pantalla de crear jugador; `CreateRoleReq` guarda el
-  nombre (único). Con `--nombre-automatico` se asigna `JugadorNNN` sin preguntar.
-- **Hall** "Sala Principal" con 8 mesas. Lista de jugadores conectados, chat del hall y de la mesa.
-- **Mesas**: entrar, sentarse a la izquierda o derecha (`ChallengeInRoomReq`), observar, salir. Cada cambio se
-  notifica a todos los del hall (`NotifyRoomDetailInfoUpdate`) y de la mesa.
-- **Partida**: con dos sentados se crea (`NotifyGameHallMatchCreated`), selección y confirmación de personaje,
-  escenario, carga, listos, fases con `NotifyMatchState`, y al subir el resultado se guardan victorias, derrotas y
-  experiencia en `cuentas.db` (tablas `jugadores` y `partidas`).
-- Lo que no tiene handler se contesta con la grabación del mod si existe, y si no con `EmptyRsp`.
-- El combate en sí (relay UDP) es la fase 3: el servidor ya anuncia un `RelayServerInfo` apuntando a sí mismo y
-  registra en el log cualquier paquete UDP que llegue, para aprender el formato.
+- **Cuentas** en `cuentas.db` (SQLite), una por teléfono (OpenId del login de invitado). La primera vez el servidor
+  devuelve el nombre vacío y el juego abre su propia pantalla de crear jugador (`CreateRoleReq`). Nombres únicos.
+  Con `--nombre-automatico` se asigna `JugadorNNNNN` sin preguntar. En el chat del hall o de la mesa,
+  `/nombre NuevoNombre` cambia el nombre en cualquier momento.
+- **Hall** "Sala Principal" con 8 mesas: entrar, sentarse en el lado izquierdo o derecho, observar, salir, clave y
+  título de mesa (`SetRoomPasswordReq`), chat del hall (con historial) y de la mesa, mensajes privados.
+- **Búsqueda de rival** (`StartSearchMatchReq`, cancelar con `ExitMatchReq`), una cola por modo:
+  clasificatoria 1v1, normal 1v1, clasificatoria 2v2, clasificatoria 3v3 y normal 3v3.
+- **Equipos 2v2**: invitar (`InvitePlayerToRoomReq`), aceptar, salir del equipo; el líder busca por los dos.
+  Si faltan compañeros, la cola completa el equipo con jugadores sueltos.
+- **Partida**: selección de personaje (uno o tres por jugador), escenario, carga, listos, fases con
+  `NotifyMatchState`, abandono (cuenta como derrota si ya empezó la pelea, cancela si aún se elegía personaje).
+- **Estadísticas y ranking**: victorias, derrotas, empates, experiencia y nivel por cuenta; puntos de
+  clasificatoria por modo (empiezan en 1000, +25 al ganar, −20 al perder); tabla de posiciones
+  (`QueryTopRankReq`, `QueryPlayerRankReq`); historial de partidas en la tabla `partidas`.
+- Anuncio de bienvenida (`QueryServerAnnounceReq`), editable en `ANUNCIO` dentro de `juego.py`.
+- Lo que no tiene handler se contesta con la grabación del mod si existe, y si no con `EmptyRsp`. Ningún error de
+  un handler corta la conexión.
 
+**Pendiente (fase 3): el relay del combate.** Al confirmar escenario, el servidor anuncia un `RelayServerInfo` que
+apunta a sí mismo y registra en el log los paquetes UDP que lleguen, pero todavía no los reenvía. Hasta entonces
+la pelea online entre dos teléfonos se quedará en la pantalla de carga.
+
+Prueba sin teléfonos: `tools/cliente_prueba.py` implementa el protocolo del cliente (ver ejemplos en el historial).
 Versión anterior (solo grabaciones): `mr_server_v1_replay.py`.

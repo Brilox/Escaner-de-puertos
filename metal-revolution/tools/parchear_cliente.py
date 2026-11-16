@@ -3,15 +3,24 @@
 
 Cambia, dentro de assets/bin/Data/sharedassets0.assets (objeto GCloudConfig, entrada del mercado 643839105),
 las tres cadenas "127.0.0.1" (updateUrlRelease, tDirUrlPreview, tDirUrlRelease) por el host indicado.
+Ademas oculta los botones de login de Facebook, Google y Twitter en la configuracion del SDK
+(assets/sp_config y assets/bcore_module_config.json), para que solo se use "Jugar como invitado".
 Luego reconstruye el APK sin las firmas antiguas, lo alinea y lo firma con un keystore propio.
 
 Uso: python3 parchear_cliente.py <apk_del_mod> <host> <apk_salida> [--keystore mr.keystore] [--pass clave]
 Requiere: pip install UnityPy ; apt install zipalign apksigner (o Android build-tools).
 """
-import argparse, os, shutil, struct, subprocess, sys, tempfile, zipfile
+import argparse, os, re, shutil, struct, subprocess, sys, tempfile, zipfile
 import UnityPy
 
 ASSET = 'assets/bin/Data/sharedassets0.assets'
+CONFIG_LOGIN = ('assets/sp_config', 'assets/bcore_module_config.json')
+
+def solo_invitado(data):
+    texto = data.decode('utf-8'); n = 0
+    for clave in ('facebook_visibility', 'google_visibility', 'twitter_visibility'):
+        texto, k = re.subn(r'("%s"\s*:\s*)"1"' % clave, r'\1"0"', texto); n += k
+    return texto.encode('utf-8'), n
 
 def ustr(s):
     b = s.encode('utf-8'); return struct.pack('<I', len(b)) + b + b'\0' * (-len(b) % 4)
@@ -34,6 +43,7 @@ def patch_asset(data, host):
 def main():
     ap = argparse.ArgumentParser(); ap.add_argument('apk'); ap.add_argument('host'); ap.add_argument('salida')
     ap.add_argument('--keystore', default='mr.keystore'); ap.add_argument('--pass', dest='pw', default='metalrevolution')
+    ap.add_argument('--todos-los-logins', action='store_true', help='no ocultar Facebook/Google/Twitter')
     a = ap.parse_args()
     tmp = tempfile.mkdtemp(); unsigned = os.path.join(tmp, 'unsigned.apk'); aligned = os.path.join(tmp, 'aligned.apk')
     with zipfile.ZipFile(a.apk) as zin, zipfile.ZipFile(unsigned, 'w') as zout:
@@ -43,6 +53,8 @@ def main():
             payload = zin.read(n)
             if n == ASSET:
                 print('parcheando', n); payload = patch_asset(payload, a.host)
+            elif n in CONFIG_LOGIN and not a.todos_los_logins:
+                payload, k = solo_invitado(payload); print(f'  {n}: {k} botones de login ocultados')
             zi = zipfile.ZipInfo(n, date_time=info.date_time); zi.compress_type = info.compress_type; zi.external_attr = info.external_attr
             zout.writestr(zi, payload)
     subprocess.check_call(['zipalign', '-p', '-f', '4', unsigned, aligned])

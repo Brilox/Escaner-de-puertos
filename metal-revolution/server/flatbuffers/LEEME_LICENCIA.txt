@@ -1,0 +1,4 @@
+Este directorio es una copia sin modificar de la libreria FlatBuffers para Python (paquete PyPI "flatbuffers" 25.12.19),
+incluida para que el servidor funcione sin "pip install".
+Copyright Google Inc. Licencia Apache 2.0: https://www.apache.org/licenses/LICENSE-2.0
+Proyecto original: https://github.com/google/flatbuffers

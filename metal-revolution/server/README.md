@@ -1,4 +1,4 @@
-# Servidor privado de Metal Revolution (fase 1)
+# Servidor privado de Metal Revolution (fase 2)
 
 Reproduce las respuestas grabadas del servidor original, igual que el servidor local del mod "Metal Offline V2",
 pero en una máquina con IP pública para que varios teléfonos conecten al mismo sitio. Es el primer escalón:
@@ -54,3 +54,23 @@ para la siguiente iteración.
 - Conexión del juego (primer byte `0x00`): `u16 tipo | u32 largo | tag2 seq | tag6 cmd | tag5 flag | tag4 payload`.
   El payload es FlatBuffers (`GameSvrReq` / `GameSvrRsp`, ver `protocolo.json`). Se responde con el blob grabado
   del mismo cmd copiando el seq; sin blob, un `EmptyRsp` (tipo de unión 2).
+
+## Fase 2 (actual): cuentas, mesas y partidas reales
+
+`mr_server.py` ya no reproduce grabaciones para el juego: decodifica cada petición con el esquema FlatBuffers
+(`esquema_fb.json`, extraído del cliente) y la despacha a `juego.py`:
+
+- **Cuentas** en `cuentas.db` (SQLite), identificadas por el OpenId del dispositivo. La primera vez el servidor
+  devuelve el jugador sin nombre, para que el juego muestre la pantalla de crear jugador; `CreateRoleReq` guarda el
+  nombre (único). Con `--nombre-automatico` se asigna `JugadorNNN` sin preguntar.
+- **Hall** "Sala Principal" con 8 mesas. Lista de jugadores conectados, chat del hall y de la mesa.
+- **Mesas**: entrar, sentarse a la izquierda o derecha (`ChallengeInRoomReq`), observar, salir. Cada cambio se
+  notifica a todos los del hall (`NotifyRoomDetailInfoUpdate`) y de la mesa.
+- **Partida**: con dos sentados se crea (`NotifyGameHallMatchCreated`), selección y confirmación de personaje,
+  escenario, carga, listos, fases con `NotifyMatchState`, y al subir el resultado se guardan victorias, derrotas y
+  experiencia en `cuentas.db` (tablas `jugadores` y `partidas`).
+- Lo que no tiene handler se contesta con la grabación del mod si existe, y si no con `EmptyRsp`.
+- El combate en sí (relay UDP) es la fase 3: el servidor ya anuncia un `RelayServerInfo` apuntando a sí mismo y
+  registra en el log cualquier paquete UDP que llegue, para aprender el formato.
+
+Versión anterior (solo grabaciones): `mr_server_v1_replay.py`.

@@ -1,1 +1,4 @@
+mr.keystore
 *.apk
+server/cuentas.db
+server/mr_server.log

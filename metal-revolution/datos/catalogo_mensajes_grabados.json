@@ -1,0 +1,3734 @@
+{
+ "anon_kActiveSignSummarySeq18Request59": {
+  "tipo": 1,
+  "cmd": 67,
+  "seq": 18,
+  "flag": 2,
+  "roundtrip": true,
+  "msg": {
+   "DataType": "ActiveSignSummaryReq",
+   "Data": {}
+  }
+ },
+ "anon_kBpInfoSummarySeq13Request59": {
+  "tipo": 1,
+  "cmd": 184,
+  "seq": 13,
+  "flag": 2,
+  "roundtrip": true,
+  "msg": {
+   "DataType": "BpInfoSummaryReq",
+   "Data": {}
+  }
+ },
+ "anon_kGetTrainingRewardSeq22Request63": {
+  "tipo": 1,
+  "cmd": 177,
+  "seq": 22,
+  "flag": 2,
+  "roundtrip": true,
+  "msg": {
+   "DataType": "GetTrainingRewardReq",
+   "Data": {
+    "CommonReward": true,
+    "RewardIndex": 3
+   }
+  }
+ },
+ "anon_kMultipleDaySeq25Request59": {
+  "tipo": 1,
+  "cmd": 208,
+  "seq": 25,
+  "flag": 2,
+  "roundtrip": true,
+  "msg": {
+   "DataType": "MultipleDayReq",
+   "Data": {}
+  }
+ },
+ "anon_kPlayerClientPingSeq16Prefix67": {
+  "tipo": 1,
+  "cmd": 47,
+  "seq": 16,
+  "flag": 2,
+  "roundtrip": false,
+  "msg": {
+   "ERROR": "unpack_from requires a buffer of at least 48 bytes for unpacking 8 bytes at offset 40 (actual buffer size is 40)"
+  }
+ },
+ "anon_kPlayerGetHallListSeq17Request59": {
+  "tipo": 1,
+  "cmd": 134,
+  "seq": 17,
+  "flag": 2,
+  "roundtrip": true,
+  "msg": {
+   "DataType": "PlayerGetHallListReq",
+   "Data": {}
+  }
+ },
+ "anon_kPlayerHeadSeq26Request59": {
+  "tipo": 1,
+  "cmd": 198,
+  "seq": 26,
+  "flag": 2,
+  "roundtrip": true,
+  "msg": {
+   "DataType": "PlayerHeadReq",
+   "Data": {}
+  }
+ },
+ "anon_kQueryRecentChatSeq17Request59": {
+  "tipo": 1,
+  "cmd": 64,
+  "seq": 17,
+  "flag": 2,
+  "roundtrip": true,
+  "msg": {
+   "DataType": "QueryRecentChatReq",
+   "Data": {}
+  }
+ },
+ "anon_kQueryServerTimeSeq68Request59": {
+  "tipo": 1,
+  "cmd": 92,
+  "seq": 68,
+  "flag": 2,
+  "roundtrip": true,
+  "msg": {
+   "DataType": "QueryServerTimeReq",
+   "Data": {}
+  }
+ },
+ "anon_kQueryZoneListSeq29Request59": {
+  "tipo": 1,
+  "cmd": 16,
+  "seq": 29,
+  "flag": 2,
+  "roundtrip": true,
+  "msg": {
+   "DataType": "QueryZoneListReq",
+   "Data": {}
+  }
+ },
+ "anon_kStartOfflineMatchSeq11Request79": {
+  "tipo": 1,
+  "cmd": 129,
+  "seq": 11,
+  "flag": 2,
+  "roundtrip": true,
+  "msg": {
+   "DataType": "StartOfflineMatchReq",
+   "Data": {
+    "MatchType": 3,
+    "SelfCharId": 2,
+    "RivalCharId": 6192
+   }
+  }
+ },
+ "mravatarfixture_request": {
+  "tipo": 1,
+  "cmd": 199,
+  "seq": 1,
+  "flag": 2,
+  "roundtrip": true,
+  "msg": {
+   "DataType": "PlayerHeadChangeReq",
+   "Data": {
+    "Id": 1
+   }
+  }
+ },
+ "mravatarfixture_response": {
+  "tipo": 2,
+  "cmd": 198,
+  "seq": 1,
+  "flag": 2,
+  "roundtrip": true,
+  "msg": {
+   "DataType": "PlayerHeadRsp",
+   "Data": {
+    "CurrHead": 0,
+    "UnlockHead": [
+     {
+      "Id": 1,
+      "Read": 1
+     },
+     {
+      "Id": 2,
+      "Read": 1
+     },
+     {
+      "Id": 3,
+      "Read": 1
+     },
+     {
+      "Id": 4,
+      "Read": 1
+     },
+     {
+      "Id": 5,
+      "Read": 1
+     },
+     {
+      "Id": 6,
+      "Read": 1
+     },
+     {
+      "Id": 7,
+      "Read": 1
+     },
+     {
+      "Id": 8,
+      "Read": 1
+     },
+     {
+      "Id": 9,
+      "Read": 1
+     },
+     {
+      "Id": 10,
+      "Read": 1
+     },
+     {
+      "Id": 11,
+      "Read": 1
+     },
+     {
+      "Id": 12,
+      "Read": 1
+     },
+     {
+      "Id": 13,
+      "Read": 1
+     },
+     {
+      "Id": 14,
+      "Read": 1
+     },
+     {
+      "Id": 15,
+      "Read": 1
+     },
+     {
+      "Id": 16,
+      "Read": 1
+     },
+     {
+      "Id": 17,
+      "Read": 1
+     },
+     {
+      "Id": 18,
+      "Read": 1
+     }
+    ]
+   }
+  }
+ },
+ "mravatarread_request": {
+  "tipo": 1,
+  "cmd": 200,
+  "seq": 1,
+  "flag": 2,
+  "roundtrip": true,
+  "msg": {
+   "DataType": "PlayerHeadMarkRead",
+   "Data": {
+    "Id": 1
+   }
+  }
+ },
+ "mravatarread_response": {
+  "tipo": 2,
+  "cmd": 200,
+  "seq": 1,
+  "flag": 2,
+  "roundtrip": true,
+  "msg": {
+   "DataType": "EmptyRsp",
+   "Data": {
+    "Reserved": 0
+   }
+  }
+ },
+ "mrcontrol_kRequest559": {
+  "tipo": 1,
+  "cmd": 168,
+  "seq": 1,
+  "flag": 2,
+  "roundtrip": true,
+  "msg": {
+   "DataType": "SaveClientConfigReq",
+   "Data": {
+    "UpdatedConfig": {
+     "TouchStickSetting": {
+      "InUseTouchStickType": 1,
+      "InUseTouchPlanIndex": 0,
+      "SavedTypePlans": [
+       {
+        "TouchStickType": 0,
+        "TouchStickPlans": [
+         {
+          "TouchStickType": 0,
+          "TouchStates": [
+           {
+            "ControlType": 0,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 1,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 2,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 3,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 4,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 5,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           }
+          ]
+         }
+        ]
+       }
+      ],
+      "ManualHideInBattle": false
+     },
+     "CustomKeyDefines": [
+      {
+       "InGameCustomKeys": [
+        {
+         "KeyboardButton": 58,
+         "ControllerButton": 1
+        },
+        {
+         "KeyboardButton": 54,
+         "ControllerButton": 2
+        },
+        {
+         "KeyboardButton": 39,
+         "ControllerButton": 4
+        },
+        {
+         "KeyboardButton": 36,
+         "ControllerButton": 3
+        },
+        {
+         "KeyboardButton": 56,
+         "ControllerButton": 21
+        },
+        {
+         "KeyboardButton": 44,
+         "ControllerButton": 22
+        },
+        {
+         "KeyboardButton": 46,
+         "ControllerButton": 18
+        },
+        {
+         "KeyboardButton": 76,
+         "ControllerButton": 19
+        },
+        {
+         "KeyboardButton": 50,
+         "ControllerButton": 20
+        },
+        {
+         "KeyboardButton": 13,
+         "ControllerButton": 100
+        }
+       ],
+       "NonGameCustomKeys": [
+        {
+         "KeyboardButton": 58,
+         "ControllerButton": 1
+        },
+        {
+         "KeyboardButton": 54,
+         "ControllerButton": 2
+        },
+        {
+         "KeyboardButton": 36,
+         "ControllerButton": 3
+        },
+        {
+         "KeyboardButton": 39,
+         "ControllerButton": 4
+        },
+        {
+         "KeyboardButton": 76,
+         "ControllerButton": 19
+        },
+        {
+         "KeyboardButton": 13,
+         "ControllerButton": 20
+        },
+        {
+         "KeyboardButton": 14,
+         "ControllerButton": 100
+        },
+        {
+         "KeyboardButton": 17,
+         "ControllerButton": 17
+        }
+       ],
+       "AutoCa": false,
+       "Initialized": true
+      },
+      {
+       "InGameCustomKeys": [
+        {
+         "KeyboardButton": 85,
+         "ControllerButton": 1
+        },
+        {
+         "KeyboardButton": 86,
+         "ControllerButton": 2
+        },
+        {
+         "KeyboardButton": 84,
+         "ControllerButton": 4
+        },
+        {
+         "KeyboardButton": 83,
+         "ControllerButton": 3
+        },
+        {
+         "KeyboardButton": 88,
+         "ControllerButton": 21
+        },
+        {
+         "KeyboardButton": 89,
+         "ControllerButton": 22
+        },
+        {
+         "KeyboardButton": 91,
+         "ControllerButton": 18
+        },
+        {
+         "KeyboardButton": 90,
+         "ControllerButton": 19
+        },
+        {
+         "KeyboardButton": 87,
+         "ControllerButton": 20
+        },
+        {
+         "KeyboardButton": 77,
+         "ControllerButton": 100
+        }
+       ],
+       "NonGameCustomKeys": [
+        {
+         "KeyboardButton": 58,
+         "ControllerButton": 1
+        },
+        {
+         "KeyboardButton": 54,
+         "ControllerButton": 2
+        },
+        {
+         "KeyboardButton": 36,
+         "ControllerButton": 3
+        },
+        {
+         "KeyboardButton": 39,
+         "ControllerButton": 4
+        },
+        {
+         "KeyboardButton": 76,
+         "ControllerButton": 19
+        },
+        {
+         "KeyboardButton": 13,
+         "ControllerButton": 20
+        },
+        {
+         "KeyboardButton": 14,
+         "ControllerButton": 100
+        },
+        {
+         "KeyboardButton": 17,
+         "ControllerButton": 17
+        }
+       ],
+       "AutoCa": false,
+       "Initialized": true
+      }
+     ]
+    }
+   }
+  }
+ },
+ "mrdefaultfixtures_kRequest1059": {
+  "tipo": 1,
+  "cmd": 168,
+  "seq": 1,
+  "flag": 2,
+  "roundtrip": true,
+  "msg": {
+   "DataType": "SaveClientConfigReq",
+   "Data": {
+    "UpdatedConfig": {
+     "TouchStickSetting": {
+      "InUseTouchStickType": 0,
+      "InUseTouchPlanIndex": 0,
+      "SavedTypePlans": [
+       {
+        "TouchStickType": 0,
+        "TouchStickPlans": [
+         {
+          "TouchStickType": 0,
+          "TouchStates": [
+           {
+            "ControlType": 0,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 1,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 2,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 3,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 4,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 5,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "TouchStickType": 1,
+        "TouchStickPlans": [
+         {
+          "TouchStickType": 1,
+          "TouchStates": [
+           {
+            "ControlType": 0,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 1,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 2,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 5,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 3,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 4,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "TouchStickType": 2,
+        "TouchStickPlans": [
+         {
+          "TouchStickType": 2,
+          "TouchStates": [
+           {
+            "ControlType": 6,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 7,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 8,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 9,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 1,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 2,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 5,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 3,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 4,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           }
+          ]
+         }
+        ]
+       }
+      ],
+      "ManualHideInBattle": false
+     },
+     "CustomKeyDefines": [
+      {
+       "InGameCustomKeys": [
+        {
+         "KeyboardButton": 58,
+         "ControllerButton": 1
+        },
+        {
+         "KeyboardButton": 54,
+         "ControllerButton": 2
+        },
+        {
+         "KeyboardButton": 39,
+         "ControllerButton": 4
+        },
+        {
+         "KeyboardButton": 36,
+         "ControllerButton": 3
+        },
+        {
+         "KeyboardButton": 56,
+         "ControllerButton": 21
+        },
+        {
+         "KeyboardButton": 44,
+         "ControllerButton": 22
+        },
+        {
+         "KeyboardButton": 46,
+         "ControllerButton": 18
+        },
+        {
+         "KeyboardButton": 76,
+         "ControllerButton": 19
+        },
+        {
+         "KeyboardButton": 50,
+         "ControllerButton": 20
+        },
+        {
+         "KeyboardButton": 13,
+         "ControllerButton": 100
+        }
+       ],
+       "NonGameCustomKeys": [
+        {
+         "KeyboardButton": 58,
+         "ControllerButton": 1
+        },
+        {
+         "KeyboardButton": 54,
+         "ControllerButton": 2
+        },
+        {
+         "KeyboardButton": 36,
+         "ControllerButton": 3
+        },
+        {
+         "KeyboardButton": 39,
+         "ControllerButton": 4
+        },
+        {
+         "KeyboardButton": 76,
+         "ControllerButton": 19
+        },
+        {
+         "KeyboardButton": 13,
+         "ControllerButton": 20
+        },
+        {
+         "KeyboardButton": 14,
+         "ControllerButton": 100
+        },
+        {
+         "KeyboardButton": 17,
+         "ControllerButton": 17
+        }
+       ],
+       "AutoCa": false,
+       "Initialized": true
+      },
+      {
+       "InGameCustomKeys": [
+        {
+         "KeyboardButton": 85,
+         "ControllerButton": 1
+        },
+        {
+         "KeyboardButton": 86,
+         "ControllerButton": 2
+        },
+        {
+         "KeyboardButton": 84,
+         "ControllerButton": 4
+        },
+        {
+         "KeyboardButton": 83,
+         "ControllerButton": 3
+        },
+        {
+         "KeyboardButton": 88,
+         "ControllerButton": 21
+        },
+        {
+         "KeyboardButton": 89,
+         "ControllerButton": 22
+        },
+        {
+         "KeyboardButton": 91,
+         "ControllerButton": 18
+        },
+        {
+         "KeyboardButton": 90,
+         "ControllerButton": 19
+        },
+        {
+         "KeyboardButton": 87,
+         "ControllerButton": 20
+        },
+        {
+         "KeyboardButton": 77,
+         "ControllerButton": 100
+        }
+       ],
+       "NonGameCustomKeys": [
+        {
+         "KeyboardButton": 58,
+         "ControllerButton": 1
+        },
+        {
+         "KeyboardButton": 54,
+         "ControllerButton": 2
+        },
+        {
+         "KeyboardButton": 36,
+         "ControllerButton": 3
+        },
+        {
+         "KeyboardButton": 39,
+         "ControllerButton": 4
+        },
+        {
+         "KeyboardButton": 76,
+         "ControllerButton": 19
+        },
+        {
+         "KeyboardButton": 13,
+         "ControllerButton": 20
+        },
+        {
+         "KeyboardButton": 14,
+         "ControllerButton": 100
+        },
+        {
+         "KeyboardButton": 17,
+         "ControllerButton": 17
+        }
+       ],
+       "AutoCa": false,
+       "Initialized": true
+      }
+     ]
+    }
+   }
+  }
+ },
+ "mrfullfixtures_kRequest1063": {
+  "tipo": 1,
+  "cmd": 168,
+  "seq": 1,
+  "flag": 2,
+  "roundtrip": true,
+  "msg": {
+   "DataType": "SaveClientConfigReq",
+   "Data": {
+    "UpdatedConfig": {
+     "TouchStickSetting": {
+      "InUseTouchStickType": 2,
+      "InUseTouchPlanIndex": 0,
+      "SavedTypePlans": [
+       {
+        "TouchStickType": 0,
+        "TouchStickPlans": [
+         {
+          "TouchStickType": 0,
+          "TouchStates": [
+           {
+            "ControlType": 0,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 1,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 2,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 3,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 4,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 5,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "TouchStickType": 1,
+        "TouchStickPlans": [
+         {
+          "TouchStickType": 1,
+          "TouchStates": [
+           {
+            "ControlType": 0,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 1,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 2,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 5,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 3,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 4,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "TouchStickType": 2,
+        "TouchStickPlans": [
+         {
+          "TouchStickType": 2,
+          "TouchStates": [
+           {
+            "ControlType": 6,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 7,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 8,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 9,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 1,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 2,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 5,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 3,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 4,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           }
+          ]
+         }
+        ]
+       }
+      ],
+      "ManualHideInBattle": false
+     },
+     "CustomKeyDefines": [
+      {
+       "InGameCustomKeys": [
+        {
+         "KeyboardButton": 58,
+         "ControllerButton": 1
+        },
+        {
+         "KeyboardButton": 54,
+         "ControllerButton": 2
+        },
+        {
+         "KeyboardButton": 39,
+         "ControllerButton": 4
+        },
+        {
+         "KeyboardButton": 36,
+         "ControllerButton": 3
+        },
+        {
+         "KeyboardButton": 56,
+         "ControllerButton": 21
+        },
+        {
+         "KeyboardButton": 44,
+         "ControllerButton": 22
+        },
+        {
+         "KeyboardButton": 46,
+         "ControllerButton": 18
+        },
+        {
+         "KeyboardButton": 76,
+         "ControllerButton": 19
+        },
+        {
+         "KeyboardButton": 50,
+         "ControllerButton": 20
+        },
+        {
+         "KeyboardButton": 13,
+         "ControllerButton": 100
+        }
+       ],
+       "NonGameCustomKeys": [
+        {
+         "KeyboardButton": 58,
+         "ControllerButton": 1
+        },
+        {
+         "KeyboardButton": 54,
+         "ControllerButton": 2
+        },
+        {
+         "KeyboardButton": 36,
+         "ControllerButton": 3
+        },
+        {
+         "KeyboardButton": 39,
+         "ControllerButton": 4
+        },
+        {
+         "KeyboardButton": 76,
+         "ControllerButton": 19
+        },
+        {
+         "KeyboardButton": 13,
+         "ControllerButton": 20
+        },
+        {
+         "KeyboardButton": 14,
+         "ControllerButton": 100
+        },
+        {
+         "KeyboardButton": 17,
+         "ControllerButton": 17
+        }
+       ],
+       "AutoCa": false,
+       "Initialized": true
+      },
+      {
+       "InGameCustomKeys": [
+        {
+         "KeyboardButton": 85,
+         "ControllerButton": 1
+        },
+        {
+         "KeyboardButton": 86,
+         "ControllerButton": 2
+        },
+        {
+         "KeyboardButton": 84,
+         "ControllerButton": 4
+        },
+        {
+         "KeyboardButton": 83,
+         "ControllerButton": 3
+        },
+        {
+         "KeyboardButton": 88,
+         "ControllerButton": 21
+        },
+        {
+         "KeyboardButton": 89,
+         "ControllerButton": 22
+        },
+        {
+         "KeyboardButton": 91,
+         "ControllerButton": 18
+        },
+        {
+         "KeyboardButton": 90,
+         "ControllerButton": 19
+        },
+        {
+         "KeyboardButton": 87,
+         "ControllerButton": 20
+        },
+        {
+         "KeyboardButton": 77,
+         "ControllerButton": 100
+        }
+       ],
+       "NonGameCustomKeys": [
+        {
+         "KeyboardButton": 58,
+         "ControllerButton": 1
+        },
+        {
+         "KeyboardButton": 54,
+         "ControllerButton": 2
+        },
+        {
+         "KeyboardButton": 36,
+         "ControllerButton": 3
+        },
+        {
+         "KeyboardButton": 39,
+         "ControllerButton": 4
+        },
+        {
+         "KeyboardButton": 76,
+         "ControllerButton": 19
+        },
+        {
+         "KeyboardButton": 13,
+         "ControllerButton": 20
+        },
+        {
+         "KeyboardButton": 14,
+         "ControllerButton": 100
+        },
+        {
+         "KeyboardButton": 17,
+         "ControllerButton": 17
+        }
+       ],
+       "AutoCa": false,
+       "Initialized": true
+      }
+     ]
+    }
+   }
+  }
+ },
+ "mrfullfixtures_kResponse1063": {
+  "tipo": 2,
+  "cmd": 167,
+  "seq": 1,
+  "flag": 2,
+  "roundtrip": true,
+  "msg": {
+   "DataType": "GetClientConfigRsp",
+   "Data": {
+    "Config": {
+     "TouchStickSetting": {
+      "InUseTouchStickType": 2,
+      "InUseTouchPlanIndex": 0,
+      "SavedTypePlans": [
+       {
+        "TouchStickType": 0,
+        "TouchStickPlans": [
+         {
+          "TouchStickType": 0,
+          "TouchStates": [
+           {
+            "ControlType": 0,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 1,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 2,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 3,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 4,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 5,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "TouchStickType": 1,
+        "TouchStickPlans": [
+         {
+          "TouchStickType": 1,
+          "TouchStates": [
+           {
+            "ControlType": 0,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 1,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 2,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 5,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 3,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 4,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "TouchStickType": 2,
+        "TouchStickPlans": [
+         {
+          "TouchStickType": 2,
+          "TouchStates": [
+           {
+            "ControlType": 6,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 7,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 8,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 9,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 1,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 2,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 5,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 3,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 4,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           }
+          ]
+         }
+        ]
+       }
+      ],
+      "ManualHideInBattle": false
+     },
+     "CustomKeyDefines": [
+      {
+       "InGameCustomKeys": [
+        {
+         "KeyboardButton": 58,
+         "ControllerButton": 1
+        },
+        {
+         "KeyboardButton": 54,
+         "ControllerButton": 2
+        },
+        {
+         "KeyboardButton": 39,
+         "ControllerButton": 4
+        },
+        {
+         "KeyboardButton": 36,
+         "ControllerButton": 3
+        },
+        {
+         "KeyboardButton": 56,
+         "ControllerButton": 21
+        },
+        {
+         "KeyboardButton": 44,
+         "ControllerButton": 22
+        },
+        {
+         "KeyboardButton": 46,
+         "ControllerButton": 18
+        },
+        {
+         "KeyboardButton": 76,
+         "ControllerButton": 19
+        },
+        {
+         "KeyboardButton": 50,
+         "ControllerButton": 20
+        },
+        {
+         "KeyboardButton": 13,
+         "ControllerButton": 100
+        }
+       ],
+       "NonGameCustomKeys": [
+        {
+         "KeyboardButton": 58,
+         "ControllerButton": 1
+        },
+        {
+         "KeyboardButton": 54,
+         "ControllerButton": 2
+        },
+        {
+         "KeyboardButton": 36,
+         "ControllerButton": 3
+        },
+        {
+         "KeyboardButton": 39,
+         "ControllerButton": 4
+        },
+        {
+         "KeyboardButton": 76,
+         "ControllerButton": 19
+        },
+        {
+         "KeyboardButton": 13,
+         "ControllerButton": 20
+        },
+        {
+         "KeyboardButton": 14,
+         "ControllerButton": 100
+        },
+        {
+         "KeyboardButton": 17,
+         "ControllerButton": 17
+        }
+       ],
+       "AutoCa": false,
+       "Initialized": true
+      },
+      {
+       "InGameCustomKeys": [
+        {
+         "KeyboardButton": 85,
+         "ControllerButton": 1
+        },
+        {
+         "KeyboardButton": 86,
+         "ControllerButton": 2
+        },
+        {
+         "KeyboardButton": 84,
+         "ControllerButton": 4
+        },
+        {
+         "KeyboardButton": 83,
+         "ControllerButton": 3
+        },
+        {
+         "KeyboardButton": 88,
+         "ControllerButton": 21
+        },
+        {
+         "KeyboardButton": 89,
+         "ControllerButton": 22
+        },
+        {
+         "KeyboardButton": 91,
+         "ControllerButton": 18
+        },
+        {
+         "KeyboardButton": 90,
+         "ControllerButton": 19
+        },
+        {
+         "KeyboardButton": 87,
+         "ControllerButton": 20
+        },
+        {
+         "KeyboardButton": 77,
+         "ControllerButton": 100
+        }
+       ],
+       "NonGameCustomKeys": [
+        {
+         "KeyboardButton": 58,
+         "ControllerButton": 1
+        },
+        {
+         "KeyboardButton": 54,
+         "ControllerButton": 2
+        },
+        {
+         "KeyboardButton": 36,
+         "ControllerButton": 3
+        },
+        {
+         "KeyboardButton": 39,
+         "ControllerButton": 4
+        },
+        {
+         "KeyboardButton": 76,
+         "ControllerButton": 19
+        },
+        {
+         "KeyboardButton": 13,
+         "ControllerButton": 20
+        },
+        {
+         "KeyboardButton": 14,
+         "ControllerButton": 100
+        },
+        {
+         "KeyboardButton": 17,
+         "ControllerButton": 17
+        }
+       ],
+       "AutoCa": false,
+       "Initialized": true
+      }
+     ]
+    }
+   }
+  }
+ },
+ "mrgoldapply_request": {
+  "tipo": 1,
+  "cmd": 5,
+  "seq": 1,
+  "flag": 2,
+  "roundtrip": true,
+  "msg": {
+   "DataType": "ChangeHeadFrameReq",
+   "Data": {
+    "HeadFrameId": 4
+   }
+  }
+ },
+ "mrgoldmark_request_bytes": {
+  "tipo": 1,
+  "cmd": 15,
+  "seq": 1,
+  "flag": 2,
+  "roundtrip": true,
+  "msg": {
+   "DataType": "SetKeyValueReq",
+   "Data": {
+    "SetValues": [
+     {
+      "Id": 1004,
+      "Value": 1
+     }
+    ]
+   }
+  }
+ },
+ "mrgoldmark_response_bytes": {
+  "tipo": 2,
+  "cmd": 15,
+  "seq": 1,
+  "flag": 2,
+  "roundtrip": true,
+  "msg": {
+   "DataType": "SetKeyValueRsp",
+   "Data": {
+    "SetOkValues": [
+     {
+      "Id": 1004,
+      "Value": 1
+     }
+    ]
+   }
+  }
+ },
+ "mroffline_assets_kActiveSignSummarySeq19Rsp59": {
+  "tipo": 2,
+  "cmd": 67,
+  "seq": 19,
+  "flag": 2,
+  "roundtrip": true,
+  "msg": {
+   "DataType": "ActiveSignSummaryRsp",
+   "Data": {
+    "StartTime": 0,
+    "EndTime": 0,
+    "SignFlag": 0,
+    "DayInWeek": 0
+   }
+  }
+ },
+ "mroffline_assets_kBpInfoSummarySeq13Rsp59": {
+  "tipo": 2,
+  "cmd": 184,
+  "seq": 13,
+  "flag": 2,
+  "roundtrip": true,
+  "msg": {
+   "DataType": "BpInfoSummaryRsp",
+   "Data": {
+    "CurrExp": 0,
+    "BpBuyState": 0,
+    "FinalGetted": 0,
+    "BpClear": false
+   }
+  }
+ },
+ "mroffline_assets_kChangeHeroSkinSeq1Rsp59": {
+  "tipo": 2,
+  "cmd": 123,
+  "seq": 1,
+  "flag": 2,
+  "roundtrip": true,
+  "msg": {
+   "DataType": "EmptyRsp",
+   "Data": {
+    "Reserved": 0
+   }
+  }
+ },
+ "mroffline_assets_kExitOfflineMatchSeq153Rsp59": {
+  "tipo": 2,
+  "cmd": 130,
+  "seq": 153,
+  "flag": 2,
+  "roundtrip": true,
+  "msg": {
+   "DataType": "EmptyRsp",
+   "Data": {
+    "Reserved": 0
+   }
+  }
+ },
+ "mroffline_assets_kFinishTutorialSeq268Request111": {
+  "tipo": 1,
+  "cmd": 174,
+  "seq": 268,
+  "flag": 2,
+  "roundtrip": true,
+  "msg": {
+   "DataType": "FinishTutorialReq",
+   "Data": {
+    "Id": "e3482f25-a92e-4215-b1b4-946e22c12c39",
+    "Finish": false
+   }
+  }
+ },
+ "mroffline_assets_kFinishTutorialSeq268Rsp59": {
+  "tipo": 2,
+  "cmd": 174,
+  "seq": 268,
+  "flag": 2,
+  "roundtrip": true,
+  "msg": {
+   "DataType": "EmptyRsp",
+   "Data": {
+    "Reserved": 0
+   }
+  }
+ },
+ "mroffline_assets_kFreshSeasonInfoSeq96Request59": {
+  "tipo": 1,
+  "cmd": 156,
+  "seq": 96,
+  "flag": 2,
+  "roundtrip": true,
+  "msg": {
+   "DataType": "FreshSeasonInfoReq",
+   "Data": {}
+  }
+ },
+ "mroffline_assets_kFreshSeasonInfoSeq96Rsp59": {
+  "tipo": 2,
+  "cmd": 156,
+  "seq": 96,
+  "flag": 2,
+  "roundtrip": true,
+  "msg": {
+   "DataType": "FreshSeasonInfoRsp",
+   "Data": {
+    "StartTime": 0,
+    "EndTime": 0
+   }
+  }
+ },
+ "mroffline_assets_kGameLoginMikeKimSkinsRsp843": {
+  "tipo": 2,
+  "cmd": 1,
+  "seq": 1,
+  "flag": 2,
+  "roundtrip": true,
+  "msg": {
+   "DataType": "LoginGameSvrRsp",
+   "Data": {
+    "PlayerInfo": {
+     "BaseInfo": {
+      "Uid": 1000001,
+      "Name": "Local Revival",
+      "Coin": 0,
+      "Diamond": 0,
+      "Exp": 0,
+      "Level": 1,
+      "Charm": 0,
+      "Zone": "",
+      "BirthZone": "",
+      "ShowHeroId": 0,
+      "LogoutTime": 0,
+      "OnlineState": 0,
+      "GameHallId": 0,
+      "HallRoomId": 0,
+      "RegisterTime": 0,
+      "OnlineTime": 0,
+      "BanLoginTime": 0,
+      "StartDeleteAccountTime": 0,
+      "DeleteAccountReason": 0,
+      "BePraisedCount": 0,
+      "OpenId": "",
+      "CurHeadFrame": 0,
+      "ViewPrivateType": 0,
+      "GameLaunchLoginTime": 0,
+      "Platform": 0,
+      "PersistHeroCount": 0,
+      "CurPlayerHead": 0,
+      "CurFlag": 0,
+      "TotalLoginDay": 0
+     },
+     "BattleData": {
+      "Uid": 1000001,
+      "DetailLevel": 0,
+      "PreferNetCode": 0
+     },
+     "Heroes": [
+      {
+       "Id": 5,
+       "Unlock": true,
+       "UseSkinId": 0,
+       "ShowSkinId": 0,
+       "ExpireTime": 0,
+       "ExpireCount": 0
+      },
+      {
+       "Id": 7,
+       "Unlock": true,
+       "UseSkinId": 0,
+       "ShowSkinId": 0,
+       "ExpireTime": 0,
+       "ExpireCount": 0
+      },
+      {
+       "Id": 6,
+       "Unlock": true,
+       "UseSkinId": 0,
+       "ShowSkinId": 0,
+       "ExpireTime": 0,
+       "ExpireCount": 0,
+       "UnlockedSkins": [
+        766,
+        767,
+        5865,
+        751,
+        5707,
+        5708,
+        6275,
+        6287
+       ]
+      },
+      {
+       "Id": 3,
+       "Unlock": true,
+       "UseSkinId": 0,
+       "ShowSkinId": 0,
+       "ExpireTime": 0,
+       "ExpireCount": 0
+      },
+      {
+       "Id": 9,
+       "Unlock": true,
+       "UseSkinId": 0,
+       "ShowSkinId": 0,
+       "ExpireTime": 0,
+       "ExpireCount": 0
+      },
+      {
+       "Id": 2,
+       "Unlock": true,
+       "UseSkinId": 0,
+       "ShowSkinId": 0,
+       "ExpireTime": 0,
+       "ExpireCount": 0
+      },
+      {
+       "Id": 10,
+       "Unlock": true,
+       "UseSkinId": 0,
+       "ShowSkinId": 0,
+       "ExpireTime": 0,
+       "ExpireCount": 0,
+       "UnlockedSkins": [
+        772,
+        773,
+        5870,
+        750,
+        5710,
+        5719,
+        5928,
+        5929
+       ]
+      },
+      {
+       "Id": 8,
+       "Unlock": true,
+       "UseSkinId": 0,
+       "ShowSkinId": 0,
+       "ExpireTime": 0,
+       "ExpireCount": 0
+      },
+      {
+       "Id": 11,
+       "Unlock": true,
+       "UseSkinId": 0,
+       "ShowSkinId": 0,
+       "ExpireTime": 0,
+       "ExpireCount": 0
+      },
+      {
+       "Id": 13,
+       "Unlock": true,
+       "UseSkinId": 0,
+       "ShowSkinId": 0,
+       "ExpireTime": 0,
+       "ExpireCount": 0
+      },
+      {
+       "Id": 16,
+       "Unlock": true,
+       "UseSkinId": 0,
+       "ShowSkinId": 0,
+       "ExpireTime": 0,
+       "ExpireCount": 0
+      },
+      {
+       "Id": 15,
+       "Unlock": true,
+       "UseSkinId": 0,
+       "ShowSkinId": 0,
+       "ExpireTime": 0,
+       "ExpireCount": 0
+      },
+      {
+       "Id": 12,
+       "Unlock": true,
+       "UseSkinId": 0,
+       "ShowSkinId": 0,
+       "ExpireTime": 0,
+       "ExpireCount": 0
+      },
+      {
+       "Id": 14,
+       "Unlock": true,
+       "UseSkinId": 0,
+       "ShowSkinId": 0,
+       "ExpireTime": 0,
+       "ExpireCount": 0
+      },
+      {
+       "Id": 17,
+       "Unlock": true,
+       "UseSkinId": 0,
+       "ShowSkinId": 0,
+       "ExpireTime": 0,
+       "ExpireCount": 0
+      },
+      {
+       "Id": 18,
+       "Unlock": true,
+       "UseSkinId": 0,
+       "ShowSkinId": 0,
+       "ExpireTime": 0,
+       "ExpireCount": 0
+      },
+      {
+       "Id": 5786,
+       "Unlock": true,
+       "UseSkinId": 0,
+       "ShowSkinId": 0,
+       "ExpireTime": 0,
+       "ExpireCount": 0
+      },
+      {
+       "Id": 5938,
+       "Unlock": true,
+       "UseSkinId": 0,
+       "ShowSkinId": 0,
+       "ExpireTime": 0,
+       "ExpireCount": 0
+      },
+      {
+       "Id": 6071,
+       "Unlock": true,
+       "UseSkinId": 0,
+       "ShowSkinId": 0,
+       "ExpireTime": 0,
+       "ExpireCount": 0
+      },
+      {
+       "Id": 6192,
+       "Unlock": true,
+       "UseSkinId": 0,
+       "ShowSkinId": 0,
+       "ExpireTime": 0,
+       "ExpireCount": 0
+      }
+     ]
+    },
+    "PayZoneId": 0,
+    "UtcTimeOffset": 0,
+    "PayServerIsReleaseEnv": false,
+    "IsChinaIp": false,
+    "GameServerId": 0,
+    "Inviteid": 0
+   }
+  }
+ },
+ "mroffline_assets_kGetClientConfigHudRsp555": {
+  "tipo": 2,
+  "cmd": 167,
+  "seq": 3,
+  "flag": 2,
+  "roundtrip": true,
+  "msg": {
+   "DataType": "GetClientConfigRsp",
+   "Data": {
+    "Config": {
+     "TouchStickSetting": {
+      "InUseTouchStickType": 0,
+      "InUseTouchPlanIndex": 0,
+      "SavedTypePlans": [
+       {
+        "TouchStickType": 0,
+        "TouchStickPlans": [
+         {
+          "TouchStickType": 0,
+          "TouchStates": [
+           {
+            "ControlType": 0,
+            "AnchoredPos": {
+             "X": 305.0,
+             "Y": 305.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 0.23999999463558197
+           },
+           {
+            "ControlType": 1,
+            "AnchoredPos": {
+             "X": -280.0,
+             "Y": 110.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 0.20000000298023224
+           },
+           {
+            "ControlType": 2,
+            "AnchoredPos": {
+             "X": -88.39984130859375,
+             "Y": 376.25
+            },
+            "Scaling": 1.0,
+            "Alpha": 0.23999999463558197
+           },
+           {
+            "ControlType": 3,
+            "AnchoredPos": {
+             "X": -456.0,
+             "Y": 276.04998779296875
+            },
+            "Scaling": 1.0,
+            "Alpha": 0.20000000298023224
+           },
+           {
+            "ControlType": 4,
+            "AnchoredPos": {
+             "X": -280.0,
+             "Y": 453.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 0.20000000298023224
+           },
+           {
+            "ControlType": 5,
+            "AnchoredPos": {
+             "X": -110.0,
+             "Y": 614.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 0.20000000298023224
+           }
+          ]
+         }
+        ]
+       }
+      ],
+      "ManualHideInBattle": false
+     },
+     "CustomKeyDefines": [
+      {
+       "InGameCustomKeys": [
+        {
+         "KeyboardButton": 58,
+         "ControllerButton": 1
+        },
+        {
+         "KeyboardButton": 54,
+         "ControllerButton": 2
+        },
+        {
+         "KeyboardButton": 39,
+         "ControllerButton": 4
+        },
+        {
+         "KeyboardButton": 36,
+         "ControllerButton": 3
+        },
+        {
+         "KeyboardButton": 56,
+         "ControllerButton": 21
+        },
+        {
+         "KeyboardButton": 44,
+         "ControllerButton": 22
+        },
+        {
+         "KeyboardButton": 46,
+         "ControllerButton": 18
+        },
+        {
+         "KeyboardButton": 76,
+         "ControllerButton": 19
+        },
+        {
+         "KeyboardButton": 50,
+         "ControllerButton": 20
+        },
+        {
+         "KeyboardButton": 13,
+         "ControllerButton": 100
+        }
+       ],
+       "NonGameCustomKeys": [
+        {
+         "KeyboardButton": 58,
+         "ControllerButton": 1
+        },
+        {
+         "KeyboardButton": 54,
+         "ControllerButton": 2
+        },
+        {
+         "KeyboardButton": 36,
+         "ControllerButton": 3
+        },
+        {
+         "KeyboardButton": 39,
+         "ControllerButton": 4
+        },
+        {
+         "KeyboardButton": 76,
+         "ControllerButton": 19
+        },
+        {
+         "KeyboardButton": 13,
+         "ControllerButton": 20
+        },
+        {
+         "KeyboardButton": 14,
+         "ControllerButton": 100
+        },
+        {
+         "KeyboardButton": 17,
+         "ControllerButton": 17
+        }
+       ],
+       "AutoCa": false,
+       "Initialized": true
+      },
+      {
+       "InGameCustomKeys": [
+        {
+         "KeyboardButton": 85,
+         "ControllerButton": 1
+        },
+        {
+         "KeyboardButton": 86,
+         "ControllerButton": 2
+        },
+        {
+         "KeyboardButton": 84,
+         "ControllerButton": 4
+        },
+        {
+         "KeyboardButton": 83,
+         "ControllerButton": 3
+        },
+        {
+         "KeyboardButton": 88,
+         "ControllerButton": 21
+        },
+        {
+         "KeyboardButton": 89,
+         "ControllerButton": 22
+        },
+        {
+         "KeyboardButton": 91,
+         "ControllerButton": 18
+        },
+        {
+         "KeyboardButton": 90,
+         "ControllerButton": 19
+        },
+        {
+         "KeyboardButton": 87,
+         "ControllerButton": 20
+        },
+        {
+         "KeyboardButton": 77,
+         "ControllerButton": 100
+        }
+       ],
+       "NonGameCustomKeys": [
+        {
+         "KeyboardButton": 58,
+         "ControllerButton": 1
+        },
+        {
+         "KeyboardButton": 54,
+         "ControllerButton": 2
+        },
+        {
+         "KeyboardButton": 36,
+         "ControllerButton": 3
+        },
+        {
+         "KeyboardButton": 39,
+         "ControllerButton": 4
+        },
+        {
+         "KeyboardButton": 76,
+         "ControllerButton": 19
+        },
+        {
+         "KeyboardButton": 13,
+         "ControllerButton": 20
+        },
+        {
+         "KeyboardButton": 14,
+         "ControllerButton": 100
+        },
+        {
+         "KeyboardButton": 17,
+         "ControllerButton": 17
+        }
+       ],
+       "AutoCa": false,
+       "Initialized": true
+      }
+     ]
+    }
+   }
+  }
+ },
+ "mroffline_assets_kGetTrainingRewardSeq22Rsp59": {
+  "tipo": 2,
+  "cmd": 177,
+  "seq": 22,
+  "flag": 2,
+  "roundtrip": true,
+  "msg": {
+   "DataType": "EmptyRsp",
+   "Data": {
+    "Reserved": 0
+   }
+  }
+ },
+ "mroffline_assets_kMultipleDaySeq25Rsp59": {
+  "tipo": 2,
+  "cmd": 208,
+  "seq": 25,
+  "flag": 2,
+  "roundtrip": true,
+  "msg": {
+   "DataType": "MultipleDayRsp",
+   "Data": {
+    "DayPass": 0,
+    "RegTime": 0,
+    "GiftStatu": 0,
+    "BornGiftStatu": 0
+   }
+  }
+ },
+ "mroffline_assets_kNameCardCdSeq10Rsp59": {
+  "tipo": 2,
+  "cmd": 218,
+  "seq": 10,
+  "flag": 2,
+  "roundtrip": true,
+  "msg": {
+   "DataType": "NameCardCdRsp",
+   "Data": {
+    "TimeLeft": 0
+   }
+  }
+ },
+ "mroffline_assets_kOpActivityGetDetailSeq73Request75": {
+  "tipo": 1,
+  "cmd": 132,
+  "seq": 73,
+  "flag": 2,
+  "roundtrip": true,
+  "msg": {
+   "DataType": "OpActivityGetDetailReq",
+   "Data": {
+    "ActIdList": [
+     9001
+    ]
+   }
+  }
+ },
+ "mroffline_assets_kOpActivityGetDetailSeq73Rsp59": {
+  "tipo": 2,
+  "cmd": 132,
+  "seq": 73,
+  "flag": 2,
+  "roundtrip": true,
+  "msg": {
+   "DataType": "OpActivityGetDetailRsp",
+   "Data": {}
+  }
+ },
+ "mroffline_assets_kOpActivityQueryTimeSeq12Rsp59": {
+  "tipo": 2,
+  "cmd": 133,
+  "seq": 12,
+  "flag": 2,
+  "roundtrip": true,
+  "msg": {
+   "DataType": "OpActivityQueryTimeReq",
+   "Data": {}
+  }
+ },
+ "mroffline_assets_kOpenServerSignDataSeq6Rsp59": {
+  "tipo": 2,
+  "cmd": 69,
+  "seq": 6,
+  "flag": 2,
+  "roundtrip": true,
+  "msg": {
+   "DataType": "OpenServerSignDataRsp",
+   "Data": {
+    "StartTime": 0,
+    "EndTime": 0,
+    "SignFlag": 0,
+    "SignTime": 0
+   }
+  }
+ },
+ "mroffline_assets_kPayRefreshDiamondSeq8Rsp59": {
+  "tipo": 2,
+  "cmd": 76,
+  "seq": 8,
+  "flag": 2,
+  "roundtrip": true,
+  "msg": {
+   "DataType": "PayRefreshDiamondRsp",
+   "Data": {}
+  }
+ },
+ "mroffline_assets_kPlayerClientPongSeq16Rsp75": {
+  "tipo": 2,
+  "cmd": 47,
+  "seq": 16,
+  "flag": 2,
+  "roundtrip": true,
+  "msg": {
+   "DataType": "PlayerClientPong",
+   "Data": {
+    "Timestamp": 1787929742737
+   }
+  }
+ },
+ "mroffline_assets_kPlayerTrainingDataSeq11Rsp59": {
+  "tipo": 2,
+  "cmd": 173,
+  "seq": 11,
+  "flag": 2,
+  "roundtrip": true,
+  "msg": {
+   "DataType": "PlayerTrainingData",
+   "Data": {
+    "LastTrainingCharId": 0
+   }
+  }
+ },
+ "mroffline_assets_kQueryBattleDataSeq120Rsp83": {
+  "tipo": 2,
+  "cmd": 24,
+  "seq": 120,
+  "flag": 2,
+  "roundtrip": true,
+  "msg": {
+   "DataType": "PlayerBattleData",
+   "Data": {
+    "Uid": 1,
+    "DetailLevel": 1,
+    "PreferNetCode": 0
+   }
+  }
+ },
+ "mroffline_assets_kQueryRecentChatSeq17Rsp59": {
+  "tipo": 2,
+  "cmd": 64,
+  "seq": 17,
+  "flag": 2,
+  "roundtrip": true,
+  "msg": {
+   "DataType": "QueryRecentChatRsp",
+   "Data": {
+    "MsgType": 0
+   }
+  }
+ },
+ "mroffline_assets_kQuerySeasonInfoSeq5Rsp59": {
+  "tipo": 2,
+  "cmd": 157,
+  "seq": 5,
+  "flag": 2,
+  "roundtrip": true,
+  "msg": {
+   "DataType": "PlayerSeasonData",
+   "Data": {}
+  }
+ },
+ "mroffline_assets_kQueryServerTimeSeq4Rsp67": {
+  "tipo": 2,
+  "cmd": 92,
+  "seq": 4,
+  "flag": 2,
+  "roundtrip": true,
+  "msg": {
+   "DataType": "QueryServerTimeRsp",
+   "Data": {
+    "ServerTime": 1666872000,
+    "TimeOffset": 0,
+    "ServerTimeOffset": 0
+   }
+  }
+ },
+ "mroffline_assets_kQueryShareInfoSeq15Rsp59": {
+  "tipo": 2,
+  "cmd": 158,
+  "seq": 15,
+  "flag": 2,
+  "roundtrip": true,
+  "msg": {
+   "DataType": "QueryShareInfoRsp",
+   "Data": {}
+  }
+ },
+ "mroffline_assets_kQueryZoneListSeq14Rsp59": {
+  "tipo": 2,
+  "cmd": 16,
+  "seq": 14,
+  "flag": 2,
+  "roundtrip": true,
+  "msg": {
+   "DataType": "QueryZoneListRsp",
+   "Data": {}
+  }
+ },
+ "mroffline_assets_kSaveClientConfigSeq292Request555": {
+  "tipo": 1,
+  "cmd": 168,
+  "seq": 292,
+  "flag": 2,
+  "roundtrip": true,
+  "msg": {
+   "DataType": "SaveClientConfigReq",
+   "Data": {
+    "UpdatedConfig": {
+     "TouchStickSetting": {
+      "InUseTouchStickType": 0,
+      "InUseTouchPlanIndex": 0,
+      "SavedTypePlans": [
+       {
+        "TouchStickType": 0,
+        "TouchStickPlans": [
+         {
+          "TouchStickType": 0,
+          "TouchStates": [
+           {
+            "ControlType": 0,
+            "AnchoredPos": {
+             "X": 326.5999755859375,
+             "Y": 305.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 0.23999999463558197
+           },
+           {
+            "ControlType": 1,
+            "AnchoredPos": {
+             "X": -280.0,
+             "Y": 110.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 0.20000000298023224
+           },
+           {
+            "ControlType": 2,
+            "AnchoredPos": {
+             "X": -88.39984130859375,
+             "Y": 376.25
+            },
+            "Scaling": 1.0,
+            "Alpha": 0.23999999463558197
+           },
+           {
+            "ControlType": 3,
+            "AnchoredPos": {
+             "X": -456.0,
+             "Y": 276.04998779296875
+            },
+            "Scaling": 1.0,
+            "Alpha": 0.20000000298023224
+           },
+           {
+            "ControlType": 4,
+            "AnchoredPos": {
+             "X": -280.0,
+             "Y": 453.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 0.20000000298023224
+           },
+           {
+            "ControlType": 5,
+            "AnchoredPos": {
+             "X": -110.0,
+             "Y": 614.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 0.20000000298023224
+           }
+          ]
+         }
+        ]
+       }
+      ],
+      "ManualHideInBattle": false
+     },
+     "CustomKeyDefines": [
+      {
+       "InGameCustomKeys": [
+        {
+         "KeyboardButton": 58,
+         "ControllerButton": 1
+        },
+        {
+         "KeyboardButton": 54,
+         "ControllerButton": 2
+        },
+        {
+         "KeyboardButton": 39,
+         "ControllerButton": 4
+        },
+        {
+         "KeyboardButton": 36,
+         "ControllerButton": 3
+        },
+        {
+         "KeyboardButton": 56,
+         "ControllerButton": 21
+        },
+        {
+         "KeyboardButton": 44,
+         "ControllerButton": 22
+        },
+        {
+         "KeyboardButton": 46,
+         "ControllerButton": 18
+        },
+        {
+         "KeyboardButton": 76,
+         "ControllerButton": 19
+        },
+        {
+         "KeyboardButton": 50,
+         "ControllerButton": 20
+        },
+        {
+         "KeyboardButton": 13,
+         "ControllerButton": 100
+        }
+       ],
+       "NonGameCustomKeys": [
+        {
+         "KeyboardButton": 58,
+         "ControllerButton": 1
+        },
+        {
+         "KeyboardButton": 54,
+         "ControllerButton": 2
+        },
+        {
+         "KeyboardButton": 36,
+         "ControllerButton": 3
+        },
+        {
+         "KeyboardButton": 39,
+         "ControllerButton": 4
+        },
+        {
+         "KeyboardButton": 76,
+         "ControllerButton": 19
+        },
+        {
+         "KeyboardButton": 13,
+         "ControllerButton": 20
+        },
+        {
+         "KeyboardButton": 14,
+         "ControllerButton": 100
+        },
+        {
+         "KeyboardButton": 17,
+         "ControllerButton": 17
+        }
+       ],
+       "AutoCa": false,
+       "Initialized": true
+      },
+      {
+       "InGameCustomKeys": [
+        {
+         "KeyboardButton": 85,
+         "ControllerButton": 1
+        },
+        {
+         "KeyboardButton": 86,
+         "ControllerButton": 2
+        },
+        {
+         "KeyboardButton": 84,
+         "ControllerButton": 4
+        },
+        {
+         "KeyboardButton": 83,
+         "ControllerButton": 3
+        },
+        {
+         "KeyboardButton": 88,
+         "ControllerButton": 21
+        },
+        {
+         "KeyboardButton": 89,
+         "ControllerButton": 22
+        },
+        {
+         "KeyboardButton": 91,
+         "ControllerButton": 18
+        },
+        {
+         "KeyboardButton": 90,
+         "ControllerButton": 19
+        },
+        {
+         "KeyboardButton": 87,
+         "ControllerButton": 20
+        },
+        {
+         "KeyboardButton": 77,
+         "ControllerButton": 100
+        }
+       ],
+       "NonGameCustomKeys": [
+        {
+         "KeyboardButton": 58,
+         "ControllerButton": 1
+        },
+        {
+         "KeyboardButton": 54,
+         "ControllerButton": 2
+        },
+        {
+         "KeyboardButton": 36,
+         "ControllerButton": 3
+        },
+        {
+         "KeyboardButton": 39,
+         "ControllerButton": 4
+        },
+        {
+         "KeyboardButton": 76,
+         "ControllerButton": 19
+        },
+        {
+         "KeyboardButton": 13,
+         "ControllerButton": 20
+        },
+        {
+         "KeyboardButton": 14,
+         "ControllerButton": 100
+        },
+        {
+         "KeyboardButton": 17,
+         "ControllerButton": 17
+        }
+       ],
+       "AutoCa": false,
+       "Initialized": true
+      }
+     ]
+    }
+   }
+  }
+ },
+ "mroffline_assets_kSaveClientConfigSeq66Rsp59": {
+  "tipo": 2,
+  "cmd": 168,
+  "seq": 66,
+  "flag": 2,
+  "roundtrip": true,
+  "msg": {
+   "DataType": "EmptyRsp",
+   "Data": {
+    "Reserved": 0
+   }
+  }
+ },
+ "mroffline_assets_kStartOfflineMatchSeq11Rsp59": {
+  "tipo": 2,
+  "cmd": 129,
+  "seq": 11,
+  "flag": 2,
+  "roundtrip": true,
+  "msg": {
+   "DataType": "EmptyRsp",
+   "Data": {
+    "Reserved": 0
+   }
+  }
+ },
+ "mroffline_lan_kEnterHallReq67": {
+  "tipo": 1,
+  "cmd": 136,
+  "seq": 32,
+  "flag": 2,
+  "roundtrip": true,
+  "msg": {
+   "DataType": "EnterHallReq",
+   "Data": {
+    "HallId": 1
+   }
+  }
+ },
+ "mroffline_lan_kEnterHallRsp91": {
+  "tipo": 2,
+  "cmd": 136,
+  "seq": 32,
+  "flag": 2,
+  "roundtrip": true,
+  "msg": {
+   "DataType": "EnterHallRsp",
+   "Data": {
+    "RoomNum": 1,
+    "IsArena": false,
+    "Full": false,
+    "PlayerCount": 1,
+    "MinRoomId": 1,
+    "MaxRoomId": 1
+   }
+  }
+ },
+ "mroffline_lan_kHallListRsp200": {
+  "tipo": 2,
+  "cmd": 134,
+  "seq": 9,
+  "flag": 2,
+  "roundtrip": true,
+  "msg": {
+   "DataType": "PlayerGetHallListRsp",
+   "Data": {
+    "HallList": [
+     {
+      "RankMin": 0,
+      "RankMax": 99999,
+      "HallId": 1,
+      "ServerId": 1,
+      "Ip": "127.0.0.1",
+      "Port": 8080,
+      "Name": "Local LAN Experimental",
+      "Zone": "",
+      "IsArena": false,
+      "StartTime": 0,
+      "EndTime": 0
+     }
+    ]
+   }
+  }
+ },
+ "mroffline_lan_kPlayerListReq59": {
+  "tipo": 1,
+  "cmd": 145,
+  "seq": 35,
+  "flag": 2,
+  "roundtrip": true,
+  "msg": {
+   "DataType": "QueryPlayerListInHallReq",
+   "Data": {
+    "StartIndex": 0,
+    "EndIndex": 0
+   }
+  }
+ },
+ "mroffline_lan_kPlayerListRsp83": {
+  "tipo": 2,
+  "cmd": 145,
+  "seq": 35,
+  "flag": 2,
+  "roundtrip": true,
+  "msg": {
+   "DataType": "QueryPlayerListInHallRsp",
+   "Data": {
+    "OnlinePlayers": [
+     0
+    ]
+   }
+  }
+ },
+ "mroffline_lan_kRoomEnterReq75": {
+  "tipo": 1,
+  "cmd": 137,
+  "seq": 158,
+  "flag": 2,
+  "roundtrip": true,
+  "msg": {
+   "DataType": "EnterHallRoomReq",
+   "Data": {
+    "Password": 0,
+    "RoomId": 1,
+    "Pos": 0,
+    "PvpPrefs": {
+     "AutoCa": true
+    }
+   }
+  }
+ },
+ "mroffline_lan_kRoomEnterRsp390": {
+  "tipo": 2,
+  "cmd": 137,
+  "seq": 158,
+  "flag": 2,
+  "roundtrip": true,
+  "msg": {
+   "DataType": "GameHallMatchCreated",
+   "Data": {
+    "RoomDetail": {
+     "RoomId": 1,
+     "Title": "Sala LAN Experimental",
+     "DisplayTitle": "Sala LAN Experimental",
+     "HasPassword": false,
+     "LeftPlayerId": 0,
+     "RightPlayerId": 0,
+     "Hot": 0,
+     "AllowObserve": true,
+     "IsArena": false,
+     "LoseCountRule": 0,
+     "LeftLoseCount": 0,
+     "RightLoseCount": 0,
+     "ObserverCount": 0,
+     "HideCharSelection": false,
+     "HostSide": 0
+    },
+    "MatchState": {
+     "MatchType": 5,
+     "MatchId": 1,
+     "SubMatchId": 0,
+     "Phase": 0,
+     "Version": "1.0.23",
+     "LeftMembers": [
+      {
+       "Uid": 0,
+       "CharId": 0,
+       "RandomChar": false,
+       "CostumeId": 0,
+       "AltColorIndex": 0,
+       "CharConfirmed": false,
+       "InBattleStatus": 0,
+       "Ready": false,
+       "LoadingProgress": 0,
+       "PendingSwitchOrderTeammateId": 0,
+       "ShouldPunishForEarlyExit": false,
+       "BattleEndStatus": 0,
+       "Side": 0,
+       "Pos": 0,
+       "NetStatus": 0,
+       "FakeWinPoint": 0,
+       "AiControlledByUid": 0,
+       "BePraisedCount": 0
+      }
+     ],
+     "RightMembers": [],
+     "StartTime": 0,
+     "EndTime": 0,
+     "RandomSeed": 0,
+     "RefightRemainCount": 0,
+     "LeftWonCount": 0,
+     "RightWonCount": 0,
+     "StageId": 0,
+     "RandomStage": false,
+     "StageConfirmed": false,
+     "StartSelectCharTime": 0,
+     "StartOrderCharTime": 0,
+     "StartSelectStageTime": 0,
+     "StartWaitingReadyTime": 0,
+     "SelectCharMaxTime": 0,
+     "SelectStageMaxTime": 0,
+     "WaitingReadyMaxTime": 0,
+     "OrderCharMaxTime": 0,
+     "LeftOrderingIndex": 0,
+     "RightOrderingIndex": 0,
+     "AllowSameCharInTeam": false,
+     "AllowSameCharInMatch": false,
+     "SkipReorderChar": false,
+     "SkipSelectStage": false
+    }
+   }
+  }
+ },
+ "mroffline_lan_kRoomListReq71": {
+  "tipo": 1,
+  "cmd": 146,
+  "seq": 34,
+  "flag": 2,
+  "roundtrip": true,
+  "msg": {
+   "DataType": "QueryRoomListInHallReq",
+   "Data": {
+    "FromRoomId": 1,
+    "ToRoomId": 1
+   }
+  }
+ },
+ "mroffline_lan_kRoomListRsp193": {
+  "tipo": 2,
+  "cmd": 146,
+  "seq": 34,
+  "flag": 2,
+  "roundtrip": true,
+  "msg": {
+   "DataType": "QueryRoomListInHallRsp",
+   "Data": {
+    "RoomInfos": [
+     {
+      "RoomId": 1,
+      "Title": "Sala LAN Experimental",
+      "DisplayTitle": "Sala LAN Experimental",
+      "HasPassword": false,
+      "LeftPlayerId": 0,
+      "RightPlayerId": 0,
+      "Hot": 0,
+      "AllowObserve": true,
+      "IsArena": false,
+      "LoseCountRule": 0,
+      "LeftLoseCount": 0,
+      "RightLoseCount": 0,
+      "ObserverCount": 0,
+      "HideCharSelection": false,
+      "HostSide": 0
+     }
+    ]
+   }
+  }
+ },
+ "mroffline_lan_kSelectJamalReq67": {
+  "tipo": 1,
+  "cmd": 32,
+  "seq": 45,
+  "flag": 2,
+  "roundtrip": true,
+  "msg": {
+   "DataType": "SelectCharReq",
+   "Data": {
+    "CharId": 5,
+    "Random": false,
+    "CostumeId": 0,
+    "Side": 0,
+    "Pos": 0
+   }
+  }
+ },
+ "mroffline_lan_kSelectJamalRsp67": {
+  "tipo": 2,
+  "cmd": 32,
+  "seq": 45,
+  "flag": 2,
+  "roundtrip": true,
+  "msg": {
+   "DataType": "SelectCharRsp",
+   "Data": {
+    "CharId": 5,
+    "Random": false,
+    "CostumeId": 0,
+    "Side": 0,
+    "Pos": 0
+   }
+  }
+ },
+ "mroffline_polish_kFuncCtrlFrameEnabled115": {
+  "tipo": 2,
+  "cmd": 91,
+  "seq": 2,
+  "flag": 2,
+  "roundtrip": true,
+  "msg": {
+   "DataType": "QueryFuncCtrlConfigRsp",
+   "Data": {
+    "ConfigJson": "{\"disableFirstPay\":1,\"enableHeadFrame\":1}"
+   }
+  }
+ },
+ "mrtouchfixtures_kRequest771": {
+  "tipo": 1,
+  "cmd": 168,
+  "seq": 1,
+  "flag": 2,
+  "roundtrip": true,
+  "msg": {
+   "DataType": "SaveClientConfigReq",
+   "Data": {
+    "UpdatedConfig": {
+     "TouchStickSetting": {
+      "InUseTouchStickType": 1,
+      "InUseTouchPlanIndex": 0,
+      "SavedTypePlans": [
+       {
+        "TouchStickType": 0,
+        "TouchStickPlans": [
+         {
+          "TouchStickType": 0,
+          "TouchStates": [
+           {
+            "ControlType": 0,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 1,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 2,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 3,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 4,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 5,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "TouchStickType": 1,
+        "TouchStickPlans": [
+         {
+          "TouchStickType": 1,
+          "TouchStates": [
+           {
+            "ControlType": 0,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 1,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 2,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 5,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 3,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 4,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           }
+          ]
+         }
+        ]
+       }
+      ],
+      "ManualHideInBattle": false
+     },
+     "CustomKeyDefines": [
+      {
+       "InGameCustomKeys": [
+        {
+         "KeyboardButton": 58,
+         "ControllerButton": 1
+        },
+        {
+         "KeyboardButton": 54,
+         "ControllerButton": 2
+        },
+        {
+         "KeyboardButton": 39,
+         "ControllerButton": 4
+        },
+        {
+         "KeyboardButton": 36,
+         "ControllerButton": 3
+        },
+        {
+         "KeyboardButton": 56,
+         "ControllerButton": 21
+        },
+        {
+         "KeyboardButton": 44,
+         "ControllerButton": 22
+        },
+        {
+         "KeyboardButton": 46,
+         "ControllerButton": 18
+        },
+        {
+         "KeyboardButton": 76,
+         "ControllerButton": 19
+        },
+        {
+         "KeyboardButton": 50,
+         "ControllerButton": 20
+        },
+        {
+         "KeyboardButton": 13,
+         "ControllerButton": 100
+        }
+       ],
+       "NonGameCustomKeys": [
+        {
+         "KeyboardButton": 58,
+         "ControllerButton": 1
+        },
+        {
+         "KeyboardButton": 54,
+         "ControllerButton": 2
+        },
+        {
+         "KeyboardButton": 36,
+         "ControllerButton": 3
+        },
+        {
+         "KeyboardButton": 39,
+         "ControllerButton": 4
+        },
+        {
+         "KeyboardButton": 76,
+         "ControllerButton": 19
+        },
+        {
+         "KeyboardButton": 13,
+         "ControllerButton": 20
+        },
+        {
+         "KeyboardButton": 14,
+         "ControllerButton": 100
+        },
+        {
+         "KeyboardButton": 17,
+         "ControllerButton": 17
+        }
+       ],
+       "AutoCa": false,
+       "Initialized": true
+      },
+      {
+       "InGameCustomKeys": [
+        {
+         "KeyboardButton": 85,
+         "ControllerButton": 1
+        },
+        {
+         "KeyboardButton": 86,
+         "ControllerButton": 2
+        },
+        {
+         "KeyboardButton": 84,
+         "ControllerButton": 4
+        },
+        {
+         "KeyboardButton": 83,
+         "ControllerButton": 3
+        },
+        {
+         "KeyboardButton": 88,
+         "ControllerButton": 21
+        },
+        {
+         "KeyboardButton": 89,
+         "ControllerButton": 22
+        },
+        {
+         "KeyboardButton": 91,
+         "ControllerButton": 18
+        },
+        {
+         "KeyboardButton": 90,
+         "ControllerButton": 19
+        },
+        {
+         "KeyboardButton": 87,
+         "ControllerButton": 20
+        },
+        {
+         "KeyboardButton": 77,
+         "ControllerButton": 100
+        }
+       ],
+       "NonGameCustomKeys": [
+        {
+         "KeyboardButton": 58,
+         "ControllerButton": 1
+        },
+        {
+         "KeyboardButton": 54,
+         "ControllerButton": 2
+        },
+        {
+         "KeyboardButton": 36,
+         "ControllerButton": 3
+        },
+        {
+         "KeyboardButton": 39,
+         "ControllerButton": 4
+        },
+        {
+         "KeyboardButton": 76,
+         "ControllerButton": 19
+        },
+        {
+         "KeyboardButton": 13,
+         "ControllerButton": 20
+        },
+        {
+         "KeyboardButton": 14,
+         "ControllerButton": 100
+        },
+        {
+         "KeyboardButton": 17,
+         "ControllerButton": 17
+        }
+       ],
+       "AutoCa": false,
+       "Initialized": true
+      }
+     ]
+    }
+   }
+  }
+ },
+ "mrtouchfixtures_kResponse771": {
+  "tipo": 2,
+  "cmd": 167,
+  "seq": 1,
+  "flag": 2,
+  "roundtrip": true,
+  "msg": {
+   "DataType": "GetClientConfigRsp",
+   "Data": {
+    "Config": {
+     "TouchStickSetting": {
+      "InUseTouchStickType": 1,
+      "InUseTouchPlanIndex": 0,
+      "SavedTypePlans": [
+       {
+        "TouchStickType": 0,
+        "TouchStickPlans": [
+         {
+          "TouchStickType": 0,
+          "TouchStates": [
+           {
+            "ControlType": 0,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 1,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 2,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 3,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 4,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 5,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "TouchStickType": 1,
+        "TouchStickPlans": [
+         {
+          "TouchStickType": 1,
+          "TouchStates": [
+           {
+            "ControlType": 0,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 1,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 2,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 5,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 3,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           },
+           {
+            "ControlType": 4,
+            "AnchoredPos": {
+             "X": 0.0,
+             "Y": 0.0
+            },
+            "Scaling": 1.0,
+            "Alpha": 1.0
+           }
+          ]
+         }
+        ]
+       }
+      ],
+      "ManualHideInBattle": false
+     },
+     "CustomKeyDefines": [
+      {
+       "InGameCustomKeys": [
+        {
+         "KeyboardButton": 58,
+         "ControllerButton": 1
+        },
+        {
+         "KeyboardButton": 54,
+         "ControllerButton": 2
+        },
+        {
+         "KeyboardButton": 39,
+         "ControllerButton": 4
+        },
+        {
+         "KeyboardButton": 36,
+         "ControllerButton": 3
+        },
+        {
+         "KeyboardButton": 56,
+         "ControllerButton": 21
+        },
+        {
+         "KeyboardButton": 44,
+         "ControllerButton": 22
+        },
+        {
+         "KeyboardButton": 46,
+         "ControllerButton": 18
+        },
+        {
+         "KeyboardButton": 76,
+         "ControllerButton": 19
+        },
+        {
+         "KeyboardButton": 50,
+         "ControllerButton": 20
+        },
+        {
+         "KeyboardButton": 13,
+         "ControllerButton": 100
+        }
+       ],
+       "NonGameCustomKeys": [
+        {
+         "KeyboardButton": 58,
+         "ControllerButton": 1
+        },
+        {
+         "KeyboardButton": 54,
+         "ControllerButton": 2
+        },
+        {
+         "KeyboardButton": 36,
+         "ControllerButton": 3
+        },
+        {
+         "KeyboardButton": 39,
+         "ControllerButton": 4
+        },
+        {
+         "KeyboardButton": 76,
+         "ControllerButton": 19
+        },
+        {
+         "KeyboardButton": 13,
+         "ControllerButton": 20
+        },
+        {
+         "KeyboardButton": 14,
+         "ControllerButton": 100
+        },
+        {
+         "KeyboardButton": 17,
+         "ControllerButton": 17
+        }
+       ],
+       "AutoCa": false,
+       "Initialized": true
+      },
+      {
+       "InGameCustomKeys": [
+        {
+         "KeyboardButton": 85,
+         "ControllerButton": 1
+        },
+        {
+         "KeyboardButton": 86,
+         "ControllerButton": 2
+        },
+        {
+         "KeyboardButton": 84,
+         "ControllerButton": 4
+        },
+        {
+         "KeyboardButton": 83,
+         "ControllerButton": 3
+        },
+        {
+         "KeyboardButton": 88,
+         "ControllerButton": 21
+        },
+        {
+         "KeyboardButton": 89,
+         "ControllerButton": 22
+        },
+        {
+         "KeyboardButton": 91,
+         "ControllerButton": 18
+        },
+        {
+         "KeyboardButton": 90,
+         "ControllerButton": 19
+        },
+        {
+         "KeyboardButton": 87,
+         "ControllerButton": 20
+        },
+        {
+         "KeyboardButton": 77,
+         "ControllerButton": 100
+        }
+       ],
+       "NonGameCustomKeys": [
+        {
+         "KeyboardButton": 58,
+         "ControllerButton": 1
+        },
+        {
+         "KeyboardButton": 54,
+         "ControllerButton": 2
+        },
+        {
+         "KeyboardButton": 36,
+         "ControllerButton": 3
+        },
+        {
+         "KeyboardButton": 39,
+         "ControllerButton": 4
+        },
+        {
+         "KeyboardButton": 76,
+         "ControllerButton": 19
+        },
+        {
+         "KeyboardButton": 13,
+         "ControllerButton": 20
+        },
+        {
+         "KeyboardButton": 14,
+         "ControllerButton": 100
+        },
+        {
+         "KeyboardButton": 17,
+         "ControllerButton": 17
+        }
+       ],
+       "AutoCa": false,
+       "Initialized": true
+      }
+     ]
+    }
+   }
+  }
+ }
+}

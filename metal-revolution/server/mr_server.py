@@ -137,8 +137,8 @@ class Server:
         log.info('[%d] conexion de %s', cid, peer)
         try:
             first = await asyncio.wait_for(reader.readexactly(1), 60)
-            log.info('[%d] primer byte %s -> modo %s', cid, first.hex(), 'TGCP' if first == b'\xaa' else 'DIRECTO' if first == b'\x00' else '?')
-            if first == b'\xaa': await self.tgcp(cid, reader, writer, first)
+            log.info('[%d] primer byte %s -> modo %s', cid, first.hex(), 'TGCP' if first in (b'\xaa', b'\x43') else 'DIRECTO' if first == b'\x00' else '?')
+            if first in (b'\xaa', b'\x43'): await self.tgcp(cid, reader, writer, first)
             elif first == b'\x00': await self.direct(cid, reader, writer, first)
             else:
                 rest = await asyncio.wait_for(reader.read(4096), 5)
@@ -155,10 +155,13 @@ class Server:
     async def tgcp(self, cid, reader, writer, first):
         n = 0
         while True:
-            if first != b'\xaa':
-                junk = first + await asyncio.wait_for(reader.read(4096), 5)
-                log.warning('[%d] TGCP desincronizado, bytes: %s', cid, junk.hex())
-                return
+            skipped = b''
+            while first != b'\xaa':          # el cliente real antepone "Cf" (43 66) a cada trama TGCP
+                skipped += first
+                if len(skipped) > 16:
+                    log.warning('[%d] TGCP desincronizado, bytes: %s', cid, skipped.hex()); return
+                first = await asyncio.wait_for(reader.readexactly(1), 60)
+            if skipped: log.info('[%d] prefijo %s', cid, skipped.hex())
             head = first + await asyncio.wait_for(reader.readexactly(4), 60); first = b''
             total = be32(head, 1)
             if not 5 <= total <= 65536:
@@ -168,16 +171,18 @@ class Server:
             n += 1; cmd = h.get(4)
             log.info('[%d] TGCP #%d cmd=%s largo=%d datos=%d cabecera=%s', cid, n, hex(cmd) if cmd is not None else '?', total, len(extra), h)
             if self.debug: log.info('[%d] RX %s %s', cid, pkt.hex(), extra.hex())
-            for name, rsp in self.dir.items():
-                if name in pkt or name in extra:
-                    writer.write(rsp); log.info('[%d] -> %s (%d bytes)', cid, name.decode(), len(rsp)); break
+            if cmd == 0x1001:
+                writer.write(self.b.ack); log.info('[%d] -> ACK63', cid)
+            elif cmd == 0x2001:
+                writer.write(self.b.authrsp + self.b.bingo); log.info('[%d] -> AUTHRSP54 + BINGO55', cid)
             else:
-                if cmd == 0x1001 or n == 1:
-                    writer.write(self.b.ack); log.info('[%d] -> ACK63', cid)
-                elif cmd == 0x2001 or n == 2:
-                    writer.write(self.b.authrsp + self.b.bingo); log.info('[%d] -> AUTHRSP54 + BINGO55', cid)
+                for name, rsp in self.dir.items():
+                    if name in extra or name in pkt:
+                        writer.write(rsp); log.info('[%d] -> %s (%d bytes)', cid, name.decode(), len(rsp)); break
                 else:
-                    log.warning('[%d] TGCP sin respuesta: %s %s', cid, pkt.hex(), extra.hex())
+                    if n == 1: writer.write(self.b.ack); log.info('[%d] -> ACK63 (por orden)', cid)
+                    elif n == 2: writer.write(self.b.authrsp + self.b.bingo); log.info('[%d] -> AUTHRSP54 + BINGO55 (por orden)', cid)
+                    else: log.warning('[%d] TGCP sin respuesta: %s %s', cid, pkt.hex(), extra.hex())
             await writer.drain()
             if reader.at_eof(): return
             first = await asyncio.wait_for(reader.readexactly(1), 120)

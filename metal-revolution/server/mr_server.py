@@ -179,6 +179,7 @@ class Sesion:
             try:
                 if tipo_n == '__emparejar__': srv.juego.emparejar(datos_n)
                 elif tipo_n == '__estado__': srv.juego.estado_partida(datos_n)
+                elif tipo_n == '__mesa__': srv.juego.avisar_mesa(datos_n)
                 else: self.enviar_notificacion(tipo_n, datos_n)
             except Exception:
                 log.exception('[%d] error enviando %s', self.cid, tipo_n)
@@ -206,7 +207,7 @@ class Server:
             else:
                 rest = await asyncio.wait_for(reader.read(4096), 5); log.warning('[%d] primer byte desconocido; datos: %s', cid, (first + rest).hex())
         except asyncio.TimeoutError: log.warning('[%d] sin datos, cierro', cid)
-        except (asyncio.IncompleteReadError, ConnectionResetError) as e: log.info('[%d] cliente cerro (%s)', cid, type(e).__name__)
+        except (asyncio.IncompleteReadError, ConnectionError) as e: log.info('[%d] cliente cerro (%s)', cid, type(e).__name__)
         except Exception: log.exception('[%d] error', cid)
         finally:
             if ses and ses.jugador: self.juego.desconectar(ses.jugador)

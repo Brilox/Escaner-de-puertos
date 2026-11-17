@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Servidor privado de Metal Revolution, fase 2.
+"""Servidor privado de Metal Revolution, fase 3.
 
 Puerto TCP unico para dos clases de conexion (ver README):
   * TGCP (primer byte 0xAA o el prefijo "Cf"): handshake y directorio Pebble RPC, con respuestas grabadas.
   * Juego (primer byte 0x00): protocolo TLV del cliente. Cada peticion se decodifica con el esquema FlatBuffers,
     se despacha a juego.Juego (cuentas, hall, mesas, partidas) y se responde con FlatBuffers reales.
     Si no hay handler, se usa la respuesta grabada del mod para ese comando, y si tampoco hay, EmptyRsp.
-Ademas un socket UDP (relay) que por ahora solo registra lo que llega, para la fase 3.
+Ademas, en el mismo numero de puerto pero por UDP, el relay de la pelea en tiempo real (relay.py).
 
 Uso: python3 mr_server.py --host <ip-publica> [--port 8080] [--debug] [--nombre-automatico]
 """
@@ -14,6 +14,7 @@ import argparse, asyncio, json, logging, os, struct, sys, time
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))   # usa la copia local de flatbuffers
 from fb_codec import Codec
 from juego import Juego
+from relay import Relay
 
 log = logging.getLogger('mr')
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -178,7 +179,6 @@ class Sesion:
         for tipo_n, datos_n in pend:
             try:
                 if tipo_n == '__emparejar__': srv.juego.emparejar(datos_n)
-                elif tipo_n == '__estado__': srv.juego.estado_partida(datos_n)
                 elif tipo_n == '__mesa__': srv.juego.avisar_mesa(datos_n)
                 else: self.enviar_notificacion(tipo_n, datos_n)
             except Exception:
@@ -241,14 +241,6 @@ class Server:
             if reader.at_eof(): return
             first = await asyncio.wait_for(reader.readexactly(1), 120)
 
-class RelayUDP(asyncio.DatagramProtocol):
-    """Fase 3 (pendiente): por ahora registra lo que llega para aprender el formato."""
-    def __init__(self, srv): self.srv = srv; self.n = 0
-    def connection_made(self, transport): self.transport = transport
-    def datagram_received(self, data, addr):
-        self.n += 1
-        if self.n <= 200 or self.srv.debug: log.info('UDP %s %d bytes: %s', addr, len(data), data[:64].hex())
-
 async def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--host', required=True); ap.add_argument('--port', type=int, default=8080); ap.add_argument('--listen', default='0.0.0.0')
@@ -259,9 +251,12 @@ async def main():
                         handlers=[logging.StreamHandler(), logging.FileHandler(a.log, encoding='utf-8')])
     srv = Server(a)
     loop = asyncio.get_running_loop()
-    await loop.create_datagram_endpoint(lambda: RelayUDP(srv), local_addr=(a.listen, a.port))
+    relay = Relay(a.listen, a.port, esperados=srv.juego.jugadores_en_relay,
+                  al_empezar=lambda mid: loop.call_soon_threadsafe(srv.juego.pelea_iniciada, mid))
+    relay.start(); srv.relay = relay
     server = await asyncio.start_server(srv.handle, a.listen, a.port)
-    log.info('fase 2: escuchando TCP y UDP en %s:%d (los clientes usaran %s:%d); %d handlers', a.listen, a.port, a.host, a.port, len(srv.juego.handlers))
+    log.info('fase 3: juego en TCP %d y pelea (relay) en UDP %d, escuchando en %s; los telefonos usaran %s:%d; %d handlers',
+             a.port, a.port, a.listen, a.host, a.port, len(srv.juego.handlers))
     async with server: await server.serve_forever()
 
 if __name__ == '__main__':

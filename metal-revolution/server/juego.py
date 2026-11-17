@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Logica de juego: cuentas, hall y mesas, busqueda de rival (1v1, 2v2, 3v3), clasificatoria, equipos, chat.
+"""Logica de juego: cuentas, hall y mesas, busqueda de rival (1v1, 2v2, 3v3), clasificatoria, equipos, chat, pelea y resultado.
 
 Todo se expresa como diccionarios que el codec FlatBuffers (fb_codec) convierte a bytes.
 Cada handler on_<Peticion>(sesion, datos) devuelve (TipoRespuesta, dict) o None (EmptyRsp).
@@ -115,9 +115,14 @@ class Mesa:
         self.id = id_; self.titulo = 'Mesa %d' % id_; self.clave = 0; self.observable = True; self.ocultar_seleccion = False
         self.izq = None; self.der = None; self.observadores = []; self.partida = None; self.anfitrion = None
     def jugadores(self): return [p for p in (self.izq, self.der) if p] + self.observadores
-    def detalle(self):
+    def completa(self): return self.izq is not None and self.der is not None
+    def detalle(self, para=None):
+        """Ficha de la mesa. Mientras solo hay un jugador sentado, a ESE jugador se le dice que los dos asientos estan
+        libres: asi su telefono se queda en la sala de espera en vez de pasar solo a elegir personaje contra la maquina
+        (que es lo que hace el juego original cuando te sientas sin rival)."""
+        solo = para is not None and not self.completa() and para in (self.izq, self.der)
         return dict(RoomId=self.id, Title=self.titulo, DisplayTitle=self.titulo, HasPassword=bool(self.clave),
-                    LeftPlayerId=self.izq.uid if self.izq else 0, RightPlayerId=self.der.uid if self.der else 0,
+                    LeftPlayerId=self.izq.uid if self.izq and not solo else 0, RightPlayerId=self.der.uid if self.der and not solo else 0,
                     Hot=len(self.jugadores()), AllowObserve=self.observable, IsArena=False, LoseCountRule=0, LeftLoseCount=0,
                     RightLoseCount=0, ObserverCount=len(self.observadores), HideCharSelection=self.ocultar_seleccion,
                     HostSide=RIGHT if self.anfitrion is not None and self.anfitrion is self.der else LEFT)
@@ -138,6 +143,7 @@ class Partida:
         self.id = id_; self.match_type = match_type; self.mesa = mesa; self.modo_mm = modo_mm
         self.lados = {LEFT: izquierda, RIGHT: derecha}; self.fase = SELECTING_CHAR; self.seed = random.randint(1, 2**31 - 1)
         self.escenario = 1; self.escenario_confirmado = False; self.inicio = int(time.time()); self.relay = None; self.resultado = None
+        self.rondas = (0, 0); self.revancha = set(); self.peleas = 0; self.puntos_antes = {}; self.puntos_despues = {}
         self.miembros = {LEFT: [], RIGHT: []}
         for lado, jugadores in self.lados.items():
             pos = 0
@@ -150,26 +156,22 @@ class Partida:
         return dict(Uid=j.uid, CharId=0, RandomChar=False, CostumeId=0, AltColorIndex=0, CharConfirmed=False, InBattleStatus=0,
                     Ready=False, LoadingProgress=0, PendingSwitchOrderTeammateId=0, PvpPrefs=j.pvp_prefs, ShouldPunishForEarlyExit=False,
                     BattleEndStatus=0, Side=lado, Pos=pos, NetStatus=0, FakeWinPoint=0, AiControlledByUid=0, BePraisedCount=0)
-    def reconstruir(self, izq, der):
-        """Rehace los lados conservando lo que cada jugador ya habia elegido."""
-        previos = {m['Uid']: m for m in self.todos_los_miembros()}
-        self.lados = {LEFT: izq, RIGHT: der}; self.miembros = {LEFT: [], RIGHT: []}
-        for lado, jugadores in self.lados.items():
-            for pos, j in enumerate(jugadores):
-                m = previos.get(j.uid) or self.miembro(j, lado, pos); m.update(Side=lado, Pos=pos)
-                self.miembros[lado].append(m); j.partida = self; j.lado = lado; j.slots = [pos]
+    def en_curso(self): return self.resultado is None and self.fase in (LOADING_FIGHT, FIGHTING, WAITING_RESULT)
+    def volver_a_seleccion(self):
+        self.fase = SELECTING_CHAR; self.escenario_confirmado = False; self.resultado = None; self.revancha.clear()
+        for m in self.todos_los_miembros(): m.update(CharConfirmed=False, Ready=False, LoadingProgress=0)
     def jugadores(self): return self.lados[LEFT] + self.lados[RIGHT]
     def todos_los_miembros(self): return self.miembros[LEFT] + self.miembros[RIGHT]
     def slot(self, j, d):
         """El miembro al que se refiere una peticion: por (Side, Pos) si es del jugador, si no su primer slot."""
         pos = d.get('Pos', None)
-        if pos is not None and pos in j.slots: return self.miembros[j.lado][pos]
+        if pos is not None and pos in j.slots and d.get('Side', j.lado) == j.lado: return self.miembros[j.lado][pos]
         return self.miembros[j.lado][j.slots[0]] if j.slots else None
     def estado(self):
         now = int(time.time())
         return dict(MatchType=self.match_type, MatchId=self.id, SubMatchId=0, Phase=self.fase, Version=VERSION_JUEGO,
                     LeftMembers=self.miembros[LEFT], RightMembers=self.miembros[RIGHT], StartTime=self.inicio, EndTime=0,
-                    RandomSeed=self.seed, RefightRemainCount=3, LeftWonCount=0, RightWonCount=0, StageId=self.escenario,
+                    RandomSeed=self.seed, RefightRemainCount=99 if self.mesa else 0, LeftWonCount=0, RightWonCount=0, StageId=self.escenario,
                     RandomStage=False, StageConfirmed=self.escenario_confirmado, StartSelectCharTime=now, StartOrderCharTime=now,
                     StartSelectStageTime=now, StartWaitingReadyTime=now, SelectCharMaxTime=60, SelectStageMaxTime=30,
                     WaitingReadyMaxTime=60, OrderCharMaxTime=30, RelayServerInfo=self.relay, LeftOrderingIndex=0, RightOrderingIndex=0,
@@ -218,15 +220,14 @@ class Juego:
     def difundir(self, jugadores, tipo, datos, excepto=None):
         for p in jugadores:
             if p is not excepto: p.notificar(tipo, datos)
-    def estado_partida(self, p): self.difundir(p.jugadores() + (p.mesa.observadores if p.mesa else []), 'NotifyMatchState', dict(MatchState=p.estado(), MatchMakingType=p.modo_mm or 0, Teammates=[]))
 
     def detalle_hall(self):
         return dict(RoomNum=len(self.mesas), IsArena=False, Full=False, PlayerCount=sum(1 for p in self.conectados.values() if p.hall),
                     MinRoomId=1, MaxRoomId=len(self.mesas))
     def estado_hall(self, j):
         m = j.mesa
-        return dict(HallId=1, RoomId=m.id if m else 0, HallInfo=self.detalle_hall(), RoomDetail=m.detalle() if m else None,
-                    MatchState=m.partida.estado() if m and m.partida else None)
+        return dict(HallId=1, RoomId=m.id if m else 0, HallInfo=self.detalle_hall(), RoomDetail=m.detalle(j) if m else None,
+                    MatchState=self.estado_mesa(m) if m else None)
     def mensaje_sistema(self, j, texto):
         j.notificar('NotifyGameHallChat', dict(Uid=0, Content=texto, Timestamp=int(time.time())))
 
@@ -348,10 +349,12 @@ class Juego:
         return 'QueryPlayerListInHallRsp', dict(OnlinePlayers=[p.uid for p in self.en_hall[ini:fin + 1]])
     def on_QueryRoomListInHallReq(self, sesion, d):
         ini = d.get('FromRoomId', 1) or 1; fin = d.get('ToRoomId', NUM_MESAS) or NUM_MESAS
-        return 'QueryRoomListInHallRsp', dict(RoomInfos=[m.detalle() for m in self.mesas.values() if ini <= m.id <= fin])
+        return 'QueryRoomListInHallRsp', dict(RoomInfos=[m.detalle(sesion.jugador) for m in self.mesas.values() if ini <= m.id <= fin])
 
     def sentar(self, j, mesa, pos):
         if pos == AUTO: pos = LEFT if mesa.izq is None else RIGHT if mesa.der is None else OBSERVER
+        if pos == LEFT and mesa.izq not in (None, j) and mesa.der in (None, j): pos = RIGHT      # ese asiento ya esta tomado: el otro
+        elif pos == RIGHT and mesa.der not in (None, j) and mesa.izq in (None, j): pos = LEFT
         if pos == LEFT and mesa.izq in (None, j): mesa.quitar(j); mesa.izq = j
         elif pos == RIGHT and mesa.der in (None, j): mesa.quitar(j); mesa.der = j
         else:
@@ -360,34 +363,42 @@ class Juego:
         if mesa.anfitrion is None and pos != OBSERVER: mesa.anfitrion = j
         j.asiento = pos; j.mesa = mesa; return pos
 
-    def actualizar_partida_mesa(self, mesa):
-        """Cada mesa con alguien sentado tiene una partida GAMEHALL: en espera (fase 0) con un jugador,
-        y pasa a seleccion de personaje cuando se sientan los dos. Igual que respondia el mod."""
-        izq = [mesa.izq] if mesa.izq else []; der = [mesa.der] if mesa.der else []
-        p = mesa.partida
-        if not izq and not der:
-            if p: self.cerrar_partida(p)
-            return None
-        if p is None:
-            p = self.crear_partida(GAMEHALL, izq, der, mesa=mesa); p.fase = WAITING_ALL_READY
-        elif p.fase in (WAITING_ALL_READY, SELECTING_CHAR, SELECTING_STAGE):
-            for x in p.jugadores():
-                if x not in izq + der: x.partida = None; x.lado = None; x.slots = []
-            p.reconstruir(izq, der)
-        if izq and der and p.fase == WAITING_ALL_READY:
-            p.fase = SELECTING_CHAR; log.info('mesa %d: %s vs %s, a elegir personaje', mesa.id, mesa.izq.nombre, mesa.der.nombre)
-        elif not (izq and der) and p.fase in (SELECTING_CHAR, SELECTING_STAGE):
-            p.fase = WAITING_ALL_READY; p.escenario_confirmado = False
-            for m in p.todos_los_miembros(): m.update(CharConfirmed=False, Ready=False)
-        return p
+    def estado_espera(self, mesa):
+        """Mesa sin pelea armada: lo mismo que respondia el servidor local del mod (un hueco vacio a la izquierda)."""
+        vacio = dict(Uid=0, CharId=0, RandomChar=False, CostumeId=0, AltColorIndex=0, CharConfirmed=False, InBattleStatus=0, Ready=False,
+                     LoadingProgress=0, PendingSwitchOrderTeammateId=0, ShouldPunishForEarlyExit=False, BattleEndStatus=0, Side=LEFT, Pos=0,
+                     NetStatus=0, FakeWinPoint=0, AiControlledByUid=0, BePraisedCount=0)
+        return dict(MatchType=GAMEHALL, MatchId=mesa.id, SubMatchId=0, Phase=WAITING_ALL_READY, Version=VERSION_JUEGO, LeftMembers=[vacio],
+                    RightMembers=[], AllowSameCharInTeam=False, AllowSameCharInMatch=True, SkipReorderChar=True, SkipSelectStage=False)
     def estado_mesa(self, mesa):
-        p = mesa.partida
-        if p: return p.estado()
-        return dict(MatchType=GAMEHALL, MatchId=0, SubMatchId=0, Phase=WAITING_ALL_READY, Version=VERSION_JUEGO, LeftMembers=[], RightMembers=[])
+        return mesa.partida.estado() if mesa.partida else self.estado_espera(mesa)
+    def vista_mesa(self, mesa, j):
+        """Lo que ve el jugador j de su mesa: ficha + estado de la pelea (o de la espera)."""
+        return dict(RoomDetail=mesa.detalle(j), MatchState=self.estado_mesa(mesa))
+    def avisar_hall_mesa(self, mesa):
+        for p in list(self.conectados.values()):
+            if p.hall: p.notificar('NotifyRoomDetailInfoUpdate', mesa.detalle(p))
     def avisar_mesa(self, mesa, excepto=None):
-        """Estado actualizado de la mesa para todos los que estan en ella, y su ficha para todo el hall."""
-        self.difundir(mesa.jugadores(), 'NotifyMatchState', dict(MatchState=self.estado_mesa(mesa), MatchMakingType=0, Teammates=[]), excepto=excepto)
-        self.difundir_hall('NotifyRoomDetailInfoUpdate', mesa.detalle(), excepto=excepto)
+        """Recoloca a todos los que estan en la mesa (sala de espera, seleccion de personaje...) y actualiza la ficha en el hall."""
+        for p in mesa.jugadores():
+            if p is not excepto: p.notificar('NotifyGameHallMatchCreated', self.vista_mesa(mesa, p))
+        self.avisar_hall_mesa(mesa)
+
+    def tras_sentarse(self, j, mesa, pos):
+        """Si con este jugador se completan los dos asientos, nace la pelea y los dos pasan A LA VEZ a elegir personaje.
+        Si no, el jugador queda en la sala de espera hasta que llegue un rival."""
+        if mesa.completa() and mesa.partida is None:
+            p = self.crear_partida(GAMEHALL, [mesa.izq], [mesa.der], mesa=mesa)
+            log.info('mesa %d: %s vs %s -> los dos a elegir personaje (pelea %d)', mesa.id, mesa.izq.nombre, mesa.der.nombre, p.id)
+            self.avisar_mesa(mesa, excepto=j)
+        else:
+            if pos == OBSERVER:
+                self.difundir(mesa.jugadores(), 'NotifyPlayerEnterHallRoom', dict(PlayerId=j.uid, RoomId=mesa.id, Pos=OBSERVER,
+                              ObIndex=len(mesa.observadores) - 1, WasObserver=False), excepto=j)
+            else:
+                log.info('mesa %d: %s espera rival', mesa.id, j.nombre)
+            self.avisar_hall_mesa(mesa)
+        return 'GameHallMatchCreated', self.vista_mesa(mesa, j)
 
     def on_EnterHallRoomReq(self, sesion, d):
         j = sesion.jugador; mesa = self.mesas.get(d.get('RoomId', 0))
@@ -396,26 +407,31 @@ class Juego:
         if mesa.clave and d.get('Password', 0) != mesa.clave and j not in mesa.jugadores():
             return 'Error', dict(ErrCode=5, ErrMsg='Clave incorrecta', ErrMsgEn='Wrong password')
         if j.mesa and j.mesa is not mesa: self.salir_mesa(j)
-        j.pvp_prefs = d.get('PvpPrefs'); pos = self.sentar(j, mesa, d.get('Pos', AUTO))
-        self.actualizar_partida_mesa(mesa)
+        if j.partida and not j.mesa: self.abandonar_partida(j)
+        self.cancelar_busqueda(j)
+        j.pvp_prefs = d.get('PvpPrefs')
+        if mesa.partida and j in mesa.partida.jugadores(): return 'GameHallMatchCreated', self.vista_mesa(mesa, j)
+        pedido = d.get('Pos', AUTO)
+        if mesa.partida and j not in mesa.partida.jugadores(): pedido = OBSERVER          # ya hay dos jugando: solo mirar
+        pos = self.sentar(j, mesa, pedido)
         log.info('%s entra a la mesa %d (%s)', j.nombre, mesa.id, {LEFT: 'izquierda', RIGHT: 'derecha'}.get(pos, 'observa'))
-        self.difundir(mesa.jugadores(), 'NotifyPlayerEnterHallRoom', dict(PlayerId=j.uid, RoomId=mesa.id, Pos=pos, ObIndex=len(mesa.observadores), WasObserver=False), excepto=j)
-        self.avisar_mesa(mesa, excepto=j)
-        return 'GameHallMatchCreated', dict(RoomDetail=mesa.detalle(), MatchState=self.estado_mesa(mesa))
+        return self.tras_sentarse(j, mesa, pos)
     def on_ChallengeInRoomReq(self, sesion, d):
         j = sesion.jugador; mesa = j.mesa
         if not mesa: return 'Error', dict(ErrCode=4, ErrMsg='No estas en una mesa', ErrMsgEn='Not in a room')
-        if mesa.partida and mesa.partida.fase >= LOADING_FIGHT:
-            return 'Error', dict(ErrCode=6, ErrMsg='Ya hay una pelea en curso', ErrMsgEn='Fight in progress')
-        self.sentar(j, mesa, d.get('Pos', AUTO)); self.actualizar_partida_mesa(mesa); self.avisar_mesa(mesa)
-        return None
+        if mesa.partida and j not in mesa.partida.jugadores():
+            return 'Error', dict(ErrCode=6, ErrMsg='Los dos asientos estan ocupados', ErrMsgEn='Both seats are taken')
+        if mesa.partida: return 'GameHallMatchCreated', self.vista_mesa(mesa, j)
+        pos = self.sentar(j, mesa, d.get('Pos', AUTO))
+        log.info('%s pide asiento en la mesa %d (%s)', j.nombre, mesa.id, {LEFT: 'izquierda', RIGHT: 'derecha'}.get(pos, 'observa'))
+        return self.tras_sentarse(j, mesa, pos)
     def on_SetRoomPasswordReq(self, sesion, d):
         j = sesion.jugador; mesa = j.mesa
         if mesa and mesa.anfitrion in (None, j):
             mesa.clave = d.get('Password', 0) or 0; mesa.observable = d.get('AllowOb', True)
             mesa.ocultar_seleccion = d.get('HideCharSelection', False); titulo = (d.get('Title') or '').strip()
             if titulo: mesa.titulo = titulo[:20]
-            self.difundir_hall('NotifyRoomDetailInfoUpdate', mesa.detalle())
+            self.avisar_hall_mesa(mesa)
         return None
     def on_ExitHallRoomReq(self, sesion, d): self.salir_mesa(sesion.jugador); return None
     def on_QueryRoomObserverListReq(self, sesion, d):
@@ -424,21 +440,25 @@ class Juego:
     def salir_mesa(self, j, servidor=False):
         mesa = j.mesa
         if not mesa: return
-        p = mesa.partida
-        if p and j in p.jugadores() and p.fase >= LOADING_FIGHT: self.abandonar_partida(j)
+        p = mesa.partida; jugaba = p is not None and j in p.jugadores(); en_pelea = jugaba and p.en_curso()
+        if en_pelea: self.abandonar_partida(j)                  # en plena pelea: pierde por abandono y al rival le sale el resultado
+        elif jugaba: self.cerrar_partida(p)                     # eligiendo personaje o ya terminada: simplemente se deshace
         mesa.quitar(j); j.mesa = None; j.asiento = OBSERVER
-        if j.partida is p and p is not None: j.partida = None; j.lado = None; j.slots = []
         log.info('%s sale de la mesa %d', j.nombre, mesa.id)
-        self.difundir(mesa.jugadores(), 'NotifyPlayerExitHallRoom', dict(PlayerId=j.uid, RoomId=mesa.id, ServerExit=servidor))
-        self.actualizar_partida_mesa(mesa)
         if not mesa.jugadores(): mesa.reiniciar()
-        self.avisar_mesa(mesa)
+        if jugaba and not en_pelea:
+            self.avisar_mesa(mesa)                              # el que se queda vuelve a la sala de espera
+        else:
+            self.difundir(mesa.observadores if jugaba else mesa.jugadores(), 'NotifyPlayerExitHallRoom',
+                          dict(PlayerId=j.uid, RoomId=mesa.id, ServerExit=servidor))
+            self.avisar_hall_mesa(mesa)
 
     # ================================================================= busqueda de rival y equipos
     def on_StartSearchMatchReq(self, sesion, d):
         j = sesion.jugador; modo = d.get('MatchMakingType', RANKING)
         if modo not in MODOS: return 'Error', dict(ErrCode=7, ErrMsg='Modo no disponible', ErrMsgEn='Mode not available')
-        if j.partida: return 'Error', dict(ErrCode=6, ErrMsg='Ya estas en una pelea', ErrMsgEn='Already in a match')
+        if j.mesa: self.salir_mesa(j)
+        if j.partida: self.abandonar_partida(j)                  # restos de una pelea anterior (terminada o a medio elegir)
         j.pvp_prefs = d.get('PvpPrefs')
         grupo = j.equipo.miembros if j.equipo and j.equipo.lider is j and j.equipo.modo == modo else [j]
         if len(grupo) > MODOS[modo]['por_lado']: grupo = [j]
@@ -480,9 +500,7 @@ class Juego:
     def on_ExitMatchReq(self, sesion, d):
         j = sesion.jugador
         if j.buscando is not None: self.cancelar_busqueda(j); return None
-        if j.partida:
-            if j.mesa: self.salir_mesa(j)
-            else: self.abandonar_partida(j)
+        if j.partida and not j.mesa: self.abandonar_partida(j)   # en las mesas se sale con ExitHallRoomReq
         return None
 
     def on_EnterInviteRoomReq(self, sesion, d):
@@ -517,9 +535,13 @@ class Juego:
         if eq.lider is j and eq.miembros: eq.lider = eq.miembros[0]
 
     # ================================================================= partida
+    def info_relay(self, p):
+        """Donde se juega la pelea: el relay UDP de este mismo servidor. NetCode 0 = rollback; UseRudp = canal fiable (KCP)."""
+        return dict(Id=1, Port=self.puerto_relay, KcpConv=6666, RelayId=p.id, Host=self.host, NetCode=0, InnerHost=self.host,
+                    InnerPort=self.puerto_relay, TcpInnerPort=self.puerto_relay, TcpOuterPort=self.puerto_relay, UseRudp=True)
     def crear_partida(self, match_type, izq, der, slots=1, mesa=None, modo_mm=None):
         p = Partida(self._sig_partida, match_type, izq, der, slots, mesa, modo_mm); self._sig_partida += 1
-        self.partidas[p.id] = p
+        p.relay = self.info_relay(p); self.partidas[p.id] = p
         if mesa: mesa.partida = p
         return p
     def cerrar_partida(self, p):
@@ -527,17 +549,29 @@ class Juego:
             if j.partida is p: j.partida = None; j.lado = None; j.slots = []
         if p.mesa and p.mesa.partida is p: p.mesa.partida = None
         self.partidas.pop(p.id, None)
+    def jugadores_en_relay(self, match_id):
+        """Cuantos telefonos deben conectarse al relay antes de dar la salida (lo consulta el hilo del relay)."""
+        p = self.partidas.get(match_id); return len(p.jugadores()) if p else None
+    def pelea_iniciada(self, match_id):
+        p = self.partidas.get(match_id)
+        if p and p.resultado is None:
+            p.fase = FIGHTING; p.inicio = int(time.time()); log.info('pelea %d en marcha', p.id)
     def abandonar_partida(self, j):
+        """El jugador se va (o se le cae la conexion). En plena pelea pierde; antes de pelear se cancela sin puntos."""
         p = j.partida
         if not p: return
-        lado = j.lado; rival = RIGHT if lado == LEFT else LEFT
-        for pos in j.slots: self.difundir(p.jugadores(), 'NotifyPlayerLeftInMatch', dict(Side=lado, Pos=pos), excepto=j)
-        if p.fase in (LOADING_FIGHT, FIGHTING, WAITING_RESULT) and p.resultado is None:
-            self.guardar_resultado(p, rival, 0, 0, abandono=True)
-        elif p.resultado is None:      # aun eligiendo personajes: se cancela sin puntos para nadie
+        lado = j.lado; rival = RIGHT if lado == LEFT else LEFT; mesa = p.mesa
+        if p.en_curso():
+            for pos in j.slots: self.difundir(p.jugadores(), 'NotifyPlayerLeftInMatch', dict(Side=lado, Pos=pos), excepto=j)
+            self.guardar_resultado(p, rival, 0, 0, abandono=True); self.avisar_resultado(p, excepto=j)
+            self.cerrar_partida(p)
+        elif p.resultado is None:
             self.difundir(p.jugadores(), 'NotifyMatchCancelled', dict(MatchId=p.id, Side=lado, Pos=j.slots[0] if j.slots else 0), excepto=j)
-        self.cerrar_partida(p)
-        if p.mesa and p.mesa.partida is None: self.actualizar_partida_mesa(p.mesa); self.avisar_mesa(p.mesa)
+            log.info('pelea %d cancelada: %s se fue antes de empezar', p.id, j.nombre); self.cerrar_partida(p)
+        else:                                                     # ya habia terminado: solo se desengancha
+            if j in p.lados.get(lado, []): p.lados[lado].remove(j)
+            j.partida = None; j.lado = None; j.slots = []
+            if not p.jugadores() or mesa is None: self.cerrar_partida(p)
 
     def on_SelectCharReq(self, sesion, d):
         j = sesion.jugador; p = j.partida; m = p.slot(j, d) if p else None
@@ -551,15 +585,18 @@ class Juego:
         if m: m['CostumeId'] = d.get('CostumeId', 0)
         return 'SelectCostumeRsp', dict(CostumeId=d.get('CostumeId', 0), Side=m['Side'] if m else 0, Pos=m['Pos'] if m else 0)
     def on_ConfirmSelectCharReq(self, sesion, d):
-        j = sesion.jugador; p = j.partida; m = p.slot(j, d) if p else None
+        """El telefono manda Confirm solo cuando es falso (en FlatBuffers lo que vale su valor por defecto no viaja):
+        si no viene, es que confirma. Cuando todos confirmaron, cada telefono pasa solo a elegir escenario."""
+        j = sesion.jugador; p = j.partida; m = p.slot(j, d) if p else None; confirma = bool(d.get('Confirm', True))
         if m:
-            m['CharConfirmed'] = d.get('Confirm', True)
+            m['CharConfirmed'] = confirma
             if d.get('CharId'): m['CharId'] = d['CharId']
-            self.difundir(p.jugadores(), 'NotifyOtherConfirmSelectChar', dict(Confirm=m['CharConfirmed'], Side=m['Side'], Pos=m['Pos']), excepto=j)
-            if p.fase == SELECTING_CHAR and p.lados[LEFT] and p.lados[RIGHT] and all(x['CharConfirmed'] for x in p.todos_los_miembros()):
-                p.fase = SELECTING_STAGE; sesion.despues.append(('__estado__', p))
-        return 'ConfirmSelectCharRsp', dict(Confirm=d.get('Confirm', True), Side=m['Side'] if m else 0, Pos=m['Pos'] if m else 0)
-    def on_ChangeCharOrderReq(self, sesion, d): return 'ChangeCharOrderRsp', dict()
+            self.difundir(p.jugadores(), 'NotifyOtherConfirmSelectChar', dict(Confirm=confirma, Side=m['Side'], Pos=m['Pos']), excepto=j)
+            if p.fase in (WAITING_ALL_READY, SELECTING_CHAR) and all(x['CharConfirmed'] for x in p.todos_los_miembros()):
+                p.fase = SELECTING_STAGE; log.info('pelea %d: personajes listos %s -> a elegir escenario', p.id,
+                                                   [[x['CharId'] for x in p.miembros[LEFT]], [x['CharId'] for x in p.miembros[RIGHT]]])
+        return 'ConfirmSelectCharRsp', dict(Confirm=confirma, Side=m['Side'] if m else 0, Pos=m['Pos'] if m else 0)
+    def on_ChangeCharOrderReq(self, sesion, d): return 'ChangeCharOrderRsp', dict(OrderingIndex=0)
     def on_SelectStageReq(self, sesion, d):
         j = sesion.jugador; p = j.partida
         if p:
@@ -567,56 +604,97 @@ class Juego:
             self.difundir(p.jugadores(), 'NotifyOtherSelectStage', dict(StageId=p.escenario, Random=d.get('Random', False), Side=j.lado, Pos=j.slots[0]), excepto=j)
         return 'SelectStageRsp', dict(StageId=d.get('StageId', 1), Random=d.get('Random', False))
     def on_ConfirmSelectStageReq(self, sesion, d):
-        j = sesion.jugador; p = j.partida
-        if p and not p.escenario_confirmado:
-            p.escenario_confirmado = True; p.fase = LOADING_FIGHT
-            p.relay = dict(Id=1, Port=self.puerto_relay, KcpConv=p.id & 0xFFFF, RelayId=p.id, Host=self.host, NetCode=0, InnerHost=self.host,
-                           InnerPort=self.puerto_relay, TcpInnerPort=self.puerto_relay, TcpOuterPort=self.puerto_relay, UseRudp=False)
+        """Basta con que uno confirme el escenario: todos pasan a la pantalla de carga."""
+        j = sesion.jugador; p = j.partida; confirma = bool(d.get('Confirm', True))
+        if p and confirma and not p.escenario_confirmado and p.resultado is None:
+            p.escenario_confirmado = True; p.fase = LOADING_FIGHT; p.peleas += 1
+            for m in p.todos_los_miembros(): m['LoadingProgress'] = 0
+            log.info('pelea %d: escenario %d confirmado por %s -> cargando', p.id, p.escenario, j.nombre)
             self.difundir(p.jugadores(), 'NotifyOtherConfirmSelectStage', dict(Confirm=True, Side=j.lado, Pos=j.slots[0]), excepto=j)
-            sesion.despues.append(('__estado__', p))
-        return None
+        return 'ConfirmSelectStageRsp', dict(Confirm=confirma)
     def on_SyncLoadingProgressReq(self, sesion, d):
-        j = sesion.jugador; p = j.partida
+        j = sesion.jugador; p = j.partida; progreso = min(100, d.get('Progress', 0))
         if p:
-            for pos in j.slots: p.miembros[j.lado][pos]['LoadingProgress'] = min(100, d.get('Progress', 0))
-        return 'SyncLoadingProgressRsp', dict(LoadDone=d.get('Progress', 0) >= 100)
+            m = p.slot(j, d)
+            for pos in j.slots: p.miembros[j.lado][pos]['LoadingProgress'] = progreso
+            self.difundir(p.jugadores(), 'NotifyOtherSyncLoadingProgress', dict(Progress=progreso, Side=m['Side'], Pos=m['Pos'], LoadDone=progreso >= 100), excepto=j)
+        return 'SyncLoadingProgressRsp', dict(LoadDone=progreso >= 100)
     def on_ReadyInMatchReq(self, sesion, d):
-        j = sesion.jugador; p = j.partida
+        j = sesion.jugador; p = j.partida; listo = bool(d.get('Ready', True))
         if p:
-            for pos in j.slots: p.miembros[j.lado][pos]['Ready'] = d.get('Ready', True)
-            self.difundir(p.jugadores(), 'NotifyOtherReadyInMatch', dict(Ready=d.get('Ready', True), Side=j.lado, Pos=j.slots[0]), excepto=j)
-            if p.fase >= LOADING_FIGHT and all(x['Ready'] for x in p.todos_los_miembros()):
-                p.fase = FIGHTING; sesion.despues.append(('__estado__', p))
+            for pos in j.slots: p.miembros[j.lado][pos]['Ready'] = listo
+            self.difundir(p.jugadores(), 'NotifyOtherReadyInMatch', dict(Ready=listo, Side=j.lado, Pos=j.slots[0]), excepto=j)
+            if p.fase == WAITING_ALL_READY and all(x['Ready'] for x in p.todos_los_miembros()): p.fase = SELECTING_CHAR
         return None
     def on_BackToCharSelectReq(self, sesion, d):
         j = sesion.jugador; p = j.partida
-        if p:
-            p.fase = SELECTING_CHAR; p.escenario_confirmado = False
-            for m in p.todos_los_miembros(): m.update(CharConfirmed=False, Ready=False, LoadingProgress=0)
+        if p and p.lados[LEFT] and p.lados[RIGHT] and not p.en_curso():
+            p.volver_a_seleccion(); log.info('pelea %d: %s pide volver a elegir personaje', p.id, j.nombre)
             self.difundir(p.jugadores(), 'NotifyOtherBackToCharSelect', dict(Side=j.lado, Pos=j.slots[0]), excepto=j)
-            sesion.despues.append(('__estado__', p))
+        elif not p and j.mesa: sesion.despues.append(('__mesa__', j.mesa))
         return 'BackToCharSelectRsp', dict()
+
+    # ----------------------------------------------------------------- resultado
     def guardar_resultado(self, p, ganador, r_izq, r_der, abandono=False):
-        p.resultado = ganador
+        p.resultado = ganador; p.rondas = (r_izq, r_der); p.fase = END
         modo_rank = p.modo_mm if p.modo_mm is not None and MODOS[p.modo_mm]['puntua'] else None
         nombre_modo = MODOS[p.modo_mm]['nombre'] if p.modo_mm is not None else 'Mesa %d' % p.mesa.id if p.mesa else 'Pelea'
         personajes = {str(m['Uid']) + ':' + str(m['Pos']): m['CharId'] for m in p.todos_los_miembros()}
+        modo_pts = p.modo_mm if p.modo_mm is not None else RANKING
+        p.puntos_antes = {x.uid: self.cuentas.rank(x.uid, modo_pts)['puntos'] for x in p.jugadores()}
         self.cuentas.registrar(nombre_modo + (' (abandono)' if abandono else ''), modo_rank, [x.uid for x in p.lados[LEFT]],
                                [x.uid for x in p.lados[RIGHT]], ganador, r_izq, r_der, personajes, p.escenario)
+        p.puntos_despues = {x.uid: self.cuentas.rank(x.uid, modo_pts)['puntos'] for x in p.jugadores()}
         for x in p.jugadores():
             x.cuenta = self.cuentas.get(x.uid)
-        log.info('resultado pelea %d (%s): gana lado %s %d-%d%s', p.id, nombre_modo, ganador, r_izq, r_der, ' por abandono' if abandono else '')
+        log.info('RESULTADO pelea %d (%s): gana el lado %s, rondas %d-%d%s', p.id, nombre_modo,
+                 {LEFT: 'izquierdo', RIGHT: 'derecho'}.get(ganador, 'ninguno (empate)'), r_izq, r_der, ' por abandono' if abandono else '')
+    def resultado_batalla(self, p):
+        """El aviso BattleResult que cierra la pelea en los telefonos (pantalla de victoria/derrota)."""
+        ahora = int(time.time()); g = p.resultado if p.resultado in (LEFT, RIGHT) else -1
+        def infos(lado):
+            return [dict(PlayerId=m['Uid'], HeroId=m['CharId'], ReplayId='', WinPointBefore=p.puntos_antes.get(m['Uid'], PUNTOS_INICIALES),
+                         WinPointAfter=p.puntos_despues.get(m['Uid'], PUNTOS_INICIALES), Rating=0, Side=lado, Pos=m['Pos']) for m in p.miembros[lado]]
+        def cambios(lado):
+            out = []
+            for m in p.miembros[lado]:
+                c = self.cuentas.get(m['Uid']) or {}; antes = p.puntos_antes.get(m['Uid'], PUNTOS_INICIALES); despues = p.puntos_despues.get(m['Uid'], antes)
+                out.append(dict(Uid=m['Uid'], NetStatus=0, CoinChange=0, ExpChange=30 if g == lado else 10, WinPoint=despues, RankPoint=despues,
+                                Happiness=0, BattleCount=c.get('partidas', 0), ContinueWin=0, BaseWinPointChange=despues - antes,
+                                AdjustWinPointChange=0, ExitInBattleCountToday=0, ForbidMatchUntilTime=0, GamesvrId=1, PunishWinPoint=0))
+            return out
+        registro = dict(Id='%d-%d' % (p.id, p.peleas), Type=p.match_type, StartTime=p.inicio, EndTime=ahora, WinnerSide=g, WinSideLastPlayerIndex=0,
+                        LeftWinRound=p.rondas[0], RightWinRound=p.rondas[1], Stage=p.escenario, Unsynced=False, Interrupted=False,
+                        Version=VERSION_JUEGO, AiType=-1, LeftPlayerInfos=infos(LEFT), RightPlayerInfos=infos(RIGHT), TotalRounds=p.rondas[0] + p.rondas[1])
+        return dict(LastBattleLog=registro, LeftPlayerChanges=cambios(LEFT), RightPlayerChanges=cambios(RIGHT), MatchId=p.id, SubMatchId=0,
+                    SaveBattleLogOnGamesvrId=1)
+    def avisar_resultado(self, p, excepto=None):
+        datos = self.resultado_batalla(p)
+        for x in p.jugadores():
+            if x is excepto: continue
+            x.notificar('BattleResult', datos); x.notificar('NotifyBasePlayerInfoChange', self.info_detallada(x.cuenta))
     def on_UploadBattleResult(self, sesion, d):
+        """Los dos telefonos suben su resultado; vale el primero que llega y se compara con el segundo."""
         j = sesion.jugador; p = j.partida
-        if p and p.resultado is None:
-            self.guardar_resultado(p, d.get('WinnerSide', -1), d.get('LeftWinRound', 0), d.get('RightWinRound', 0))
-            p.fase = END; self.estado_partida(p)
-            for x in p.jugadores(): x.notificar('NotifyBasePlayerInfoChange', self.info_detallada(x.cuenta))
-            mesa = p.mesa; self.cerrar_partida(p)
-            if mesa: self.actualizar_partida_mesa(mesa); sesion.despues.append(('__mesa__', mesa))   # revancha en la misma mesa
+        ganador = d.get('WinnerSide', -1); rondas = (d.get('LeftWinRound', 0), d.get('RightWinRound', 0))
+        if p and p.resultado is None and p.fase >= LOADING_FIGHT:
+            self.guardar_resultado(p, ganador, rondas[0], rondas[1]); self.avisar_resultado(p)
+            if p.mesa: self.avisar_hall_mesa(p.mesa)
+        elif p and p.resultado is not None and (p.resultado, p.rondas) != (ganador if ganador in (LEFT, RIGHT) else p.resultado, rondas):
+            log.warning('pelea %d: %s subio un resultado distinto (lado %s, %s) al registrado (lado %s, %s): posible desincronizacion',
+                        p.id, j.nombre, ganador, rondas, p.resultado, p.rondas)
         return None
     def on_RefightReq(self, sesion, d):
-        j = sesion.jugador
-        if j.mesa: self.actualizar_partida_mesa(j.mesa); sesion.despues.append(('__mesa__', j.mesa))
-        return 'RefightRsp', dict(FightStarted=bool(j.mesa and j.mesa.partida and j.mesa.partida.fase >= SELECTING_CHAR))
+        """Revancha directa con los mismos personajes: arranca cuando los dos la piden."""
+        j = sesion.jugador; p = j.partida
+        if not p or not (p.lados[LEFT] and p.lados[RIGHT]) or p.en_curso():
+            if not p and j.mesa: sesion.despues.append(('__mesa__', j.mesa))      # el rival ya se fue: de vuelta a la sala de espera
+            return 'RefightRsp', dict(FightStarted=False)
+        p.revancha.add(j); todos = all(x in p.revancha for x in p.jugadores())
+        self.difundir(p.jugadores(), 'NotifyOtherRequestRefight', dict(FightStarted=todos, Side=j.lado, Pos=j.slots[0]), excepto=j)
+        if todos:
+            p.resultado = None; p.fase = LOADING_FIGHT; p.revancha.clear(); p.peleas += 1
+            for m in p.todos_los_miembros(): m['LoadingProgress'] = 0
+            log.info('pelea %d: revancha aceptada por todos', p.id)
+        return 'RefightRsp', dict(FightStarted=todos)
     def on_RemoteFightDataReq(self, sesion, d): return 'RemoteFightDataRsp', dict()

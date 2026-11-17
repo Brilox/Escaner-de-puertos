@@ -27,6 +27,8 @@ Tiempo estimado: 30 a 45 minutos la primera vez.
 5. **Firewall.** La primera vez Windows pregunta si permitir Python en la red: marca "Redes privadas" y Permitir.
    Si no preguntó y luego el teléfono no conecta, abre "Firewall de Windows Defender", "Configuración avanzada",
    "Reglas de entrada", "Nueva regla", Puerto, TCP, 8080, Permitir.
+   **Para la pelea hace falta además UDP:** crea una segunda regla igual pero eligiendo **UDP**, 8080, Permitir.
+   Sin ella el juego llega a la pantalla de carga y se queda ahí (el log no mostrará ninguna línea `relay:`).
 6. **Comprueba que escucha.** Desde el navegador del teléfono (en la misma Wi-Fi) entra a `http://192.168.1.35:8080`.
    La página saldrá vacía o con error, es normal, pero en la ventana del servidor debe aparecer una línea
    `conexion de (...)`. Si aparece, la red está bien. Si no aparece nada, es firewall o el teléfono está en otra red.

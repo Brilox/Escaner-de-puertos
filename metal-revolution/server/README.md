@@ -1,4 +1,4 @@
-# Servidor privado de Metal Revolution (fase 2)
+# Servidor privado de Metal Revolution (fase 3)
 
 Reproduce las respuestas grabadas del servidor original, igual que el servidor local del mod "Metal Offline V2",
 pero en una máquina con IP pública para que varios teléfonos conecten al mismo sitio. Es el primer escalón:
@@ -7,7 +7,8 @@ salas reales y el relay de combate vienen en las fases siguientes sobre esta mis
 
 ## Qué necesitas
 
-- Un VPS Linux con IP pública (cualquier plan básico sirve) con el puerto TCP 8080 abierto.
+- Un VPS Linux con IP pública (cualquier plan básico sirve) con el puerto 8080 abierto en **TCP y UDP**
+  (TCP para el juego, UDP para la pelea).
 - Python 3.10 o superior en el VPS. No hace falta ninguna librería extra.
 - En tu PC: Python 3, `pip install UnityPy`, y las herramientas `zipalign` y `apksigner`
   (en Debian/Ubuntu: `sudo apt install zipalign apksigner`; en Windows vienen con Android Studio, en build-tools).
@@ -70,8 +71,13 @@ despacha a `juego.py`. No hace falta instalar nada: la librería `flatbuffers` v
   clasificatoria 1v1, normal 1v1, clasificatoria 2v2, clasificatoria 3v3 y normal 3v3.
 - **Equipos 2v2**: invitar (`InvitePlayerToRoomReq`), aceptar, salir del equipo; el líder busca por los dos.
   Si faltan compañeros, la cola completa el equipo con jugadores sueltos.
-- **Partida**: selección de personaje (uno o tres por jugador), escenario, carga, listos, fases con
-  `NotifyMatchState`, abandono (cuenta como derrota si ya empezó la pelea, cancela si aún se elegía personaje).
+- **Partida**: selección de personaje (uno o tres por jugador), escenario, carga, resultado, revancha, volver a
+  elegir personaje y abandono (derrota si ya empezó la pelea; si aún se elegía personaje, se cancela sin puntos).
+  El servidor solo reenvía cada acción al rival (`NotifyOtherSelectChar`, `NotifyOtherConfirmSelectChar`,
+  `NotifyOtherConfirmSelectStage`, `NotifyOtherSyncLoadingProgress`...): el cambio de pantalla lo decide cada
+  teléfono. `NotifyMatchState` no se usa en el flujo normal porque en el cliente es el camino de reconexión.
+- **Mesas con sala de espera**: el primero que se sienta queda esperando; cuando se sienta el segundo, los dos
+  reciben `NotifyGameHallMatchCreated` y pasan a la vez a elegir personaje. Detalle en `Mesa.detalle()`.
 - **Estadísticas y ranking**: victorias, derrotas, empates, experiencia y nivel por cuenta; puntos de
   clasificatoria por modo (empiezan en 1000, +25 al ganar, −20 al perder); tabla de posiciones
   (`QueryTopRankReq`, `QueryPlayerRankReq`); historial de partidas en la tabla `partidas`.
@@ -79,9 +85,26 @@ despacha a `juego.py`. No hace falta instalar nada: la librería `flatbuffers` v
 - Lo que no tiene handler se contesta con la grabación del mod si existe, y si no con `EmptyRsp`. Ningún error de
   un handler corta la conexión.
 
-**Pendiente (fase 3): el relay del combate.** Al confirmar escenario, el servidor anuncia un `RelayServerInfo` que
-apunta a sí mismo y registra en el log los paquetes UDP que lleguen, pero todavía no los reenvía. Hasta entonces
-la pelea online entre dos teléfonos se quedará en la pantalla de carga.
+## Fase 3 (actual): la pelea en tiempo real (`relay.py`)
 
-Prueba sin teléfonos: `tools/cliente_prueba.py` implementa el protocolo del cliente (ver ejemplos en el historial).
+Cada pelea lleva un `RelayServerInfo` que apunta a este mismo servidor (mismo número de puerto, pero UDP). Al
+terminar de cargar, cada teléfono manda un ping UDP, abre un canal KCP y pide entrar a la sala de su pelea; cuando
+están todos, el relay da la salida y a partir de ahí reenvía los botones de cada jugador a los demás (netcode
+rollback del propio juego). El formato exacto de cada mensaje está en la cabecera de `relay.py` y en `ANALISIS.md`.
+Al acabar, los teléfonos suben el resultado (`UploadBattleResult`) y el servidor contesta a todos con `BattleResult`.
+
+- El relay corre en un hilo aparte con un socket UDP normal y un KCP propio escrito en Python puro.
+- En el log, las líneas `relay:` cuentan quién entra, cuándo empieza la pelea y cuántos inputs se reenviaron.
+- No implementado todavía: el netcode FrameSync (el servidor anuncia rollback), espectadores de una pelea en curso
+  y reconexión a mitad de combate.
+
+## Probar sin teléfonos
+
+```
+python mr_server.py --host 127.0.0.1 --port 18080 --nombre-automatico
+python ../tools/prueba_pelea.py 127.0.0.1 18080
+```
+
+`tools/prueba_pelea.py` simula dos teléfonos de punta a punta: sala de espera, selección, carga, ping, KCP con
+paquetes perdidos, resultado, revancha, abandono y clasificatoria 3v3. `tools/cliente_prueba.py` es el cliente base.
 Versión anterior (solo grabaciones): `mr_server_v1_replay.py`.

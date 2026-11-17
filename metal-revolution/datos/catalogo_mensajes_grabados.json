@@ -3,7 +3,6 @@
   "tipo": 1,
   "cmd": 67,
   "seq": 18,
-  "flag": 2,
   "roundtrip": true,
   "msg": {
    "DataType": "ActiveSignSummaryReq",
@@ -14,7 +13,6 @@
   "tipo": 1,
   "cmd": 184,
   "seq": 13,
-  "flag": 2,
   "roundtrip": true,
   "msg": {
    "DataType": "BpInfoSummaryReq",
@@ -25,7 +23,6 @@
   "tipo": 1,
   "cmd": 177,
   "seq": 22,
-  "flag": 2,
   "roundtrip": true,
   "msg": {
    "DataType": "GetTrainingRewardReq",
@@ -39,7 +36,6 @@
   "tipo": 1,
   "cmd": 208,
   "seq": 25,
-  "flag": 2,
   "roundtrip": true,
   "msg": {
    "DataType": "MultipleDayReq",
@@ -50,7 +46,6 @@
   "tipo": 1,
   "cmd": 47,
   "seq": 16,
-  "flag": 2,
   "roundtrip": false,
   "msg": {
    "ERROR": "unpack_from requires a buffer of at least 48 bytes for unpacking 8 bytes at offset 40 (actual buffer size is 40)"
@@ -60,7 +55,6 @@
   "tipo": 1,
   "cmd": 134,
   "seq": 17,
-  "flag": 2,
   "roundtrip": true,
   "msg": {
    "DataType": "PlayerGetHallListReq",
@@ -71,7 +65,6 @@
   "tipo": 1,
   "cmd": 198,
   "seq": 26,
-  "flag": 2,
   "roundtrip": true,
   "msg": {
    "DataType": "PlayerHeadReq",
@@ -82,7 +75,6 @@
   "tipo": 1,
   "cmd": 64,
   "seq": 17,
-  "flag": 2,
   "roundtrip": true,
   "msg": {
    "DataType": "QueryRecentChatReq",
@@ -93,7 +85,6 @@
   "tipo": 1,
   "cmd": 92,
   "seq": 68,
-  "flag": 2,
   "roundtrip": true,
   "msg": {
    "DataType": "QueryServerTimeReq",
@@ -104,7 +95,6 @@
   "tipo": 1,
   "cmd": 16,
   "seq": 29,
-  "flag": 2,
   "roundtrip": true,
   "msg": {
    "DataType": "QueryZoneListReq",
@@ -115,7 +105,6 @@
   "tipo": 1,
   "cmd": 129,
   "seq": 11,
-  "flag": 2,
   "roundtrip": true,
   "msg": {
    "DataType": "StartOfflineMatchReq",
@@ -130,7 +119,6 @@
   "tipo": 1,
   "cmd": 199,
   "seq": 1,
-  "flag": 2,
   "roundtrip": true,
   "msg": {
    "DataType": "PlayerHeadChangeReq",
@@ -143,7 +131,6 @@
   "tipo": 2,
   "cmd": 198,
   "seq": 1,
-  "flag": 2,
   "roundtrip": true,
   "msg": {
    "DataType": "PlayerHeadRsp",
@@ -230,7 +217,6 @@
   "tipo": 1,
   "cmd": 200,
   "seq": 1,
-  "flag": 2,
   "roundtrip": true,
   "msg": {
    "DataType": "PlayerHeadMarkRead",
@@ -243,7 +229,6 @@
   "tipo": 2,
   "cmd": 200,
   "seq": 1,
-  "flag": 2,
   "roundtrip": true,
   "msg": {
    "DataType": "EmptyRsp",
@@ -256,7 +241,6 @@
   "tipo": 1,
   "cmd": 168,
   "seq": 1,
-  "flag": 2,
   "roundtrip": true,
   "msg": {
    "DataType": "SaveClientConfigReq",
@@ -411,7 +395,7 @@
          "ControllerButton": 17
         }
        ],
-       "AutoCa": false,
+       "AutoCa": true,
        "Initialized": true
       },
       {
@@ -491,7 +475,7 @@
          "ControllerButton": 17
         }
        ],
-       "AutoCa": false,
+       "AutoCa": true,
        "Initialized": true
       }
      ]
@@ -503,7 +487,6 @@
   "tipo": 1,
   "cmd": 168,
   "seq": 1,
-  "flag": 2,
   "roundtrip": true,
   "msg": {
    "DataType": "SaveClientConfigReq",
@@ -813,7 +796,7 @@
          "ControllerButton": 17
         }
        ],
-       "AutoCa": false,
+       "AutoCa": true,
        "Initialized": true
       },
       {
@@ -893,7 +876,7 @@
          "ControllerButton": 17
         }
        ],
-       "AutoCa": false,
+       "AutoCa": true,
        "Initialized": true
       }
      ]
@@ -905,7 +888,6 @@
   "tipo": 1,
   "cmd": 168,
   "seq": 1,
-  "flag": 2,
   "roundtrip": true,
   "msg": {
    "DataType": "SaveClientConfigReq",
@@ -1215,7 +1197,7 @@
          "ControllerButton": 17
         }
        ],
-       "AutoCa": false,
+       "AutoCa": true,
        "Initialized": true
       },
       {
@@ -1295,7 +1277,7 @@
          "ControllerButton": 17
         }
        ],
-       "AutoCa": false,
+       "AutoCa": true,
        "Initialized": true
       }
      ]
@@ -1307,7 +1289,6 @@
   "tipo": 2,
   "cmd": 167,
   "seq": 1,
-  "flag": 2,
   "roundtrip": true,
   "msg": {
    "DataType": "GetClientConfigRsp",
@@ -1617,7 +1598,7 @@
          "ControllerButton": 17
         }
        ],
-       "AutoCa": false,
+       "AutoCa": true,
        "Initialized": true
       },
       {
@@ -1697,7 +1678,7 @@
          "ControllerButton": 17
         }
        ],
-       "AutoCa": false,
+       "AutoCa": true,
        "Initialized": true
       }
      ]
@@ -1709,7 +1690,6 @@
   "tipo": 1,
   "cmd": 5,
   "seq": 1,
-  "flag": 2,
   "roundtrip": true,
   "msg": {
    "DataType": "ChangeHeadFrameReq",
@@ -1722,7 +1702,6 @@
   "tipo": 1,
   "cmd": 15,
   "seq": 1,
-  "flag": 2,
   "roundtrip": true,
   "msg": {
    "DataType": "SetKeyValueReq",
@@ -1740,7 +1719,6 @@
   "tipo": 2,
   "cmd": 15,
   "seq": 1,
-  "flag": 2,
   "roundtrip": true,
   "msg": {
    "DataType": "SetKeyValueRsp",
@@ -1758,7 +1736,6 @@
   "tipo": 2,
   "cmd": 67,
   "seq": 19,
-  "flag": 2,
   "roundtrip": true,
   "msg": {
    "DataType": "ActiveSignSummaryRsp",
@@ -1774,14 +1751,13 @@
   "tipo": 2,
   "cmd": 184,
   "seq": 13,
-  "flag": 2,
   "roundtrip": true,
   "msg": {
    "DataType": "BpInfoSummaryRsp",
    "Data": {
-    "CurrExp": 0,
+    "CurrExp": -1,
     "BpBuyState": 0,
-    "FinalGetted": 0,
+    "FinalGetted": -1,
     "BpClear": false
    }
   }
@@ -1790,7 +1766,6 @@
   "tipo": 2,
   "cmd": 123,
   "seq": 1,
-  "flag": 2,
   "roundtrip": true,
   "msg": {
    "DataType": "EmptyRsp",
@@ -1803,7 +1778,6 @@
   "tipo": 2,
   "cmd": 130,
   "seq": 153,
-  "flag": 2,
   "roundtrip": true,
   "msg": {
    "DataType": "EmptyRsp",
@@ -1816,13 +1790,12 @@
   "tipo": 1,
   "cmd": 174,
   "seq": 268,
-  "flag": 2,
   "roundtrip": true,
   "msg": {
    "DataType": "FinishTutorialReq",
    "Data": {
     "Id": "e3482f25-a92e-4215-b1b4-946e22c12c39",
-    "Finish": false
+    "Finish": true
    }
   }
  },
@@ -1830,7 +1803,6 @@
   "tipo": 2,
   "cmd": 174,
   "seq": 268,
-  "flag": 2,
   "roundtrip": true,
   "msg": {
    "DataType": "EmptyRsp",
@@ -1843,7 +1815,6 @@
   "tipo": 1,
   "cmd": 156,
   "seq": 96,
-  "flag": 2,
   "roundtrip": true,
   "msg": {
    "DataType": "FreshSeasonInfoReq",
@@ -1854,7 +1825,6 @@
   "tipo": 2,
   "cmd": 156,
   "seq": 96,
-  "flag": 2,
   "roundtrip": true,
   "msg": {
    "DataType": "FreshSeasonInfoRsp",
@@ -1868,7 +1838,6 @@
   "tipo": 2,
   "cmd": 1,
   "seq": 1,
-  "flag": 2,
   "roundtrip": true,
   "msg": {
    "DataType": "LoginGameSvrRsp",
@@ -2096,7 +2065,7 @@
     "PayZoneId": 0,
     "UtcTimeOffset": 0,
     "PayServerIsReleaseEnv": false,
-    "IsChinaIp": false,
+    "IsChinaIp": true,
     "GameServerId": 0,
     "Inviteid": 0
    }
@@ -2106,7 +2075,6 @@
   "tipo": 2,
   "cmd": 167,
   "seq": 3,
-  "flag": 2,
   "roundtrip": true,
   "msg": {
    "DataType": "GetClientConfigRsp",
@@ -2261,7 +2229,7 @@
          "ControllerButton": 17
         }
        ],
-       "AutoCa": false,
+       "AutoCa": true,
        "Initialized": true
       },
       {
@@ -2341,7 +2309,7 @@
          "ControllerButton": 17
         }
        ],
-       "AutoCa": false,
+       "AutoCa": true,
        "Initialized": true
       }
      ]
@@ -2353,7 +2321,6 @@
   "tipo": 2,
   "cmd": 177,
   "seq": 22,
-  "flag": 2,
   "roundtrip": true,
   "msg": {
    "DataType": "EmptyRsp",
@@ -2366,7 +2333,6 @@
   "tipo": 2,
   "cmd": 208,
   "seq": 25,
-  "flag": 2,
   "roundtrip": true,
   "msg": {
    "DataType": "MultipleDayRsp",
@@ -2382,7 +2348,6 @@
   "tipo": 2,
   "cmd": 218,
   "seq": 10,
-  "flag": 2,
   "roundtrip": true,
   "msg": {
    "DataType": "NameCardCdRsp",
@@ -2395,7 +2360,6 @@
   "tipo": 1,
   "cmd": 132,
   "seq": 73,
-  "flag": 2,
   "roundtrip": true,
   "msg": {
    "DataType": "OpActivityGetDetailReq",
@@ -2410,7 +2374,6 @@
   "tipo": 2,
   "cmd": 132,
   "seq": 73,
-  "flag": 2,
   "roundtrip": true,
   "msg": {
    "DataType": "OpActivityGetDetailRsp",
@@ -2421,7 +2384,6 @@
   "tipo": 2,
   "cmd": 133,
   "seq": 12,
-  "flag": 2,
   "roundtrip": true,
   "msg": {
    "DataType": "OpActivityQueryTimeReq",
@@ -2432,7 +2394,6 @@
   "tipo": 2,
   "cmd": 69,
   "seq": 6,
-  "flag": 2,
   "roundtrip": true,
   "msg": {
    "DataType": "OpenServerSignDataRsp",
@@ -2448,7 +2409,6 @@
   "tipo": 2,
   "cmd": 76,
   "seq": 8,
-  "flag": 2,
   "roundtrip": true,
   "msg": {
    "DataType": "PayRefreshDiamondRsp",
@@ -2459,7 +2419,6 @@
   "tipo": 2,
   "cmd": 47,
   "seq": 16,
-  "flag": 2,
   "roundtrip": true,
   "msg": {
    "DataType": "PlayerClientPong",
@@ -2472,7 +2431,6 @@
   "tipo": 2,
   "cmd": 173,
   "seq": 11,
-  "flag": 2,
   "roundtrip": true,
   "msg": {
    "DataType": "PlayerTrainingData",
@@ -2485,7 +2443,6 @@
   "tipo": 2,
   "cmd": 24,
   "seq": 120,
-  "flag": 2,
   "roundtrip": true,
   "msg": {
    "DataType": "PlayerBattleData",
@@ -2500,12 +2457,11 @@
   "tipo": 2,
   "cmd": 64,
   "seq": 17,
-  "flag": 2,
   "roundtrip": true,
   "msg": {
    "DataType": "QueryRecentChatRsp",
    "Data": {
-    "MsgType": 0
+    "MsgType": 4
    }
   }
  },
@@ -2513,7 +2469,6 @@
   "tipo": 2,
   "cmd": 157,
   "seq": 5,
-  "flag": 2,
   "roundtrip": true,
   "msg": {
    "DataType": "PlayerSeasonData",
@@ -2524,7 +2479,6 @@
   "tipo": 2,
   "cmd": 92,
   "seq": 4,
-  "flag": 2,
   "roundtrip": true,
   "msg": {
    "DataType": "QueryServerTimeRsp",
@@ -2539,7 +2493,6 @@
   "tipo": 2,
   "cmd": 158,
   "seq": 15,
-  "flag": 2,
   "roundtrip": true,
   "msg": {
    "DataType": "QueryShareInfoRsp",
@@ -2550,7 +2503,6 @@
   "tipo": 2,
   "cmd": 16,
   "seq": 14,
-  "flag": 2,
   "roundtrip": true,
   "msg": {
    "DataType": "QueryZoneListRsp",
@@ -2561,7 +2513,6 @@
   "tipo": 1,
   "cmd": 168,
   "seq": 292,
-  "flag": 2,
   "roundtrip": true,
   "msg": {
    "DataType": "SaveClientConfigReq",
@@ -2716,7 +2667,7 @@
          "ControllerButton": 17
         }
        ],
-       "AutoCa": false,
+       "AutoCa": true,
        "Initialized": true
       },
       {
@@ -2796,7 +2747,7 @@
          "ControllerButton": 17
         }
        ],
-       "AutoCa": false,
+       "AutoCa": true,
        "Initialized": true
       }
      ]
@@ -2808,7 +2759,6 @@
   "tipo": 2,
   "cmd": 168,
   "seq": 66,
-  "flag": 2,
   "roundtrip": true,
   "msg": {
    "DataType": "EmptyRsp",
@@ -2821,7 +2771,6 @@
   "tipo": 2,
   "cmd": 129,
   "seq": 11,
-  "flag": 2,
   "roundtrip": true,
   "msg": {
    "DataType": "EmptyRsp",
@@ -2834,7 +2783,6 @@
   "tipo": 1,
   "cmd": 136,
   "seq": 32,
-  "flag": 2,
   "roundtrip": true,
   "msg": {
    "DataType": "EnterHallReq",
@@ -2847,7 +2795,6 @@
   "tipo": 2,
   "cmd": 136,
   "seq": 32,
-  "flag": 2,
   "roundtrip": true,
   "msg": {
    "DataType": "EnterHallRsp",
@@ -2865,7 +2812,6 @@
   "tipo": 2,
   "cmd": 134,
   "seq": 9,
-  "flag": 2,
   "roundtrip": true,
   "msg": {
    "DataType": "PlayerGetHallListRsp",
@@ -2892,7 +2838,6 @@
   "tipo": 1,
   "cmd": 145,
   "seq": 35,
-  "flag": 2,
   "roundtrip": true,
   "msg": {
    "DataType": "QueryPlayerListInHallReq",
@@ -2906,7 +2851,6 @@
   "tipo": 2,
   "cmd": 145,
   "seq": 35,
-  "flag": 2,
   "roundtrip": true,
   "msg": {
    "DataType": "QueryPlayerListInHallRsp",
@@ -2921,7 +2865,6 @@
   "tipo": 1,
   "cmd": 137,
   "seq": 158,
-  "flag": 2,
   "roundtrip": true,
   "msg": {
    "DataType": "EnterHallRoomReq",
@@ -2939,7 +2882,6 @@
   "tipo": 2,
   "cmd": 137,
   "seq": 158,
-  "flag": 2,
   "roundtrip": true,
   "msg": {
    "DataType": "GameHallMatchCreated",
@@ -3010,8 +2952,8 @@
      "LeftOrderingIndex": 0,
      "RightOrderingIndex": 0,
      "AllowSameCharInTeam": false,
-     "AllowSameCharInMatch": false,
-     "SkipReorderChar": false,
+     "AllowSameCharInMatch": true,
+     "SkipReorderChar": true,
      "SkipSelectStage": false
     }
    }
@@ -3021,7 +2963,6 @@
   "tipo": 1,
   "cmd": 146,
   "seq": 34,
-  "flag": 2,
   "roundtrip": true,
   "msg": {
    "DataType": "QueryRoomListInHallReq",
@@ -3035,7 +2976,6 @@
   "tipo": 2,
   "cmd": 146,
   "seq": 34,
-  "flag": 2,
   "roundtrip": true,
   "msg": {
    "DataType": "QueryRoomListInHallRsp",
@@ -3056,7 +2996,7 @@
       "RightLoseCount": 0,
       "ObserverCount": 0,
       "HideCharSelection": false,
-      "HostSide": 0
+      "HostSide": -1
      }
     ]
    }
@@ -3066,7 +3006,6 @@
   "tipo": 1,
   "cmd": 32,
   "seq": 45,
-  "flag": 2,
   "roundtrip": true,
   "msg": {
    "DataType": "SelectCharReq",
@@ -3083,7 +3022,6 @@
   "tipo": 2,
   "cmd": 32,
   "seq": 45,
-  "flag": 2,
   "roundtrip": true,
   "msg": {
    "DataType": "SelectCharRsp",
@@ -3100,7 +3038,6 @@
   "tipo": 2,
   "cmd": 91,
   "seq": 2,
-  "flag": 2,
   "roundtrip": true,
   "msg": {
    "DataType": "QueryFuncCtrlConfigRsp",
@@ -3113,7 +3050,6 @@
   "tipo": 1,
   "cmd": 168,
   "seq": 1,
-  "flag": 2,
   "roundtrip": true,
   "msg": {
    "DataType": "SaveClientConfigReq",
@@ -3332,7 +3268,7 @@
          "ControllerButton": 17
         }
        ],
-       "AutoCa": false,
+       "AutoCa": true,
        "Initialized": true
       },
       {
@@ -3412,7 +3348,7 @@
          "ControllerButton": 17
         }
        ],
-       "AutoCa": false,
+       "AutoCa": true,
        "Initialized": true
       }
      ]
@@ -3424,7 +3360,6 @@
   "tipo": 2,
   "cmd": 167,
   "seq": 1,
-  "flag": 2,
   "roundtrip": true,
   "msg": {
    "DataType": "GetClientConfigRsp",
@@ -3643,7 +3578,7 @@
          "ControllerButton": 17
         }
        ],
-       "AutoCa": false,
+       "AutoCa": true,
        "Initialized": true
       },
       {
@@ -3723,7 +3658,7 @@
          "ControllerButton": 17
         }
        ],
-       "AutoCa": false,
+       "AutoCa": true,
        "Initialized": true
       }
      ]

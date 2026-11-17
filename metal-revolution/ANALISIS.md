@@ -124,7 +124,37 @@ y elige el conector según `RelayServerInfo`: `GCloudRelayServerConnector`, `Kcp
 devolver un `RelayServerInfo` que fuerce **RawUdp o Kcp**: así el relay es un programa UDP simple y evitamos
 el protocolo LockStep de Tencent.
 
+## Protocolo del relay (fase 3, leído del código del cliente)
+
+- El cliente usa `RollbackRelayServerClient` si `RelayServerInfo.NetCode != 1` y el conector `KcpRelayServerConnector`
+  (`KCPSharp.KcpSocket`): UDP directo a `Host:Port`, `conv = KcpConv` (6666 por defecto), nodelay 1, intervalo 10 ms,
+  reenvío rápido 2, sin control de congestión, ventanas de 128.
+- Antes de conectar mide el ping (`PingRetriever`): un datagrama con el mismo formato TLV del canal TCP (tipo 1,
+  payload = marca de tiempo). Hay que devolverlo igual con tipo 2.
+- Un datagrama cuyos primeros 4 bytes son cero no pasa por KCP: es el canal sin garantía de entrega.
+- Mensajes cliente → servidor (primer byte = tipo, little-endian, pueden venir varios seguidos):
+  `0 EnterRoom` (matchId i32 = `RelayId`, subMatchId u16, side, pos, reEnter, teamSize), `1 ExitRoom`, `2 HeartBeat`,
+  `14 Input` (frame i32, botones u16), `15 SyncPing`, `16 CheckSync`, `17 Emoji`, `18 Item`.
+- Servidor → cliente: `0` (un byte) cuando ya entraron todos (`AllPlayerEnterRoom`, dispara `OnRelayRoomEntered`
+  y arranca la pelea); y los tipos 14 a 18 reenviados a los demás con `side` y `pos` del emisor insertados tras el frame.
+  El emisor no recibe eco de sus propios mensajes (`RollbackNetCodeDriver::OnRecvRelayMsg` los entrega al
+  `RollbackRemoteInputReader` del lado indicado).
+- Fin de pelea: `UploadBattleResult` por TCP y aviso `BattleResult` (`ServerBattleResult`) cuyo `MatchId` debe
+  coincidir con `RelayId`.
+
+## Obfuscaciones encontradas en `libil2cpp.so` (build 1.0.23 arm64)
+
+- Tabla de offsets de campos: XOR `0xB6B6B6B6`. Tipos con enum ≥ 0x80: XOR `0xB6`.
+- La sección `.text` (los thunks de métodos de structs, como los getters de FlatBuffers) va con XOR `0xB6` por byte.
+  `tools/mrrev.py` lo deshace y `tools/extraer_defaults_fb.py` saca de esos getters el número de slot real y el valor
+  por defecto de cada campo. Importa: un campo que vale su valor por defecto no viaja, así que `Confirm` (por
+  defecto verdadero) llegaba "vacío" y el servidor lo leía como falso.
+
 ## Herramientas en este directorio
+
+- `tools/mrrev.py`: desensamblado anotado (nombres de métodos, literales, campos) para leer la lógica del cliente.
+- `tools/extraer_esquema_fb.py` y `tools/extraer_defaults_fb.py`: esquema FlatBuffers completo con slots y valores por defecto.
+- `tools/prueba_pelea.py`: prueba de punta a punta con dos teléfonos simulados.
 
 - `tools/extraer_tipos_il2cpp.py`: clases/campos/métodos desde `global-metadata.dat` (sin .NET).
 - `tools/extraer_blobs_mod.py`: extrae los mensajes grabados de `libgame.so`.

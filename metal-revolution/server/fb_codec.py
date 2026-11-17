@@ -39,10 +39,10 @@ class Codec:
             o=4+2*i
             return struct.unpack_from('<H',buf,vt+o)[0] if o+2<=vsize else 0
         for i,f in enumerate(fields):
-            off=fo(i)
+            off=fo(f.get('id',i))
             if not off:
-                if f['kind']=='scalar': out[f['name']]=False if f['type']=='bool' else 0
-                elif f['kind']=='enum': out[f['name']]=0
+                if f['kind']=='scalar': out[f['name']]=f.get('default', False if f['type']=='bool' else 0)
+                elif f['kind']=='enum': out[f['name']]=f.get('default',0)
                 continue
             p=pos+off; k=f['kind']
             if k=='scalar': out[f['name']]=struct.unpack_from(SC[f['type']][0],buf,p)[0]
@@ -110,9 +110,9 @@ class Codec:
                     items,size,al=self.layout(f['type']); b.StartVector(size,len(v),al)
                     for x in reversed(v): self.enc_struct(b,f['type'],x)
                     offs[f['name']]=b.EndVector()
-        b.StartObject(len(fields))
-        for i,f in enumerate(fields):
-            v=obj.get(f['name']); k=f['kind']
+        b.StartObject(max([f.get('id',n) for n,f in enumerate(fields)],default=-1)+1)
+        for n,f in enumerate(fields):
+            i=f.get('id',n); v=obj.get(f['name']); k=f['kind']
             if k=='union': 
                 if f['name'] in offs: b.PrependUOffsetTRelativeSlot(i,offs[f['name']],0)
                 continue

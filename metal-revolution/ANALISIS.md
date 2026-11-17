@@ -130,7 +130,12 @@ el protocolo LockStep de Tencent.
   (`KCPSharp.KcpSocket`): UDP directo a `Host:Port`, `conv = KcpConv` (6666 por defecto), nodelay 1, intervalo 10 ms,
   reenvío rápido 2, sin control de congestión, ventanas de 128.
 - Antes de conectar mide el ping (`PingRetriever`): un datagrama con el mismo formato TLV del canal TCP (tipo 1,
-  payload = marca de tiempo). Hay que devolverlo igual con tipo 2.
+  payload = marca de tiempo) **al puerto `Port - 1`** (`InitRelayServerPingRetriever` resta 1 a `GetUdpPort`). Hay que
+  devolverlo igual con tipo 2. Si falla, `OnPingErrorBeforeConnect` muestra "RelayServerConnectTimeout" y reconecta.
+- Fase de ordenar (3v3/2v2, fase 2 `ORDERING_CHAR`): `ChangeCharOrderReq{SrcPos, TargetPos}` con `TargetPos` igual al
+  `OrderingIndex` actual; `ChangeCharOrderRsp.OrderingIndex` = siguiente puesto (el cliente completa solo el último).
+  El rival aplica el cambio con `NotifyOtherRequestChangeCharOrder` (SourceUid = TargetUid = quien ordena) y el aviso
+  vacío `NotifyFinishReorderChar` (unión 121) llama a `FinishReorderChar` → `GotoSelectStagePhase`.
 - Un datagrama cuyos primeros 4 bytes son cero no pasa por KCP: es el canal sin garantía de entrega.
 - Mensajes cliente → servidor (primer byte = tipo, little-endian, pueden venir varios seguidos):
   `0 EnterRoom` (matchId i32 = `RelayId`, subMatchId u16, side, pos, reEnter, teamSize), `1 ExitRoom`, `2 HeartBeat`,

@@ -180,6 +180,7 @@ class Sesion:
             try:
                 if tipo_n == '__emparejar__': srv.juego.emparejar(datos_n)
                 elif tipo_n == '__mesa__': srv.juego.avisar_mesa(datos_n)
+                elif tipo_n == '__orden__': srv.juego.terminar_orden(datos_n)
                 else: self.enviar_notificacion(tipo_n, datos_n)
             except Exception:
                 log.exception('[%d] error enviando %s', self.cid, tipo_n)
@@ -195,7 +196,7 @@ class Server:
         self.blobs = Blobs(a.blobs); self.dir = self.blobs.dir_responses(a.host, a.port)
         cat = json.load(open(os.path.join(HERE, '..', 'datos', 'catalogo_mensajes_grabados.json'), encoding='utf-8'))
         plantilla = cat['mroffline_assets_kGameLoginMikeKimSkinsRsp843']['msg']['Data']
-        self.juego = Juego(a.host, a.port, a.port, plantilla, a.nombre_automatico); self.conns = 0
+        self.juego = Juego(a.host, a.port, a.puerto_relay or a.port, plantilla, a.nombre_automatico); self.conns = 0
     async def handle(self, reader, writer):
         self.conns += 1; cid = self.conns; peer = writer.get_extra_info('peername'); ses = None
         log.info('[%d] conexion de %s', cid, peer)
@@ -245,18 +246,20 @@ async def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--host', required=True); ap.add_argument('--port', type=int, default=8080); ap.add_argument('--listen', default='0.0.0.0')
     ap.add_argument('--blobs', default=os.path.join(HERE, 'blobs')); ap.add_argument('--log', default='mr_server.log')
-    ap.add_argument('--debug', action='store_true'); ap.add_argument('--nombre-automatico', action='store_true', help='asigna JugadorNNN sin pedir nombre')
+    ap.add_argument('--debug', action='store_true')
+    ap.add_argument('--puerto-relay', type=int, default=0, help='puerto UDP de la pelea (por defecto el mismo que --port); el ping va a este menos 1')
+    ap.add_argument('--nombre-automatico', action='store_true', help='asigna JugadorNNN sin pedir nombre')
     a = ap.parse_args()
     logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s',
                         handlers=[logging.StreamHandler(), logging.FileHandler(a.log, encoding='utf-8')])
     srv = Server(a)
     loop = asyncio.get_running_loop()
-    relay = Relay(a.listen, a.port, esperados=srv.juego.jugadores_en_relay,
+    relay = Relay(a.listen, srv.juego.puerto_relay, esperados=srv.juego.jugadores_en_relay,
                   al_empezar=lambda mid: loop.call_soon_threadsafe(srv.juego.pelea_iniciada, mid))
     relay.start(); srv.relay = relay
     server = await asyncio.start_server(srv.handle, a.listen, a.port)
-    log.info('fase 3: juego en TCP %d y pelea (relay) en UDP %d, escuchando en %s; los telefonos usaran %s:%d; %d handlers',
-             a.port, a.port, a.listen, a.host, a.port, len(srv.juego.handlers))
+    log.info('fase 3: juego en TCP %d; pelea en UDP %d y %d (abre los dos en el firewall); escuchando en %s; los telefonos usaran %s; %d handlers',
+             a.port, relay.puerto_ping, relay.puerto, a.listen, a.host, len(srv.juego.handlers))
     async with server: await server.serve_forever()
 
 if __name__ == '__main__':

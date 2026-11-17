@@ -42,7 +42,7 @@ class TelefonoUDP:
     def ping(self):
         cuerpo = struct.pack('>HI', 2, 7) + struct.pack('>HI', 6, 1) + struct.pack('>HB', 5, 2) + struct.pack('>HI', 4, 8) + struct.pack('<q', 123456789)
         pk = struct.pack('>HI', 1, len(cuerpo)) + cuerpo
-        self.s.sendto(pk, (HOST, PUERTO))
+        self.s.sendto(pk, (HOST, PUERTO - 1))                  # el juego hace el ping al puerto del relay MENOS UNO
         try: r, _ = self.s.recvfrom(4096)
         except socket.timeout: return False
         return r == b'\x00\x02' + pk[2:]
@@ -204,7 +204,22 @@ def prueba_clasificatoria():
     ok(bool(ea and eb and len(ea['MatchState']['LeftMembers']) == 3 and ea['MatchState']['RelayServerInfo']['Port'] == PUERTO),
        'rival encontrado: 3 huecos por lado y datos del relay')
     mid = ea['MatchState']['MatchId']; a.avisos.clear(); b.avisos.clear()
-    seleccion(a, b, (0, 1), slots=3); escenario_y_carga(a, b, (0, 1)); pelea(mid, (0, 1), n=40, perder=(2,))
+    seleccion(a, b, (0, 1), slots=3)
+    # fase de ordenar: cada uno llena el puesto 0 y luego el 1; el 2 queda decidido solo
+    r = a.pedir('ChangeCharOrderReq', {'SrcPos': 2, 'TargetPos': 0}, ver=False)
+    ok((de(r, 'ChangeCharOrderRsp') or {}).get('OrderingIndex') == 1, 'ordenar: tras el primer puesto el servidor contesta el puesto siguiente (1)')
+    av = de(b.recibir(0.2), 'NotifyOtherRequestChangeCharOrder')
+    ok(bool(av and av['SourceUid'] == uid_a and av['SrcPos'] == 2 and av['TargetPos'] == 0), 'el rival ve el cambio de orden')
+    r = a.pedir('ChangeCharOrderReq', {'SrcPos': 1, 'TargetPos': 0}, ver=False)
+    ok((de(r, 'ChangeCharOrderRsp') or {}).get('OrderingIndex') == 1, 'un pedido para un puesto ya ocupado no avanza el orden')
+    a.pedir('ChangeCharOrderReq', {'SrcPos': 2, 'TargetPos': 1}, ver=False); b.recibir(0.2)
+    ok(de(a.recibir(0.2), 'NotifyFinishReorderChar') is None, 'con un solo lado ordenado todavia no se pasa al escenario')
+    b.pedir('ChangeCharOrderReq', {'SrcPos': 0, 'TargetPos': 0}, ver=False)
+    r = b.pedir('ChangeCharOrderReq', {'SrcPos': 1, 'TargetPos': 1}, ver=False)
+    fa = de(a.recibir(0.3) + a.avisos, 'NotifyFinishReorderChar'); fb = de(r + b.avisos, 'NotifyFinishReorderChar')
+    ok(fa is not None and fb is not None, 'cuando los dos ordenaron, ambos reciben NotifyFinishReorderChar (a elegir escenario)')
+    a.avisos.clear(); b.avisos.clear()
+    escenario_y_carga(a, b, (0, 1)); pelea(mid, (0, 1), n=40, perder=(2,))
     rb = resultado(a, b, 0)
     ok(rb['LeftPlayerChanges'][0]['WinPoint'] > rb['RightPlayerChanges'][0]['WinPoint'], 'el ganador sube puntos y el perdedor baja')
     a.pedir('ExitMatchReq', {}, ver=False); b.pedir('ExitMatchReq', {}, ver=False)

@@ -5,6 +5,8 @@ Durante la pelea los dos (o cuatro) telefonos no se hablan entre ellos: cada uno
 y el servidor los reenvia a los demas. Este modulo hace ese trabajo. Protocolo (leido del codigo del juego):
 
   * Ping previo: datagrama con el mismo formato TLV del canal TCP (empieza por 00 01). Se contesta igual, con tipo 00 02.
+    OJO: el juego manda este ping al puerto del relay MENOS UNO (RelayServerInfo.Port - 1, p. ej. 8079 si el relay es 8080).
+    Si ese puerto no contesta, el juego se queda en la carga (~88 %) y a los pocos segundos se reconecta.
   * Canal fiable: KCP estandar (cabecera de 24 bytes little-endian: conv, cmd, frg, wnd, ts, sn, una, len).
   * Canal rapido: datagrama que empieza por 4 bytes a cero y despues los mensajes tal cual, sin garantia de entrega.
   * Mensajes (el primer byte es el tipo, todo little-endian, pueden venir varios seguidos):
@@ -19,7 +21,7 @@ y el servidor los reenvia a los demas. Este modulo hace ese trabajo. Protocolo (
 
 Corre en un hilo propio con un socket normal: asi funciona igual en Windows y Linux y no compite con el resto del
 servidor. No usa ninguna libreria externa."""
-import collections, logging, socket, struct, threading, time
+import collections, logging, select, socket, struct, threading, time
 
 log = logging.getLogger('mr.relay')
 CMD_PUSH, CMD_ACK, CMD_WASK, CMD_WINS = 81, 82, 83, 84
@@ -168,45 +170,64 @@ class Relay(threading.Thread):
     """esperados(match_id) -> cuantos telefonos tienen que entrar antes de empezar (None si la partida no existe).
     al_empezar(match_id) y al_salir(match_id, lado, pos) se llaman desde el hilo del relay."""
 
-    def __init__(self, escucha, puerto, esperados=None, al_empezar=None):
+    def __init__(self, escucha, puerto, esperados=None, al_empezar=None, puerto_ping=None):
         super().__init__(name='relay', daemon=True)
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.sock.bind((escucha, puerto)); self.sock.settimeout(0.005)
-        self.puerto = self.sock.getsockname()[1]
+        self.sock = self._socket(escucha, puerto); self.puerto = self.sock.getsockname()[1]
+        if puerto_ping is None: puerto_ping = self.puerto - 1
+        self.sock_ping = self._socket(escucha, puerto_ping) if puerto_ping and puerto_ping != self.puerto else None
+        self.puerto_ping = self.sock_ping.getsockname()[1] if self.sock_ping else self.puerto
+        self.socks = [x for x in (self.sock, self.sock_ping) if x]
         self.esperados = esperados or (lambda mid: 2); self.al_empezar = al_empezar
         self.pares = {}; self.salas = {}; self.sucios = set(); self.activo = True
         self.pings = 0; self.raros = 0; self._ult_tick = 0.0; self._ult_limpieza = 0.0
+
+    @staticmethod
+    def _socket(escucha, puerto):
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        if hasattr(socket, 'SIO_UDP_CONNRESET'):          # Windows: que un telefono que se fue no rompa la lectura
+            try: s.ioctl(socket.SIO_UDP_CONNRESET, False)
+            except (OSError, ValueError): pass
+        s.bind((escucha, puerto)); s.setblocking(False); return s
 
     def parar(self):
         self.activo = False
 
     # ---- bucle
     def run(self):
-        log.info('relay UDP escuchando en el puerto %d', self.puerto)
+        log.info('relay UDP escuchando: pelea en el puerto %d, ping previo en el puerto %d', self.puerto, self.puerto_ping)
         while self.activo:
+            try: listos, _, _ = select.select(self.socks, [], [], 0.005)
+            except (OSError, ValueError): listos = []
+            for s in listos:
+                for _ in range(64):                  # vacia lo que haya en el socket
+                    try: data, addr = s.recvfrom(4096)
+                    except (BlockingIOError, InterruptedError): break
+                    except OSError: break            # en Windows un envio a un puerto cerrado aparece aqui como error
+                    try: self.datagrama(data, addr, s)
+                    except Exception: log.exception('error en el relay (se ignora el paquete)')
             try:
-                data, addr = self.sock.recvfrom(4096)
-            except socket.timeout:
-                data = None
-            except OSError:              # en Windows un envio a un puerto cerrado aparece aqui como error: se ignora
-                data = None
-            try:
-                if data: self.datagrama(data, addr)
                 t = time.monotonic()
                 if t - self._ult_tick >= 0.01: self._ult_tick = t; self.tick(t)
             except Exception:
-                log.exception('error en el relay (se ignora el paquete)')
-        self.sock.close()
+                log.exception('error en el relay')
+        for s in self.socks: s.close()
 
     def _enviar_udp(self, data, addr):
         try: self.sock.sendto(data, addr)
         except OSError: pass
 
-    def datagrama(self, data, addr):
+    def datagrama(self, data, addr, sock=None):
         if len(data) >= 6 and data[0] == 0 and data[1] == 1:          # ping TLV previo a la conexion
             self.pings += 1
-            if self.pings <= 5 or self.pings % 500 == 0: log.info('relay: ping UDP de %s:%d (%d en total)', addr[0], addr[1], self.pings)
-            self._enviar_udp(b'\x00\x02' + data[2:], addr); return
+            if self.pings <= 5 or self.pings % 500 == 0:
+                log.info('relay: ping UDP de %s:%d al puerto %d (%d en total)', addr[0], addr[1], (sock or self.sock).getsockname()[1], self.pings)
+            try: (sock or self.sock).sendto(b'\x00\x02' + data[2:], addr)
+            except OSError: pass
+            return
+        if sock is not None and sock is self.sock_ping:               # en el puerto del ping solo se esperan pings
+            self.raros += 1
+            if self.raros <= 10: log.warning('relay: datagrama desconocido en el puerto del ping de %s:%d: %s', addr[0], addr[1], data[:48].hex())
+            return
         if len(data) < 5: return
         par = self.pares.get(addr)
         if data[:4] == b'\0\0\0\0':                                     # canal rapido, sin KCP

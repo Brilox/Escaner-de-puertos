@@ -4,7 +4,7 @@
 Todo se expresa como diccionarios que el codec FlatBuffers (fb_codec) convierte a bytes.
 Cada handler on_<Peticion>(sesion, datos) devuelve (TipoRespuesta, dict) o None (EmptyRsp).
 Los avisos a otros jugadores se mandan con jugador.notificar(TipoAviso, dict)."""
-import copy, json, logging, os, random, sqlite3, time
+import asyncio, copy, json, logging, os, random, sqlite3, time
 
 log = logging.getLogger('mr.juego')
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -24,6 +24,7 @@ MODOS = {
 }
 GAMEHALL = 5                                                    # MatchType de las mesas del hall
 PUNTOS_INICIALES, PUNTOS_GANAR, PUNTOS_PERDER = 1000, 25, 20
+SEGUNDOS_ORDEN = 30                                             # tiempo para ordenar personajes (3v3 y 2v2)
 ANUNCIO = ('Bienvenido a Metal Online', 'Servidor privado sin fines de lucro, hecho por fans. '
            'Escribe /nombre TuNombre en el chat del hall para cambiar tu nombre.')
 
@@ -144,6 +145,7 @@ class Partida:
         self.lados = {LEFT: izquierda, RIGHT: derecha}; self.fase = SELECTING_CHAR; self.seed = random.randint(1, 2**31 - 1)
         self.escenario = 1; self.escenario_confirmado = False; self.inicio = int(time.time()); self.relay = None; self.resultado = None
         self.rondas = (0, 0); self.revancha = set(); self.peleas = 0; self.puntos_antes = {}; self.puntos_despues = {}
+        self.orden = {LEFT: 0, RIGHT: 0}; self.temporizador_orden = None
         self.miembros = {LEFT: [], RIGHT: []}
         for lado, jugadores in self.lados.items():
             pos = 0
@@ -157,8 +159,11 @@ class Partida:
                     Ready=False, LoadingProgress=0, PendingSwitchOrderTeammateId=0, PvpPrefs=j.pvp_prefs, ShouldPunishForEarlyExit=False,
                     BattleEndStatus=0, Side=lado, Pos=pos, NetStatus=0, FakeWinPoint=0, AiControlledByUid=0, BePraisedCount=0)
     def en_curso(self): return self.resultado is None and self.fase in (LOADING_FIGHT, FIGHTING, WAITING_RESULT)
+    def peleando(self): return self.resultado is None and self.fase in (FIGHTING, WAITING_RESULT)
+    def orden_terminado(self, lado): return self.orden[lado] >= len(self.miembros[lado]) - 1
     def volver_a_seleccion(self):
         self.fase = SELECTING_CHAR; self.escenario_confirmado = False; self.resultado = None; self.revancha.clear()
+        self.orden = {LEFT: 0, RIGHT: 0}
         for m in self.todos_los_miembros(): m.update(CharConfirmed=False, Ready=False, LoadingProgress=0)
     def jugadores(self): return self.lados[LEFT] + self.lados[RIGHT]
     def todos_los_miembros(self): return self.miembros[LEFT] + self.miembros[RIGHT]
@@ -174,7 +179,7 @@ class Partida:
                     RandomSeed=self.seed, RefightRemainCount=99 if self.mesa else 0, LeftWonCount=0, RightWonCount=0, StageId=self.escenario,
                     RandomStage=False, StageConfirmed=self.escenario_confirmado, StartSelectCharTime=now, StartOrderCharTime=now,
                     StartSelectStageTime=now, StartWaitingReadyTime=now, SelectCharMaxTime=60, SelectStageMaxTime=30,
-                    WaitingReadyMaxTime=60, OrderCharMaxTime=30, RelayServerInfo=self.relay, LeftOrderingIndex=0, RightOrderingIndex=0,
+                    WaitingReadyMaxTime=60, OrderCharMaxTime=SEGUNDOS_ORDEN, RelayServerInfo=self.relay, LeftOrderingIndex=0, RightOrderingIndex=0,
                     AllowSameCharInTeam=True, AllowSameCharInMatch=True, SkipReorderChar=True, SkipSelectStage=False)
 
 # ----------------------------------------------------------------- juego
@@ -440,8 +445,9 @@ class Juego:
     def salir_mesa(self, j, servidor=False):
         mesa = j.mesa
         if not mesa: return
-        p = mesa.partida; jugaba = p is not None and j in p.jugadores(); en_pelea = jugaba and p.en_curso()
+        p = mesa.partida; jugaba = p is not None and j in p.jugadores(); en_pelea = jugaba and p.peleando()
         if en_pelea: self.abandonar_partida(j)                  # en plena pelea: pierde por abandono y al rival le sale el resultado
+        elif jugaba and p.en_curso(): self.abandonar_partida(j) # cargando: se cancela (sin puntos) y el otro vuelve a la mesa
         elif jugaba: self.cerrar_partida(p)                     # eligiendo personaje o ya terminada: simplemente se deshace
         mesa.quitar(j); j.mesa = None; j.asiento = OBSERVER
         log.info('%s sale de la mesa %d', j.nombre, mesa.id)
@@ -561,13 +567,14 @@ class Juego:
         p = j.partida
         if not p: return
         lado = j.lado; rival = RIGHT if lado == LEFT else LEFT; mesa = p.mesa
-        if p.en_curso():
+        if p.temporizador_orden: p.temporizador_orden.cancel(); p.temporizador_orden = None
+        if p.peleando():
             for pos in j.slots: self.difundir(p.jugadores(), 'NotifyPlayerLeftInMatch', dict(Side=lado, Pos=pos), excepto=j)
             self.guardar_resultado(p, rival, 0, 0, abandono=True); self.avisar_resultado(p, excepto=j)
             self.cerrar_partida(p)
         elif p.resultado is None:
             self.difundir(p.jugadores(), 'NotifyMatchCancelled', dict(MatchId=p.id, Side=lado, Pos=j.slots[0] if j.slots else 0), excepto=j)
-            log.info('pelea %d cancelada: %s se fue antes de empezar', p.id, j.nombre); self.cerrar_partida(p)
+            log.info('pelea %d cancelada: %s se fue antes de empezar a pelear', p.id, j.nombre); self.cerrar_partida(p)
         else:                                                     # ya habia terminado: solo se desengancha
             if j in p.lados.get(lado, []): p.lados[lado].remove(j)
             j.partida = None; j.lado = None; j.slots = []
@@ -593,10 +600,68 @@ class Juego:
             if d.get('CharId'): m['CharId'] = d['CharId']
             self.difundir(p.jugadores(), 'NotifyOtherConfirmSelectChar', dict(Confirm=confirma, Side=m['Side'], Pos=m['Pos']), excepto=j)
             if p.fase in (WAITING_ALL_READY, SELECTING_CHAR) and all(x['CharConfirmed'] for x in p.todos_los_miembros()):
-                p.fase = SELECTING_STAGE; log.info('pelea %d: personajes listos %s -> a elegir escenario', p.id,
-                                                   [[x['CharId'] for x in p.miembros[LEFT]], [x['CharId'] for x in p.miembros[RIGHT]]])
+                elegidos = [[x['CharId'] for x in p.miembros[LEFT]], [x['CharId'] for x in p.miembros[RIGHT]]]
+                if max(len(p.miembros[LEFT]), len(p.miembros[RIGHT])) > 1:
+                    # Con varios personajes por lado (3v3, 2v2) el juego pasa a ORDENARLOS antes del escenario
+                    p.fase = ORDERING_CHAR; p.orden = {LEFT: 0, RIGHT: 0}
+                    log.info('pelea %d: personajes listos %s -> a ordenarlos', p.id, elegidos)
+                    self.programar_fin_orden(p)
+                else:
+                    p.fase = SELECTING_STAGE; log.info('pelea %d: personajes listos %s -> a elegir escenario', p.id, elegidos)
         return 'ConfirmSelectCharRsp', dict(Confirm=confirma, Side=m['Side'] if m else 0, Pos=m['Pos'] if m else 0)
-    def on_ChangeCharOrderReq(self, sesion, d): return 'ChangeCharOrderRsp', dict(OrderingIndex=0)
+
+    # ----------------------------------------------------------------- orden de los personajes (3v3, 2v2)
+    def on_ChangeCharOrderReq(self, sesion, d):
+        """Fase de ordenar: el telefono va llenando el puesto OrderingIndex (0, 1, ...) con el personaje SrcPos.
+        Hay que contestarle el puesto siguiente; el ultimo se completa solo. Al rival se le avisa del cambio para que
+        vea el mismo orden. Cuando los dos lados terminaron, NotifyFinishReorderChar los manda a elegir escenario."""
+        j = sesion.jugador; p = j.partida
+        if not p or p.fase != ORDERING_CHAR: return 'ChangeCharOrderRsp', dict(OrderingIndex=0)
+        lado = j.lado; miembros = p.miembros[lado]; n = len(miembros)
+        companero = d.get('TargetTeammateId', 0)
+        if companero and companero != j.uid:                     # 2v2: pedir al companero cambiar de puesto
+            otro = next((x for x in p.lados[lado] if x.uid == companero), None)
+            if otro: otro.notificar('NotifyOtherRequestChangeCharOrder', dict(SourceUid=j.uid, TargetUid=companero,
+                                                                              SrcPos=d.get('SrcPos', 0), TargetPos=d.get('TargetPos', 0)))
+            return 'ChangeCharOrderRsp', dict(OrderingIndex=p.orden[lado])
+        src = d.get('SrcPos', 0); dst = d.get('TargetPos', 0)
+        if dst != p.orden[lado] or not (0 <= src < n and 0 <= dst < n):
+            log.info('pelea %d: %s pide orden %d->%d pero toca el puesto %d', p.id, j.nombre, src, dst, p.orden[lado])
+            return 'ChangeCharOrderRsp', dict(OrderingIndex=p.orden[lado])
+        if src != dst:
+            a = next(x for x in miembros if x['Pos'] == src); b = next(x for x in miembros if x['Pos'] == dst)
+            a['Pos'], b['Pos'] = dst, src; miembros.sort(key=lambda x: x['Pos'])
+        p.orden[lado] = dst + 1
+        if p.orden_terminado(lado): p.orden[lado] = n           # el ultimo puesto queda decidido solo
+        log.info('pelea %d: %s pone el personaje %d en el puesto %d -> orden %s', p.id, j.nombre, src, dst, [x['CharId'] for x in miembros])
+        self.difundir(p.jugadores(), 'NotifyOtherRequestChangeCharOrder', dict(SourceUid=j.uid, TargetUid=j.uid, SrcPos=src, TargetPos=dst), excepto=j)
+        if p.orden_terminado(LEFT) and p.orden_terminado(RIGHT): sesion.despues.append(('__orden__', p))
+        return 'ChangeCharOrderRsp', dict(OrderingIndex=dst + 1)
+    def on_AcceptChangeCharOrderReq(self, sesion, d):
+        """2v2: el companero acepta intercambiar puestos."""
+        j = sesion.jugador; p = j.partida; otro_uid = d.get('SourceTeammateId', 0)
+        if p and p.fase == ORDERING_CHAR:
+            ma = next((x for x in p.miembros[j.lado] if x['Uid'] == j.uid), None); mb = next((x for x in p.miembros[j.lado] if x['Uid'] == otro_uid), None)
+            if ma and mb:
+                ma['Pos'], mb['Pos'] = mb['Pos'], ma['Pos']; p.miembros[j.lado].sort(key=lambda x: x['Pos'])
+                for x in p.jugadores():
+                    if x.uid == otro_uid: x.slots = [mb['Pos']]
+                j.slots = [ma['Pos']]
+                self.difundir(p.jugadores(), 'NotifyOtherAcceptChangeCharOrder', dict(SourceUid=otro_uid, TargetUid=j.uid))
+        return None
+    def programar_fin_orden(self, p):
+        """Por si alguien no termina de ordenar (o el telefono no lo pide), el servidor cierra la fase al acabar el tiempo."""
+        try:
+            p.temporizador_orden = asyncio.get_running_loop().call_later(SEGUNDOS_ORDEN + 3, self.terminar_orden, p, True)
+        except RuntimeError:
+            p.temporizador_orden = None
+    def terminar_orden(self, p, por_tiempo=False):
+        if p.temporizador_orden: p.temporizador_orden.cancel(); p.temporizador_orden = None
+        if p.fase != ORDERING_CHAR or self.partidas.get(p.id) is not p: return
+        p.fase = SELECTING_STAGE; p.orden = {LEFT: len(p.miembros[LEFT]), RIGHT: len(p.miembros[RIGHT])}
+        log.info('pelea %d: orden terminado%s %s -> a elegir escenario', p.id, ' (por tiempo)' if por_tiempo else '',
+                 [[x['CharId'] for x in p.miembros[LEFT]], [x['CharId'] for x in p.miembros[RIGHT]]])
+        self.difundir(p.jugadores(), 'NotifyFinishReorderChar', dict())
     def on_SelectStageReq(self, sesion, d):
         j = sesion.jugador; p = j.partida
         if p:

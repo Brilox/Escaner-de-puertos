@@ -7,8 +7,8 @@ salas reales y el relay de combate vienen en las fases siguientes sobre esta mis
 
 ## Qué necesitas
 
-- Un VPS Linux con IP pública (cualquier plan básico sirve) con el puerto 8080 abierto en **TCP y UDP**
-  (TCP para el juego, UDP para la pelea).
+- Un VPS Linux con IP pública (cualquier plan básico sirve) con el puerto TCP 8080 abierto y los puertos
+  **UDP 8079 y 8080** (8080 para la pelea; 8079 para el ping previo, que el juego manda al puerto de la pelea menos uno).
 - Python 3.10 o superior en el VPS. No hace falta ninguna librería extra.
 - En tu PC: Python 3, `pip install UnityPy`, y las herramientas `zipalign` y `apksigner`
   (en Debian/Ubuntu: `sudo apt install zipalign apksigner`; en Windows vienen con Android Studio, en build-tools).
@@ -93,7 +93,12 @@ están todos, el relay da la salida y a partir de ahí reenvía los botones de c
 rollback del propio juego). El formato exacto de cada mensaje está en la cabecera de `relay.py` y en `ANALISIS.md`.
 Al acabar, los teléfonos suben el resultado (`UploadBattleResult`) y el servidor contesta a todos con `BattleResult`.
 
-- El relay corre en un hilo aparte con un socket UDP normal y un KCP propio escrito en Python puro.
+- El relay corre en un hilo aparte con sockets UDP normales y un KCP propio escrito en Python puro.
+- El ping previo va a `RelayServerInfo.Port - 1` (leído en `InitRelayServerPingRetriever`); por eso el relay escucha
+  también en ese puerto. `--puerto-relay N` cambia el puerto de la pelea (el ping pasa a ser N-1).
+- 3v3 y 2v2 tienen una fase de **ordenar personajes** entre la selección y el escenario: cada `ChangeCharOrderReq`
+  llena el puesto `OrderingIndex` y se contesta con el siguiente; el rival recibe `NotifyOtherRequestChangeCharOrder`
+  y, cuando los dos lados terminaron (o pasan 33 s), todos reciben `NotifyFinishReorderChar`.
 - En el log, las líneas `relay:` cuentan quién entra, cuándo empieza la pelea y cuántos inputs se reenviaron.
 - No implementado todavía: el netcode FrameSync (el servidor anuncia rollback), espectadores de una pelea en curso
   y reconexión a mitad de combate.

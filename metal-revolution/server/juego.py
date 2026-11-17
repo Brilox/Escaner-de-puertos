@@ -18,7 +18,9 @@ RANKING, RANKING_2V2, RANKING_NORMAL, RANKING_SOLO_3V3, QUICK_SOLO_3V3 = range(5
 MODOS = {
     RANKING:          dict(nombre='Clasificatoria 1v1', match_type=0, por_lado=1, slots=1, puntua=True),
     RANKING_2V2:      dict(nombre='Clasificatoria 2v2', match_type=7, por_lado=2, slots=1, puntua=True, pantalla_equipo=True),
-    RANKING_NORMAL:   dict(nombre='Normal 1v1',         match_type=1, por_lado=1, slots=1, puntua=False),
+    # Partida rapida: el juego NO muestra seleccion de personaje; usa el favorito elegido antes de buscar (ChangeFavCharReq)
+    # y pasa directo a la carga. El servidor tiene que mandar ya el personaje de cada uno y el escenario.
+    RANKING_NORMAL:   dict(nombre='Normal 1v1',         match_type=1, por_lado=1, slots=1, puntua=False, directo=True),
     # El boton "Clasificatoria" del menu abre el modo 3v3 en solitario (asi viene de fabrica en esta version).
     # Por ahora se juega como 1 contra 1: un solo personaje por lado (el 3v3 se desincronizaba al ordenar personajes).
     RANKING_SOLO_3V3: dict(nombre='Clasificatoria 1v1', match_type=8, por_lado=1, slots=1, puntua=True, pantalla_equipo=True),
@@ -27,6 +29,8 @@ MODOS = {
 GAMEHALL = 5                                                    # MatchType de las mesas del hall
 PUNTOS_INICIALES, PUNTOS_GANAR, PUNTOS_PERDER = 1000, 25, 20
 SEGUNDOS_ORDEN = 30                                             # tiempo para ordenar personajes (3v3 y 2v2)
+ESCENARIOS = (1, 2, 3, 4)                                       # escenarios vistos en las peleas reales (para la partida rapida)
+PERSONAJE_POR_DEFECTO = 5                                       # si alguien busca partida rapida sin haber elegido personaje
 SEGUNDOS_RESULTADO = 10                                         # si un telefono no sube su resultado, se le manda igual tras este tiempo
 ANUNCIO = ('Bienvenido a Metal Online', 'Servidor privado sin fines de lucro, hecho por fans. '
            'Escribe /nombre TuNombre en el chat del hall para cambiar tu nombre.')
@@ -150,6 +154,7 @@ class Partida:
         self.rondas = (0, 0); self.revancha = set(); self.peleas = 0; self.puntos_antes = {}; self.puntos_despues = {}
         self.orden = {LEFT: 0, RIGHT: 0}; self.temporizador_orden = None
         self.datos_resultado = None; self.notificados = set(); self.temporizador_resultado = None
+        self.rondas_detalle = ([], [])                                  # resultado de cada ronda (lista de RoundResult por lado)
         self.miembros = {LEFT: [], RIGHT: []}
         for lado, jugadores in self.lados.items():
             pos = 0
@@ -166,7 +171,7 @@ class Partida:
     def peleando(self): return self.resultado is None and self.fase in (FIGHTING, WAITING_RESULT)
     def orden_terminado(self, lado): return self.orden[lado] >= len(self.miembros[lado]) - 1
     def limpiar_resultado(self):
-        self.resultado = None; self.datos_resultado = None; self.notificados = set()
+        self.resultado = None; self.datos_resultado = None; self.notificados = set(); self.rondas_detalle = ([], [])
         if self.temporizador_resultado: self.temporizador_resultado.cancel(); self.temporizador_resultado = None
     def volver_a_seleccion(self):
         self.fase = SELECTING_CHAR; self.escenario_confirmado = False; self.limpiar_resultado(); self.revancha.clear()
@@ -512,6 +517,13 @@ class Juego:
             cfg = MODOS[modo]
             p = self.crear_partida(cfg['match_type'], lados[0], lados[1], slots=cfg['slots'], modo_mm=modo)
             log.info('%s: pelea %d %s vs %s', cfg['nombre'], p.id, [x.nombre for x in lados[0]], [x.nombre for x in lados[1]])
+            if cfg.get('directo'):
+                # sin seleccion: cada uno pelea con su favorito de este modo, en un escenario al azar, directo a la carga
+                for m in p.todos_los_miembros():
+                    m.update(CharId=self.cuentas.favorito(m['Uid'], modo) or PERSONAJE_POR_DEFECTO, CharConfirmed=True)
+                p.escenario = random.choice(ESCENARIOS); p.escenario_confirmado = True; p.fase = LOADING_FIGHT
+                log.info('pelea %d: directo a la carga con personajes %s en el escenario %d', p.id,
+                         [m['CharId'] for m in p.todos_los_miembros()], p.escenario)
             self.difundir(p.jugadores(), 'NotifySearchMatchRivalFound', dict(MatchState=p.estado()))
     def on_ExitMatchReq(self, sesion, d):
         j = sesion.jugador
@@ -744,9 +756,13 @@ class Juego:
                                 Happiness=0, BattleCount=c.get('partidas', 0), ContinueWin=0, BaseWinPointChange=despues - antes,
                                 AdjustWinPointChange=0, ExitInBattleCountToday=0, ForbidMatchUntilTime=0, GamesvrId=1, PunishWinPoint=0))
             return out
+        # OJO: la pantalla de resultados recorre TotalRounds rondas leyendo LeftRoundResults[i] y RightRoundResults[i];
+        # si TotalRounds es mayor que esas listas, la pantalla falla y el juego se queda en la imagen del ganador.
+        izq, der = p.rondas_detalle; total = min(len(izq), len(der))
         registro = dict(Id='%d-%d' % (p.id, p.peleas), Type=p.match_type, StartTime=p.inicio, EndTime=ahora, WinnerSide=g, WinSideLastPlayerIndex=0,
                         LeftWinRound=p.rondas[0], RightWinRound=p.rondas[1], Stage=p.escenario, Unsynced=False, Interrupted=False,
-                        Version=VERSION_JUEGO, AiType=-1, LeftPlayerInfos=infos(LEFT), RightPlayerInfos=infos(RIGHT), TotalRounds=p.rondas[0] + p.rondas[1])
+                        Version=VERSION_JUEGO, AiType=-1, LeftPlayerInfos=infos(LEFT), RightPlayerInfos=infos(RIGHT), TotalRounds=total,
+                        LeftRoundResults=izq[:total], RightRoundResults=der[:total])
         return dict(LastBattleLog=registro, LeftPlayerChanges=cambios(LEFT), RightPlayerChanges=cambios(RIGHT), MatchId=p.id, SubMatchId=0,
                     SaveBattleLogOnGamesvrId=1)
     def enviar_resultado(self, p, x):
@@ -771,6 +787,7 @@ class Juego:
         ganador = d.get('WinnerSide', -1); rondas = (d.get('LeftWinRound', 0), d.get('RightWinRound', 0))
         if not p or p.fase < LOADING_FIGHT: return None
         if p.resultado is None:
+            p.rondas_detalle = (list(d.get('LeftRoundResults') or []), list(d.get('RightRoundResults') or []))
             self.guardar_resultado(p, ganador, rondas[0], rondas[1]); p.datos_resultado = self.resultado_batalla(p)
             if p.mesa: self.avisar_hall_mesa(p.mesa)
             try: p.temporizador_resultado = asyncio.get_running_loop().call_later(SEGUNDOS_RESULTADO, self.resultado_pendiente, p)

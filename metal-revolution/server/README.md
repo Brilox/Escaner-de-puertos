@@ -103,6 +103,10 @@ Al acabar, los teléfonos suben el resultado (`UploadBattleResult`) y el servido
 - **Resultado:** cada teléfono sube su `UploadBattleResult` y el servidor le contesta con `BattleResult` solo después
   de recibir el suyo. Si se lo manda antes, el teléfono lo descarta y se queda en "esperando resultado". A quien no lo
   sube en 10 s se le manda igual.
+- El `BattleLog` del resultado debe traer `LeftRoundResults`/`RightRoundResults` con `TotalRounds` elementos: la
+  pantalla de resultados los recorre ronda a ronda y, si faltan, falla y el juego se queda en la imagen del ganador.
+- **Partida rápida (tipo 2):** el juego no muestra selección de personaje; usa el favorito elegido antes de buscar
+  (`ChangeFavCharReq`). El servidor manda ya el personaje de cada uno y un escenario, y la pelea pasa directo a la carga.
 - **Clasificatoria:** el botón del menú abre el modo "3v3 en solitario" (`MatchMakingType` 3), pero el servidor lo
   arma como **1 contra 1**: el 3v3 se desincronizaba al ordenar personajes. La búsqueda rápida es el tipo 2 (1v1 normal).
 - No implementado todavía: el netcode FrameSync (el servidor anuncia rollback), espectadores de una pelea en curso

@@ -154,6 +154,9 @@ def resultado(a, b, ganador=0):
     r = b.pedir('UploadBattleResult', datos, ver=False); rb = de(r + b.recibir(0.2), 'BattleResult')
     ok(bool(ra and rb and rb['LastBattleLog']['WinnerSide'] == ganador and rb['LastBattleLog']['LeftWinRound'] == 2),
        'los dos reciben el resultado (BattleResult) con el ganador correcto, cada uno tras subir el suyo')
+    bl = (rb or {}).get('LastBattleLog', {})
+    ok(bl.get('TotalRounds') == 3 and bl.get('LeftRoundResults') == [16, 48, 16] and bl.get('RightRoundResults') == [48, 16, 48],
+       'el resultado trae las rondas (sin ellas la pantalla de resultados del juego falla)')
     a.avisos.clear(); b.avisos.clear()
     return rb
 
@@ -220,11 +223,17 @@ def prueba_clasificatoria():
     r = a.pedir('QueryBattleDataReq', {'Uid': uid_a, 'DetailLevel': 1}, ver=False)
     ok((de(r, 'PlayerBattleData') or {}).get('DetailLevel') == 1, 'las estadisticas vuelven con el nivel de detalle pedido (sin bucle)')
     print('   (esperando %d s: resultado de alguien que nunca lo sube)' % 11)
+    # partida rapida: cada uno elige su personaje ANTES de buscar y el juego va directo a la carga
+    a.pedir('ChangeFavCharReq', {'CharId': 8, 'MatchMakingType': 2}, ver=False); b.pedir('ChangeFavCharReq', {'CharId': 16, 'MatchMakingType': 2}, ver=False)
     a.pedir('StartSearchMatchReq', {'MatchMakingType': 2}, ver=False); b.pedir('StartSearchMatchReq', {'MatchMakingType': 2}, ver=False)
     ea = de(a.recibir(0.3) + a.avisos, 'NotifySearchMatchRivalFound')
-    ok(bool(ea and len(ea['MatchState']['LeftMembers']) == 1), 'la busqueda rapida 1v1 (normal) tambien encuentra rival')
+    ms = (ea or {}).get('MatchState', {})
+    ok(bool(ea and len(ms['LeftMembers']) == 1), 'la busqueda rapida 1v1 (normal) tambien encuentra rival')
+    ok([m['CharId'] for m in ms.get('LeftMembers', []) + ms.get('RightMembers', [])] == [8, 16] and ms.get('StageConfirmed') and ms.get('StageId') in (1, 2, 3, 4),
+       'partida rapida: el servidor ya manda el personaje favorito de cada uno y el escenario (sin eso la carga se queda pegada)')
     a.avisos.clear(); b.avisos.clear(); b.recibir(0.2); b.avisos.clear()
-    seleccion(a, b, (0, 1)); escenario_y_carga(a, b, (0, 1)); pelea(ea['MatchState']['MatchId'], (0, 1), n=10, perder=())
+    a.pedir('SyncLoadingProgressReq', {'Progress': 100, 'Side': 0, 'Pos': 0}, ver=False); b.pedir('SyncLoadingProgressReq', {'Progress': 100, 'Side': 1, 'Pos': 0}, ver=False)
+    pelea(ms['MatchId'], (0, 1), n=10, perder=())
     a.pedir('UploadBattleResult', {'WinnerSide': 1, 'LeftWinRound': 0, 'RightWinRound': 2}, ver=False); b.avisos.clear()
     time.sleep(11); rb = de(b.recibir(0.5) + b.avisos, 'BattleResult')
     ok(bool(rb and rb['LastBattleLog']['WinnerSide'] == 1), 'si un telefono nunca sube su resultado, igual le llega a los 10 s')

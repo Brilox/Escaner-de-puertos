@@ -42,8 +42,12 @@ if [ -d "$DESTINO/.git" ]; then
   sudo -u "$USUARIO" git -C "$DESTINO" fetch -q --depth 1 origin "$RAMA"
   sudo -u "$USUARIO" git -C "$DESTINO" reset -q --hard FETCH_HEAD
 else
-  sudo -u "$USUARIO" git clone -q --depth 1 --filter=blob:none --sparse -b "$RAMA" "$REPO" "$DESTINO"
-  sudo -u "$USUARIO" git -C "$DESTINO" sparse-checkout set metal-revolution/server metal-revolution/datos
+  # sin checkout primero: el repositorio tiene archivos grandes en la raiz que el servidor no necesita
+  sudo -u "$USUARIO" git clone -q --depth 1 --filter=blob:none --no-checkout -b "$RAMA" "$REPO" "$DESTINO"
+  sudo -u "$USUARIO" git -C "$DESTINO" config core.sparseCheckout true
+  sudo -u "$USUARIO" git -C "$DESTINO" config core.sparseCheckoutCone false
+  printf '/metal-revolution/server/\n/metal-revolution/datos/\n' | sudo -u "$USUARIO" tee "$DESTINO/.git/info/sparse-checkout" >/dev/null
+  sudo -u "$USUARIO" git -C "$DESTINO" checkout -q "$RAMA"
 fi
 echo "   version: $(git -C "$DESTINO" log -1 --format='%h %s' | cut -c1-90)"
 

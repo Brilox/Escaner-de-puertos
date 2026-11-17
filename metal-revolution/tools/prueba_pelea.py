@@ -145,11 +145,15 @@ def pelea(match_id, lados, n=120, perder=(3, 4, 40)):
 
 
 def resultado(a, b, ganador=0):
-    a.pedir('UploadBattleResult', {'WinnerSide': ganador, 'LeftWinRound': 2, 'RightWinRound': 1}, ver=False)
-    ra = de(a.recibir(0.2) + a.avisos, 'BattleResult'); rb = de(b.recibir(0.2), 'BattleResult')
-    b.pedir('UploadBattleResult', {'WinnerSide': ganador, 'LeftWinRound': 2, 'RightWinRound': 1}, ver=False)
+    """Como el telefono real: cada uno sube su resultado (con la lista de rondas, que viaja como lista de numeros)."""
+    datos = {'WinnerSide': ganador, 'LeftWinRound': 2, 'RightWinRound': 1, 'LeftRoundResults': [16, 48, 16], 'RightRoundResults': [48, 16, 48],
+             'SnapshotHash': 'abc', 'Interrupted': False}
+    a.pedir('UploadBattleResult', datos, ver=False)
+    ra = de(a.recibir(0.2) + a.avisos, 'BattleResult'); antes = de(b.recibir(0.2), 'BattleResult')
+    ok(antes is None, 'al que todavia no sube su resultado NO se le manda antes de tiempo (si no, se queda esperando)')
+    r = b.pedir('UploadBattleResult', datos, ver=False); rb = de(r + b.recibir(0.2), 'BattleResult')
     ok(bool(ra and rb and rb['LastBattleLog']['WinnerSide'] == ganador and rb['LastBattleLog']['LeftWinRound'] == 2),
-       'los dos reciben el resultado (BattleResult) con el ganador correcto')
+       'los dos reciben el resultado (BattleResult) con el ganador correcto, cada uno tras subir el suyo')
     a.avisos.clear(); b.avisos.clear()
     return rb
 
@@ -195,36 +199,35 @@ def prueba_mesa():
 
 
 def prueba_clasificatoria():
-    print('\n=== CLASIFICATORIA 3v3 (cada jugador lleva 3 personajes) ===')
+    print('\n=== CLASIFICATORIA (el boton pide 3v3; el servidor la arma 1 contra 1) ===')
     a, uid_a = entrar_al_juego('Carla'); b, uid_b = entrar_al_juego('Dani')
     r = a.pedir('StartSearchMatchReq', {'MatchMakingType': 3}, ver=False)
     ok((de(r, 'StartSearchMatchRsp') or {}).get('LastSearchTime', 0) > 0, 'la busqueda arranca (LastSearchTime)')
     b.pedir('StartSearchMatchReq', {'MatchMakingType': 3}, ver=False)
     ea = de(a.recibir(0.3), 'NotifySearchMatchRivalFound'); eb = de(b.recibir(0.3) + b.avisos, 'NotifySearchMatchRivalFound')
-    ok(bool(ea and eb and len(ea['MatchState']['LeftMembers']) == 3 and ea['MatchState']['RelayServerInfo']['Port'] == PUERTO),
-       'rival encontrado: 3 huecos por lado y datos del relay')
+    ok(bool(ea and eb and len(ea['MatchState']['LeftMembers']) == 1 and len(ea['MatchState']['RightMembers']) == 1
+            and ea['MatchState']['RelayServerInfo']['Port'] == PUERTO), 'rival encontrado: UN personaje por lado y datos del relay')
     mid = ea['MatchState']['MatchId']; a.avisos.clear(); b.avisos.clear()
-    seleccion(a, b, (0, 1), slots=3)
-    # fase de ordenar: cada uno llena el puesto 0 y luego el 1; el 2 queda decidido solo
-    r = a.pedir('ChangeCharOrderReq', {'SrcPos': 2, 'TargetPos': 0}, ver=False)
-    ok((de(r, 'ChangeCharOrderRsp') or {}).get('OrderingIndex') == 1, 'ordenar: tras el primer puesto el servidor contesta el puesto siguiente (1)')
-    av = de(b.recibir(0.2), 'NotifyOtherRequestChangeCharOrder')
-    ok(bool(av and av['SourceUid'] == uid_a and av['SrcPos'] == 2 and av['TargetPos'] == 0), 'el rival ve el cambio de orden')
-    r = a.pedir('ChangeCharOrderReq', {'SrcPos': 1, 'TargetPos': 0}, ver=False)
-    ok((de(r, 'ChangeCharOrderRsp') or {}).get('OrderingIndex') == 1, 'un pedido para un puesto ya ocupado no avanza el orden')
-    a.pedir('ChangeCharOrderReq', {'SrcPos': 2, 'TargetPos': 1}, ver=False); b.recibir(0.2)
-    ok(de(a.recibir(0.2), 'NotifyFinishReorderChar') is None, 'con un solo lado ordenado todavia no se pasa al escenario')
-    b.pedir('ChangeCharOrderReq', {'SrcPos': 0, 'TargetPos': 0}, ver=False)
-    r = b.pedir('ChangeCharOrderReq', {'SrcPos': 1, 'TargetPos': 1}, ver=False)
+    a.pedir('SelectCharReq', {'CharId': 5, 'Side': 0, 'Pos': 0}, ver=False); a.pedir('ConfirmSelectCharReq', {'CharId': 5, 'Side': 0, 'Pos': 0}, ver=False)
+    b.pedir('SelectCharReq', {'CharId': 6, 'Side': 1, 'Pos': 0}, ver=False); r = b.pedir('ConfirmSelectCharReq', {'CharId': 6, 'Side': 1, 'Pos': 0}, ver=False)
     fa = de(a.recibir(0.3) + a.avisos, 'NotifyFinishReorderChar'); fb = de(r + b.avisos, 'NotifyFinishReorderChar')
-    ok(fa is not None and fb is not None, 'cuando los dos ordenaron, ambos reciben NotifyFinishReorderChar (a elegir escenario)')
+    ok(fa is not None and fb is not None, 'con los dos personajes confirmados, la pantalla de equipo recibe el paso al escenario')
     a.avisos.clear(); b.avisos.clear()
     escenario_y_carga(a, b, (0, 1)); pelea(mid, (0, 1), n=40, perder=(2,))
     rb = resultado(a, b, 0)
     ok(rb['LeftPlayerChanges'][0]['WinPoint'] > rb['RightPlayerChanges'][0]['WinPoint'], 'el ganador sube puntos y el perdedor baja')
     a.pedir('ExitMatchReq', {}, ver=False); b.pedir('ExitMatchReq', {}, ver=False)
-    r = a.pedir('StartSearchMatchReq', {'MatchMakingType': 0}, ver=False)
-    ok(de(r, 'StartSearchMatchRsp') is not None, 'despues de la pelea se puede volver a buscar rival')
+    r = a.pedir('QueryBattleDataReq', {'Uid': uid_a, 'DetailLevel': 1}, ver=False)
+    ok((de(r, 'PlayerBattleData') or {}).get('DetailLevel') == 1, 'las estadisticas vuelven con el nivel de detalle pedido (sin bucle)')
+    print('   (esperando %d s: resultado de alguien que nunca lo sube)' % 11)
+    a.pedir('StartSearchMatchReq', {'MatchMakingType': 2}, ver=False); b.pedir('StartSearchMatchReq', {'MatchMakingType': 2}, ver=False)
+    ea = de(a.recibir(0.3) + a.avisos, 'NotifySearchMatchRivalFound')
+    ok(bool(ea and len(ea['MatchState']['LeftMembers']) == 1), 'la busqueda rapida 1v1 (normal) tambien encuentra rival')
+    a.avisos.clear(); b.avisos.clear(); b.recibir(0.2); b.avisos.clear()
+    seleccion(a, b, (0, 1)); escenario_y_carga(a, b, (0, 1)); pelea(ea['MatchState']['MatchId'], (0, 1), n=10, perder=())
+    a.pedir('UploadBattleResult', {'WinnerSide': 1, 'LeftWinRound': 0, 'RightWinRound': 2}, ver=False); b.avisos.clear()
+    time.sleep(11); rb = de(b.recibir(0.5) + b.avisos, 'BattleResult')
+    ok(bool(rb and rb['LastBattleLog']['WinnerSide'] == 1), 'si un telefono nunca sube su resultado, igual le llega a los 10 s')
     a.s.close(); b.s.close()
 
 

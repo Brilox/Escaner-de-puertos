@@ -17,14 +17,17 @@ WAITING_ALL_READY, SELECTING_CHAR, ORDERING_CHAR, SELECTING_STAGE, LOADING_FIGHT
 RANKING, RANKING_2V2, RANKING_NORMAL, RANKING_SOLO_3V3, QUICK_SOLO_3V3 = range(5)
 MODOS = {
     RANKING:          dict(nombre='Clasificatoria 1v1', match_type=0, por_lado=1, slots=1, puntua=True),
-    RANKING_2V2:      dict(nombre='Clasificatoria 2v2', match_type=7, por_lado=2, slots=1, puntua=True),
+    RANKING_2V2:      dict(nombre='Clasificatoria 2v2', match_type=7, por_lado=2, slots=1, puntua=True, pantalla_equipo=True),
     RANKING_NORMAL:   dict(nombre='Normal 1v1',         match_type=1, por_lado=1, slots=1, puntua=False),
-    RANKING_SOLO_3V3: dict(nombre='Clasificatoria 3v3', match_type=8, por_lado=1, slots=3, puntua=True),
-    QUICK_SOLO_3V3:   dict(nombre='Normal 3v3',         match_type=9, por_lado=1, slots=3, puntua=False),
+    # El boton "Clasificatoria" del menu abre el modo 3v3 en solitario (asi viene de fabrica en esta version).
+    # Por ahora se juega como 1 contra 1: un solo personaje por lado (el 3v3 se desincronizaba al ordenar personajes).
+    RANKING_SOLO_3V3: dict(nombre='Clasificatoria 1v1', match_type=8, por_lado=1, slots=1, puntua=True, pantalla_equipo=True),
+    QUICK_SOLO_3V3:   dict(nombre='Rapida 1v1',         match_type=9, por_lado=1, slots=1, puntua=False, pantalla_equipo=True),
 }
 GAMEHALL = 5                                                    # MatchType de las mesas del hall
 PUNTOS_INICIALES, PUNTOS_GANAR, PUNTOS_PERDER = 1000, 25, 20
 SEGUNDOS_ORDEN = 30                                             # tiempo para ordenar personajes (3v3 y 2v2)
+SEGUNDOS_RESULTADO = 10                                         # si un telefono no sube su resultado, se le manda igual tras este tiempo
 ANUNCIO = ('Bienvenido a Metal Online', 'Servidor privado sin fines de lucro, hecho por fans. '
            'Escribe /nombre TuNombre en el chat del hall para cambiar tu nombre.')
 
@@ -146,6 +149,7 @@ class Partida:
         self.escenario = 1; self.escenario_confirmado = False; self.inicio = int(time.time()); self.relay = None; self.resultado = None
         self.rondas = (0, 0); self.revancha = set(); self.peleas = 0; self.puntos_antes = {}; self.puntos_despues = {}
         self.orden = {LEFT: 0, RIGHT: 0}; self.temporizador_orden = None
+        self.datos_resultado = None; self.notificados = set(); self.temporizador_resultado = None
         self.miembros = {LEFT: [], RIGHT: []}
         for lado, jugadores in self.lados.items():
             pos = 0
@@ -161,8 +165,11 @@ class Partida:
     def en_curso(self): return self.resultado is None and self.fase in (LOADING_FIGHT, FIGHTING, WAITING_RESULT)
     def peleando(self): return self.resultado is None and self.fase in (FIGHTING, WAITING_RESULT)
     def orden_terminado(self, lado): return self.orden[lado] >= len(self.miembros[lado]) - 1
+    def limpiar_resultado(self):
+        self.resultado = None; self.datos_resultado = None; self.notificados = set()
+        if self.temporizador_resultado: self.temporizador_resultado.cancel(); self.temporizador_resultado = None
     def volver_a_seleccion(self):
-        self.fase = SELECTING_CHAR; self.escenario_confirmado = False; self.resultado = None; self.revancha.clear()
+        self.fase = SELECTING_CHAR; self.escenario_confirmado = False; self.limpiar_resultado(); self.revancha.clear()
         self.orden = {LEFT: 0, RIGHT: 0}
         for m in self.todos_los_miembros(): m.update(CharConfirmed=False, Ready=False, LoadingProgress=0)
     def jugadores(self): return self.lados[LEFT] + self.lados[RIGHT]
@@ -207,14 +214,14 @@ class Juego:
         pi['BattleData'] = self.datos_batalla(cuenta)
         return pi
 
-    def datos_batalla(self, cuenta):
+    def datos_batalla(self, cuenta, nivel=1):
         uid = cuenta['uid']; mm = []
         for modo in range(len(MODOS)):
             r = self.cuentas.rank(uid, modo)
             mm.append(dict(Happiness=0, RankPoint=r['puntos'], WinPoint=r['puntos'], MaxWinPoint=r['max_puntos'], ContinueRewardAiCount=0,
                            FavorHeroId=self.cuentas.favorito(uid, modo), ExitInBattleCountToday=0, ForbidMatchUntilTime=0))
         total = dict(WinCount=cuenta['victorias'], TotalCount=cuenta['partidas'], ContinueWinCount=0, MaxContinueWinCount=0)
-        return dict(Uid=uid, DetailLevel=0, PreferNetCode=0, CommonBattleStats=[total], MatchMakingBattleStats=mm)
+        return dict(Uid=uid, DetailLevel=nivel, PreferNetCode=0, CommonBattleStats=[total], MatchMakingBattleStats=mm)
 
     def respuesta_login(self, cuenta):
         return 'LoginGameSvrRsp', dict(self.plantilla, PlayerInfo=self.info_detallada(cuenta), UtcTimeOffset=0, GameServerId=1, PayZoneId=0)
@@ -283,7 +290,10 @@ class Juego:
     def on_BatchQueryPlayerInfoReq(self, sesion, d):
         return 'BatchQueryPlayerInfoRsp', dict(Result=[self.info_detallada(c) for c in (self.cuentas.get(u) for u in d.get('Uids', [])) if c])
     def on_QueryBattleDataReq(self, sesion, d):
-        c = self.cuentas.get(d.get('Uid') or sesion.jugador.uid); return ('PlayerBattleData', self.datos_batalla(c)) if c else None
+        """Hay que devolver el mismo DetailLevel que se pide: si se devuelve uno menor, el telefono cree que los datos
+        estan incompletos y los vuelve a pedir sin parar (bucle de cientos de peticiones por segundo)."""
+        c = self.cuentas.get(d.get('Uid') or sesion.jugador.uid)
+        return ('PlayerBattleData', self.datos_batalla(c, d.get('DetailLevel', 1))) if c else None
     def on_ChangeFavCharReq(self, sesion, d):
         j = sesion.jugador; modo = d.get('MatchMakingType', 0); personaje = d.get('CharId', 0)
         if self.cuentas.favorito(j.uid, modo) != personaje:
@@ -551,6 +561,7 @@ class Juego:
         if mesa: mesa.partida = p
         return p
     def cerrar_partida(self, p):
+        if p.temporizador_orden: p.temporizador_orden.cancel(); p.temporizador_orden = None
         for j in p.jugadores():
             if j.partida is p: j.partida = None; j.lado = None; j.slots = []
         if p.mesa and p.mesa.partida is p: p.mesa.partida = None
@@ -606,6 +617,11 @@ class Juego:
                     p.fase = ORDERING_CHAR; p.orden = {LEFT: 0, RIGHT: 0}
                     log.info('pelea %d: personajes listos %s -> a ordenarlos', p.id, elegidos)
                     self.programar_fin_orden(p)
+                elif p.modo_mm is not None and MODOS[p.modo_mm].get('pantalla_equipo'):
+                    # Pantalla de equipo con un solo personaje: no hay nada que ordenar, pero esa pantalla espera el aviso
+                    # NotifyFinishReorderChar para pasar al escenario.
+                    p.fase = ORDERING_CHAR; log.info('pelea %d: personajes listos %s -> a elegir escenario', p.id, elegidos)
+                    sesion.despues.append(('__orden__', p))
                 else:
                     p.fase = SELECTING_STAGE; log.info('pelea %d: personajes listos %s -> a elegir escenario', p.id, elegidos)
         return 'ConfirmSelectCharRsp', dict(Confirm=confirma, Side=m['Side'] if m else 0, Pos=m['Pos'] if m else 0)
@@ -733,21 +749,38 @@ class Juego:
                         Version=VERSION_JUEGO, AiType=-1, LeftPlayerInfos=infos(LEFT), RightPlayerInfos=infos(RIGHT), TotalRounds=p.rondas[0] + p.rondas[1])
         return dict(LastBattleLog=registro, LeftPlayerChanges=cambios(LEFT), RightPlayerChanges=cambios(RIGHT), MatchId=p.id, SubMatchId=0,
                     SaveBattleLogOnGamesvrId=1)
+    def enviar_resultado(self, p, x):
+        """BattleResult a un jugador, una sola vez por pelea."""
+        if x in p.notificados or p.datos_resultado is None: return
+        p.notificados.add(x); x.notificar('BattleResult', p.datos_resultado); x.notificar('NotifyBasePlayerInfoChange', self.info_detallada(x.cuenta))
     def avisar_resultado(self, p, excepto=None):
-        datos = self.resultado_batalla(p)
+        if p.datos_resultado is None: p.datos_resultado = self.resultado_batalla(p)
         for x in p.jugadores():
-            if x is excepto: continue
-            x.notificar('BattleResult', datos); x.notificar('NotifyBasePlayerInfoChange', self.info_detallada(x.cuenta))
+            if x is not excepto: self.enviar_resultado(p, x)
+    def resultado_pendiente(self, p):
+        """Pasado el plazo, el resultado se manda tambien a quien no subio el suyo (se colgo, cerro el juego...)."""
+        p.temporizador_resultado = None
+        faltan = [x for x in p.jugadores() if x not in p.notificados]
+        if faltan: log.info('pelea %d: %s no subio su resultado; se le manda igual', p.id, [x.nombre for x in faltan])
+        for x in faltan: self.enviar_resultado(p, x)
     def on_UploadBattleResult(self, sesion, d):
-        """Los dos telefonos suben su resultado; vale el primero que llega y se compara con el segundo."""
+        """Cada telefono sube su resultado al terminar la pelea; vale el primero que llega.
+        OJO: a cada telefono se le manda BattleResult solo DESPUES de que el mismo sube el suyo. Si le llega antes (cuando
+        aun no termina de mostrar la pelea), lo descarta y luego se queda para siempre en 'esperando resultado'."""
         j = sesion.jugador; p = j.partida
         ganador = d.get('WinnerSide', -1); rondas = (d.get('LeftWinRound', 0), d.get('RightWinRound', 0))
-        if p and p.resultado is None and p.fase >= LOADING_FIGHT:
-            self.guardar_resultado(p, ganador, rondas[0], rondas[1]); self.avisar_resultado(p)
+        if not p or p.fase < LOADING_FIGHT: return None
+        if p.resultado is None:
+            self.guardar_resultado(p, ganador, rondas[0], rondas[1]); p.datos_resultado = self.resultado_batalla(p)
             if p.mesa: self.avisar_hall_mesa(p.mesa)
-        elif p and p.resultado is not None and (p.resultado, p.rondas) != (ganador if ganador in (LEFT, RIGHT) else p.resultado, rondas):
+            try: p.temporizador_resultado = asyncio.get_running_loop().call_later(SEGUNDOS_RESULTADO, self.resultado_pendiente, p)
+            except RuntimeError: pass
+        elif (p.resultado, p.rondas) != (ganador if ganador in (LEFT, RIGHT) else p.resultado, rondas):
             log.warning('pelea %d: %s subio un resultado distinto (lado %s, %s) al registrado (lado %s, %s): posible desincronizacion',
                         p.id, j.nombre, ganador, rondas, p.resultado, p.rondas)
+        else:
+            log.info('pelea %d: %s confirma el mismo resultado', p.id, j.nombre)
+        self.enviar_resultado(p, j)
         return None
     def on_RefightReq(self, sesion, d):
         """Revancha directa con los mismos personajes: arranca cuando los dos la piden."""
@@ -758,7 +791,7 @@ class Juego:
         p.revancha.add(j); todos = all(x in p.revancha for x in p.jugadores())
         self.difundir(p.jugadores(), 'NotifyOtherRequestRefight', dict(FightStarted=todos, Side=j.lado, Pos=j.slots[0]), excepto=j)
         if todos:
-            p.resultado = None; p.fase = LOADING_FIGHT; p.revancha.clear(); p.peleas += 1
+            p.limpiar_resultado(); p.fase = LOADING_FIGHT; p.revancha.clear(); p.peleas += 1
             for m in p.todos_los_miembros(): m['LoadingProgress'] = 0
             log.info('pelea %d: revancha aceptada por todos', p.id)
         return 'RefightRsp', dict(FightStarted=todos)

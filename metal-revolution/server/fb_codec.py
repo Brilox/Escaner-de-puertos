@@ -8,6 +8,11 @@ class Codec:
         self.S=schema; self.T=schema['tables']; self.ST=schema['structs']; self.E=schema['enums']; self.U=schema.get('unions',{})
         self.struct_layout={}
         self.enum_by_value={n:{v:k for k,v in e['values'].items()} for n,e in self.E.items()}
+        # Listas de enums (p. ej. RoundResult en UploadBattleResult) viajan como listas de numeros simples.
+        for t in list(self.T.values()) + list(self.ST.values()):
+            for f in t['fields']:
+                if f['kind'] == 'vector' and f.get('elem') == 'struct' and f.get('type') in self.E and f['type'] not in self.ST:
+                    f['elem'] = 'scalar'; f['type'] = self.E[f['type']]['base']
     def union_table(self,uname,value):
         name=self.enum_by_value[uname].get(value); 
         if name is None: return None,None

@@ -10,7 +10,7 @@ Ademas, en el mismo numero de puerto pero por UDP, el relay de la pelea en tiemp
 
 Uso: python3 mr_server.py --host <ip-publica> [--port 8080] [--debug] [--nombre-automatico]
 """
-import argparse, asyncio, json, logging, os, struct, sys, time
+import argparse, asyncio, json, logging, logging.handlers, os, struct, sys, time
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))   # usa la copia local de flatbuffers
 from fb_codec import Codec
 from juego import Juego
@@ -251,7 +251,7 @@ async def main():
     ap.add_argument('--nombre-automatico', action='store_true', help='asigna JugadorNNN sin pedir nombre')
     a = ap.parse_args()
     logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s',
-                        handlers=[logging.StreamHandler(), logging.FileHandler(a.log, encoding='utf-8')])
+                        handlers=[logging.StreamHandler(), logging.handlers.RotatingFileHandler(a.log, maxBytes=20 * 1024 * 1024, backupCount=3, encoding='utf-8')])
     srv = Server(a)
     loop = asyncio.get_running_loop()
     relay = Relay(a.listen, srv.juego.puerto_relay, esperados=srv.juego.jugadores_en_relay,

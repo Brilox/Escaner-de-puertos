@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Instala (o actualiza) el servidor de Metal Revolution en una maquina Linux de Oracle Cloud (Ubuntu u Oracle Linux).
+# Instala (o actualiza) el servidor de Metal Revolution en una maquina Linux: Oracle Cloud (Ubuntu u Oracle Linux)
+# o cualquier VPS con Ubuntu/Debian (Vultr, etc.).
 #
 #   curl -fsSLO https://raw.githubusercontent.com/Brilox/Escaner-de-puertos/claude/metal-revolution-multiplayer-server-kode3a/metal-revolution/server/instalar_oracle.sh
 #   sudo bash instalar_oracle.sh                 # detecta la IP publica sola
@@ -28,7 +29,7 @@ echo "== 1/5 Paquetes (git, python3, cortafuegos)"
 if command -v apt-get >/dev/null 2>&1; then
   export DEBIAN_FRONTEND=noninteractive
   apt-get update -qq
-  apt-get install -y -qq git python3 curl iptables-persistent >/dev/null
+  apt-get install -y -qq git python3 curl >/dev/null
 elif command -v dnf >/dev/null 2>&1; then
   dnf install -y -q git python3 curl >/dev/null
 else
@@ -62,10 +63,17 @@ fi
 echo "   los telefonos se conectaran a $IP:$PUERTO"
 
 echo "== 4/5 Cortafuegos de la maquina: TCP $PUERTO, UDP $PUERTO_PING y UDP $PUERTO"
-if command -v firewall-cmd >/dev/null 2>&1 && systemctl is-active --quiet firewalld; then
+if command -v ufw >/dev/null 2>&1 && ufw status 2>/dev/null | grep -q '^Status: active'; then
+  # VPS con ufw (Vultr y otros): se usa ufw. Ojo: instalar iptables-persistent desinstalaria ufw.
+  ufw allow "$PUERTO/tcp" >/dev/null
+  ufw allow "$PUERTO_PING:$PUERTO/udp" >/dev/null
+elif command -v firewall-cmd >/dev/null 2>&1 && systemctl is-active --quiet firewalld; then
   firewall-cmd -q --permanent --add-port="$PUERTO/tcp" --add-port="$PUERTO_PING-$PUERTO/udp"
   firewall-cmd -q --reload
 else
+  if command -v apt-get >/dev/null 2>&1 && ! command -v ufw >/dev/null 2>&1; then
+    apt-get install -y -qq iptables-persistent >/dev/null       # Oracle Ubuntu: para que las reglas sobrevivan al reinicio
+  fi
   abrir() { iptables -C INPUT -p "$1" --dport "$2" -j ACCEPT 2>/dev/null || iptables -I INPUT -p "$1" --dport "$2" -j ACCEPT; }
   abrir tcp "$PUERTO"; abrir udp "$PUERTO_PING"; abrir udp "$PUERTO"
   if command -v netfilter-persistent >/dev/null 2>&1; then netfilter-persistent save >/dev/null 2>&1 || true
@@ -100,7 +108,7 @@ if systemctl is-active --quiet "$SERVICIO"; then
   echo "  Reiniciar:            sudo systemctl restart $SERVICIO"
   echo "  Parar:                sudo systemctl stop $SERVICIO"
   echo "  Actualizar:           sudo bash $SERVER_DIR/instalar_oracle.sh"
-  echo "Recuerda abrir esos mismos puertos en la Security List de Oracle (paso 4 de la guia)."
+  echo "En Oracle, recuerda abrir esos mismos puertos en la Security List (paso 4 de la guia)."
 else
   echo "El servidor no arranco. Ultimas lineas:"; journalctl -u "$SERVICIO" -n 30 --no-pager; exit 1
 fi

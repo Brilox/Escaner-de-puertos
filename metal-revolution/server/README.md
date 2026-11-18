@@ -107,8 +107,11 @@ Al acabar, los teléfonos suben el resultado (`UploadBattleResult`) y el servido
   pantalla de resultados los recorre ronda a ronda y, si faltan, falla y el juego se queda en la imagen del ganador.
 - **Partida rápida (tipo 2):** el juego no muestra selección de personaje; usa el favorito elegido antes de buscar
   (`ChangeFavCharReq`). El servidor manda ya el personaje de cada uno y un escenario, y la pelea pasa directo a la carga.
-- **Clasificatoria:** el botón del menú abre el modo "3v3 en solitario" (`MatchMakingType` 3), pero el servidor lo
-  arma como **1 contra 1**: el 3v3 se desincronizaba al ordenar personajes. La búsqueda rápida es el tipo 2 (1v1 normal).
+- **Clasificatoria:** el botón del menú abre el modo "3v3 en solitario" (`MatchMakingType` 3): 3 personajes por
+  jugador, fase de ordenarlos y pelea por relevos. Al reordenar, el rival recibe `NotifyOtherRequestChangeCharOrder`
+  con `TargetUid = 0`; con otro valor su teléfono lo ignora y la pelea se desincroniza.
+- **Sala:** al terminar la pelea no se manda `NotifyRoomDetailInfoUpdate` a los de la mesa. Si llega justo antes del
+  resultado, el teléfono se queda en la imagen del ganador sin revancha ni salir.
 - No implementado todavía: el netcode FrameSync (el servidor anuncia rollback), espectadores de una pelea en curso
   y reconexión a mitad de combate.
 

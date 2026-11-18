@@ -21,10 +21,10 @@ MODOS = {
     # Partida rapida: el juego NO muestra seleccion de personaje; usa el favorito elegido antes de buscar (ChangeFavCharReq)
     # y pasa directo a la carga. El servidor tiene que mandar ya el personaje de cada uno y el escenario.
     RANKING_NORMAL:   dict(nombre='Normal 1v1',         match_type=1, por_lado=1, slots=1, puntua=False, directo=True),
-    # El boton "Clasificatoria" del menu abre el modo 3v3 en solitario (asi viene de fabrica en esta version).
-    # Por ahora se juega como 1 contra 1: un solo personaje por lado (el 3v3 se desincronizaba al ordenar personajes).
-    RANKING_SOLO_3V3: dict(nombre='Clasificatoria 1v1', match_type=8, por_lado=1, slots=1, puntua=True, pantalla_equipo=True),
-    QUICK_SOLO_3V3:   dict(nombre='Rapida 1v1',         match_type=9, por_lado=1, slots=1, puntua=False, pantalla_equipo=True),
+    # El boton "Clasificatoria" del menu abre el modo 3v3 en solitario (asi viene de fabrica en esta version):
+    # cada jugador elige 3 personajes, los ordena y pelean por relevos.
+    RANKING_SOLO_3V3: dict(nombre='Clasificatoria 3v3', match_type=8, por_lado=1, slots=3, puntua=True, pantalla_equipo=True),
+    QUICK_SOLO_3V3:   dict(nombre='Rapida 3v3',         match_type=9, por_lado=1, slots=3, puntua=False, pantalla_equipo=True),
 }
 GAMEHALL = 5                                                    # MatchType de las mesas del hall
 PUNTOS_INICIALES, PUNTOS_GANAR, PUNTOS_PERDER = 1000, 25, 20
@@ -662,7 +662,9 @@ class Juego:
         p.orden[lado] = dst + 1
         if p.orden_terminado(lado): p.orden[lado] = n           # el ultimo puesto queda decidido solo
         log.info('pelea %d: %s pone el personaje %d en el puesto %d -> orden %s', p.id, j.nombre, src, dst, [x['CharId'] for x in miembros])
-        self.difundir(p.jugadores(), 'NotifyOtherRequestChangeCharOrder', dict(SourceUid=j.uid, TargetUid=j.uid, SrcPos=src, TargetPos=dst), excepto=j)
+        # TargetUid = 0 significa "reordena sus propios personajes". Con TargetUid = el mismo jugador, el telefono del rival
+        # lo toma como un pedido entre companeros que no aplica, NO cambia el orden y la pelea se desincroniza.
+        self.difundir(p.jugadores(), 'NotifyOtherRequestChangeCharOrder', dict(SourceUid=j.uid, TargetUid=0, SrcPos=src, TargetPos=dst), excepto=j)
         if p.orden_terminado(LEFT) and p.orden_terminado(RIGHT): sesion.despues.append(('__orden__', p))
         return 'ChangeCharOrderRsp', dict(OrderingIndex=dst + 1)
     def on_AcceptChangeCharOrderReq(self, sesion, d):
@@ -789,7 +791,8 @@ class Juego:
         if p.resultado is None:
             p.rondas_detalle = (list(d.get('LeftRoundResults') or []), list(d.get('RightRoundResults') or []))
             self.guardar_resultado(p, ganador, rondas[0], rondas[1]); p.datos_resultado = self.resultado_batalla(p)
-            if p.mesa: self.avisar_hall_mesa(p.mesa)
+            # (en la sala NO se manda NotifyRoomDetailInfoUpdate aqui: los asientos no cambian y, si le llega al telefono
+            #  justo antes del resultado, se queda en la imagen del ganador sin revancha ni salir)
             try: p.temporizador_resultado = asyncio.get_running_loop().call_later(SEGUNDOS_RESULTADO, self.resultado_pendiente, p)
             except RuntimeError: pass
         elif (p.resultado, p.rondas) != (ganador if ganador in (LEFT, RIGHT) else p.resultado, rondas):

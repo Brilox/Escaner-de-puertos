@@ -202,19 +202,30 @@ def prueba_mesa():
 
 
 def prueba_clasificatoria():
-    print('\n=== CLASIFICATORIA (el boton pide 3v3; el servidor la arma 1 contra 1) ===')
+    print('\n=== CLASIFICATORIA 3v3 (cada jugador elige 3 personajes y los ordena) ===')
     a, uid_a = entrar_al_juego('Carla'); b, uid_b = entrar_al_juego('Dani')
     r = a.pedir('StartSearchMatchReq', {'MatchMakingType': 3}, ver=False)
     ok((de(r, 'StartSearchMatchRsp') or {}).get('LastSearchTime', 0) > 0, 'la busqueda arranca (LastSearchTime)')
     b.pedir('StartSearchMatchReq', {'MatchMakingType': 3}, ver=False)
     ea = de(a.recibir(0.3), 'NotifySearchMatchRivalFound'); eb = de(b.recibir(0.3) + b.avisos, 'NotifySearchMatchRivalFound')
-    ok(bool(ea and eb and len(ea['MatchState']['LeftMembers']) == 1 and len(ea['MatchState']['RightMembers']) == 1
-            and ea['MatchState']['RelayServerInfo']['Port'] == PUERTO), 'rival encontrado: UN personaje por lado y datos del relay')
+    ok(bool(ea and eb and len(ea['MatchState']['LeftMembers']) == 3 and ea['MatchState']['RelayServerInfo']['Port'] == PUERTO),
+       'rival encontrado: 3 huecos por lado y datos del relay')
     mid = ea['MatchState']['MatchId']; a.avisos.clear(); b.avisos.clear()
-    a.pedir('SelectCharReq', {'CharId': 5, 'Side': 0, 'Pos': 0}, ver=False); a.pedir('ConfirmSelectCharReq', {'CharId': 5, 'Side': 0, 'Pos': 0}, ver=False)
-    b.pedir('SelectCharReq', {'CharId': 6, 'Side': 1, 'Pos': 0}, ver=False); r = b.pedir('ConfirmSelectCharReq', {'CharId': 6, 'Side': 1, 'Pos': 0}, ver=False)
+    seleccion(a, b, (0, 1), slots=3)
+    # fase de ordenar: cada uno llena el puesto 0 y luego el 1; el 2 queda decidido solo
+    r = a.pedir('ChangeCharOrderReq', {'SrcPos': 2, 'TargetPos': 0}, ver=False)
+    ok((de(r, 'ChangeCharOrderRsp') or {}).get('OrderingIndex') == 1, 'ordenar: tras el primer puesto el servidor contesta el puesto siguiente (1)')
+    av = de(b.recibir(0.2), 'NotifyOtherRequestChangeCharOrder')
+    ok(bool(av and av['SourceUid'] == uid_a and av['TargetUid'] == 0 and av['SrcPos'] == 2 and av['TargetPos'] == 0),
+       'el rival recibe el cambio de orden con TargetUid=0 (si no, su telefono lo ignora y se desincroniza)')
+    r = a.pedir('ChangeCharOrderReq', {'SrcPos': 1, 'TargetPos': 0}, ver=False)
+    ok((de(r, 'ChangeCharOrderRsp') or {}).get('OrderingIndex') == 1, 'un pedido para un puesto ya ocupado no avanza el orden')
+    a.pedir('ChangeCharOrderReq', {'SrcPos': 2, 'TargetPos': 1}, ver=False); b.recibir(0.2)
+    ok(de(a.recibir(0.2), 'NotifyFinishReorderChar') is None, 'con un solo lado ordenado todavia no se pasa al escenario')
+    b.pedir('ChangeCharOrderReq', {'SrcPos': 0, 'TargetPos': 0}, ver=False)
+    r = b.pedir('ChangeCharOrderReq', {'SrcPos': 1, 'TargetPos': 1}, ver=False)
     fa = de(a.recibir(0.3) + a.avisos, 'NotifyFinishReorderChar'); fb = de(r + b.avisos, 'NotifyFinishReorderChar')
-    ok(fa is not None and fb is not None, 'con los dos personajes confirmados, la pantalla de equipo recibe el paso al escenario')
+    ok(fa is not None and fb is not None, 'cuando los dos ordenaron, ambos reciben NotifyFinishReorderChar (a elegir escenario)')
     a.avisos.clear(); b.avisos.clear()
     escenario_y_carga(a, b, (0, 1)); pelea(mid, (0, 1), n=40, perder=(2,))
     rb = resultado(a, b, 0)

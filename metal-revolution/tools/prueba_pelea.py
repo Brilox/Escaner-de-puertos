@@ -187,6 +187,8 @@ def prueba_mesa():
     r = a.pedir('EnterHallRoomReq', {'RoomId': 1, 'Pos': 0, 'Password': 0}, ver=False); v = de(r, 'GameHallMatchCreated')
     ok(bool(v and v['RoomDetail']['LeftPlayerId'] == 0 and v['RoomDetail']['RightPlayerId'] == 0 and v['MatchState']['Phase'] == 0),
        'el primer jugador queda en la SALA DE ESPERA (no pasa solo a elegir personaje)')
+    fu = de(r + a.recibir(0.2) + a.avisos, 'NotifyRoomDetailInfoUpdate')
+    ok(bool(fu and fu['LeftPlayerId'] == uid_a), 'despues le llega la ficha con su asiento ocupado (para que se vea su avatar)')
     r = b.pedir('QueryRoomListInHallReq', {'FromRoomId': 1, 'ToRoomId': 8}, ver=False)
     ok(de(r, 'QueryRoomListInHallRsp')['RoomInfos'][0]['LeftPlayerId'] == uid_a, 'el segundo jugador ve la mesa con el primero sentado')
     b.avisos.clear(); a.recibir(0.1); a.avisos.clear()

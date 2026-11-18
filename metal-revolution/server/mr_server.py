@@ -117,6 +117,8 @@ class Blobs:
                 b'VersionUpdate:ReqUpdateVersion': self.raw['mroffline_assets_kVersionUpdateNoUpdateRsp171']}
 
 # ---------------------------------------------------------------- sesion de juego
+# peticiones que llegan cada pocos segundos durante la pelea: no se escriben en el log (salvo --debug-hex)
+RUIDOSOS = {'PlayerClientPing', 'UploadBattleInputDataReq'}
 class Sesion:
     def __init__(self, srv, cid, reader, writer):
         self.srv = srv; self.cid = cid; self.reader = reader; self.writer = writer
@@ -136,7 +138,7 @@ class Sesion:
         while True:
             data = await asyncio.wait_for(self.reader.read(65536), 600)
             if not data: return
-            if self.srv.debug: log.info('[%d] RX %s', self.cid, data.hex())
+            if self.srv.debug_hex: log.info('[%d] RX %s', self.cid, data.hex())
             buf += data
             while True:
                 try: p = parse_direct(buf)
@@ -148,13 +150,14 @@ class Sesion:
             await self.writer.drain()
     def procesar(self, seq, cmd, payload):
         """Nunca deja caer la conexion: cualquier fallo termina en una respuesta EmptyRsp."""
-        srv = self.srv; nombre = srv.req_names.get(cmd, '?'); como = ''
+        srv = self.srv; nombre = srv.req_names.get(cmd, '?'); como = ''; ruidoso = False
         try:
             try: req = srv.codec.decode('GameSvrRequest', payload)
             except Exception as e:
                 req = None; log.warning('[%d] no pude decodificar cmd=%d %s: %s', self.cid, cmd, nombre, e)
             tipo = (req or {}).get('DataType') or nombre; datos = (req or {}).get('Data') or {}
-            log.info('[%d] <- %s seq=%d %s', self.cid, tipo, seq, json.dumps(datos, ensure_ascii=False, default=str)[:400])
+            ruidoso = tipo in RUIDOSOS and not srv.debug_hex
+            if not ruidoso: log.info('[%d] <- %s seq=%d %s', self.cid, tipo, seq, json.dumps(datos, ensure_ascii=False, default=str)[:400])
             handler = srv.juego.handlers.get(tipo); rsp_payload = None
             if self.jugador: srv.juego.actividad(self.jugador, tipo)
             if handler and (self.jugador or tipo in srv.juego.PUBLICOS):
@@ -175,7 +178,7 @@ class Sesion:
         except Exception:
             log.exception('[%d] error procesando cmd=%d', self.cid, cmd); rsp_payload = srv.empty; como = 'EmptyRsp (error)'
         self.writer.write(build_direct(RESPONSE, seq, cmd, bytes(rsp_payload)))
-        log.info('[%d] -> %s (%d bytes)', self.cid, como, len(rsp_payload))
+        if not ruidoso: log.info('[%d] -> %s (%d bytes)', self.cid, como, len(rsp_payload))
         pend = self.pendientes + self.despues; self.pendientes = []; self.despues = []
         for tipo_n, datos_n in pend:
             try:
@@ -189,7 +192,7 @@ class Sesion:
 # ---------------------------------------------------------------- servidor
 class Server:
     def __init__(self, a):
-        self.debug = a.debug; self.host = a.host; self.port = a.port
+        self.debug = a.debug; self.debug_hex = a.debug_hex; self.host = a.host; self.port = a.port
         self.codec = Codec(json.load(open(os.path.join(HERE, 'esquema_fb.json'))))
         self.req_names = {v: k for k, v in self.codec.E['GameSvrReqUnion']['values'].items()}
         self.notice_ids = self.codec.E['GameSvrNoticeUnion']['values']
@@ -228,7 +231,7 @@ class Server:
             h = tgcp_head(pkt); extra = await asyncio.wait_for(reader.readexactly(h.get(9, 0)), 60) if h.get(9) else b''
             n += 1; cmd = h.get(4)
             log.info('[%d] TGCP #%d cmd=%s largo=%d datos=%d', cid, n, hex(cmd) if cmd is not None else '?', total, len(extra))
-            if self.debug: log.info('[%d] RX %s %s', cid, pkt.hex(), extra.hex())
+            if self.debug_hex: log.info('[%d] RX %s %s', cid, pkt.hex(), extra.hex())
             if cmd == 0x1001: writer.write(self.blobs.ack); log.info('[%d] -> ACK63', cid)
             elif cmd == 0x2001: writer.write(self.blobs.authrsp + self.blobs.bingo); log.info('[%d] -> AUTHRSP54 + BINGO55', cid)
             else:
@@ -248,6 +251,7 @@ async def main():
     ap.add_argument('--host', required=True); ap.add_argument('--port', type=int, default=8080); ap.add_argument('--listen', default='0.0.0.0')
     ap.add_argument('--blobs', default=os.path.join(HERE, 'blobs')); ap.add_argument('--log', default='mr_server.log')
     ap.add_argument('--debug', action='store_true')
+    ap.add_argument('--debug-hex', action='store_true', help='ademas guarda cada paquete en hexadecimal (pesado: solo para investigar)')
     ap.add_argument('--puerto-relay', type=int, default=0, help='puerto UDP de la pelea (por defecto el mismo que --port); el ping va a este menos 1')
     ap.add_argument('--nombre-automatico', action='store_true', help='asigna JugadorNNN sin pedir nombre')
     a = ap.parse_args()

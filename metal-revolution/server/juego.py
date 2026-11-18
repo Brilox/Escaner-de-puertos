@@ -443,8 +443,11 @@ class Juego:
         """Lo que ve el jugador j de su mesa: ficha + estado de la pelea (o de la espera)."""
         return dict(RoomDetail=mesa.detalle(j), MatchState=self.estado_mesa(mesa))
     def avisar_hall_mesa(self, mesa):
+        # Aqui va la ficha REAL (con el asiento del que espera ocupado), tambien para el que espera solo: asi su
+        # telefono muestra su avatar en la sala de espera. Lo que lo mantiene ahi en vez de mandarlo a pelear contra la
+        # maquina es el GameHallMatchCreated (vista_mesa), que sigue diciendole que los asientos estan libres.
         for p in list(self.conectados.values()):
-            if p.hall: p.notificar('NotifyRoomDetailInfoUpdate', mesa.detalle(p))
+            if p.hall: p.notificar('NotifyRoomDetailInfoUpdate', mesa.detalle())
     def avisar_mesa(self, mesa, excepto=None):
         """Recoloca a todos los que estan en la mesa (sala de espera, seleccion de personaje...) y actualiza la ficha en el hall."""
         for p in mesa.jugadores():

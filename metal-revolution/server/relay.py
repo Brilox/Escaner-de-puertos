@@ -189,6 +189,9 @@ class Relay(threading.Thread):
         if hasattr(socket, 'SIO_UDP_CONNRESET'):          # Windows: que un telefono que se fue no rompa la lectura
             try: s.ioctl(socket.SIO_UDP_CONNRESET, False)
             except (OSError, ValueError): pass
+        for opcion in (socket.SO_RCVBUF, socket.SO_SNDBUF):  # buferes grandes: que una rafaga no haga perder paquetes
+            try: s.setsockopt(socket.SOL_SOCKET, opcion, 1 << 20)
+            except OSError: pass
         s.bind((escucha, puerto)); s.setblocking(False); return s
 
     def parar(self):

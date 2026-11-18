@@ -250,3 +250,13 @@ Leído de `ConfigHashNetworkHandler` / `ConfigManager` / `TextConfig` en `libil2
 - Sala: subir de nivel justo al terminar la pelea dejó a los dos teléfonos sin abrir la pantalla de resultados; el nivel
   mostrado queda fijo durante la sesión.
 
+### Encontrado con el registro del teléfono (`adb logcat`, etiqueta `Unity`)
+- **Sala sin pantalla de resultados:** `process notice handler BattleResult error: ArgumentOutOfRangeException` en
+  `PlayerBattleDataWrapper.ApplyLastBattleStats`. El teléfono suma la pelea en `CommonBattleStats[BattleLog.Type]` y el
+  servidor mandaba esa lista con 1 elemento (la sala es el tipo 5). Ahora van 11 (uno por `MatchType`).
+- **3v3:** marcar los inputs con los puestos 1 y 2 provoca `NullReferenceException` en
+  `RollbackNetCodeDriver.OnRecvRelayMsg` con cada mensaje: el teléfono no tiene lectores para esos puestos. Revertido.
+  El 3v3 queda cerrado en `OpenSystemConfig` (fecha vencida) hasta entender el cambio al segundo personaje.
+- El juego escribe mucho en el registro (`==>ufo:[ui]open ui …`, `[stateMachine] set trigger …`,
+  `[game-server]send request …`): con `adb logcat` se ve exactamente en qué pantalla queda y qué falla.
+

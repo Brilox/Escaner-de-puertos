@@ -27,11 +27,15 @@
 		},
 		{
 			"name": "RankSolo3v3",
-			"level": 1
+			"level": 1,
+			"beginTime": "2021/1/1 0:00:00",
+			"endTime": "2021/1/1 0:01:00"
 		},
 		{
 			"name": "QuickSolo3v3",
-			"level": 1
+			"level": 1,
+			"beginTime": "2021/1/1 0:00:00",
+			"endTime": "2021/1/1 0:01:00"
 		},
 		{
 			"name": "Quick2v2",

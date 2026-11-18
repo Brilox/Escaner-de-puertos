@@ -27,6 +27,7 @@ MODOS = {
     RANKING_SOLO_3V3: dict(nombre='Clasificatoria 3v3', match_type=8, por_lado=1, slots=3, puntua=True, pantalla_equipo=True),
     QUICK_SOLO_3V3:   dict(nombre='Rapida 3v3',         match_type=9, por_lado=1, slots=3, puntua=False, pantalla_equipo=True),
 }
+TIPOS_DE_PELEA = 11                                             # MatchType.COUNT
 GAMEHALL = 5                                                    # MatchType de las mesas del hall
 PUNTOS_INICIALES, PUNTOS_GANAR, PUNTOS_PERDER = 1000, 25, 20
 # Tutoriales que se dan por hechos en todas las cuentas. e3482f25 es la guia de entrenamiento que el juego lanza despues
@@ -243,7 +244,13 @@ class Juego:
             mm.append(dict(Happiness=0, RankPoint=r['puntos'], WinPoint=r['puntos'], MaxWinPoint=r['max_puntos'], ContinueRewardAiCount=0,
                            FavorHeroId=self.cuentas.favorito(uid, modo), ExitInBattleCountToday=0, ForbidMatchUntilTime=0))
         total = dict(WinCount=cuenta['victorias'], TotalCount=cuenta['partidas'], ContinueWinCount=0, MaxContinueWinCount=0)
-        return dict(Uid=uid, DetailLevel=nivel, PreferNetCode=0, CommonBattleStats=[total], MatchMakingBattleStats=mm)
+        vacio = dict(WinCount=0, TotalCount=0, ContinueWinCount=0, MaxContinueWinCount=0)
+        # CommonBattleStats va indexada por MatchType (0..10). Al llegar el resultado, el telefono suma la pelea en
+        # CommonBattleStats[BattleLog.Type]: con una lista mas corta (antes iba 1 solo elemento) lanza
+        # ArgumentOutOfRangeException en PlayerBattleDataWrapper.ApplyLastBattleStats y NUNCA abre la pantalla de
+        # resultados. Le paso en la sala (tipo 5); visto en el registro del telefono (adb logcat).
+        comun = [total] + [dict(vacio) for _ in range(TIPOS_DE_PELEA - 1)]
+        return dict(Uid=uid, DetailLevel=nivel, PreferNetCode=0, CommonBattleStats=comun, MatchMakingBattleStats=mm)
 
     def respuesta_login(self, cuenta):
         return 'LoginGameSvrRsp', dict(self.plantilla, PlayerInfo=self.info_detallada(cuenta), UtcTimeOffset=0, GameServerId=1, PayZoneId=0)
@@ -617,10 +624,8 @@ class Juego:
         self.partidas.pop(p.id, None)
     def puestos_relay(self, match_id, lado, pos):
         """Todos los puestos que maneja el telefono que entro al relay con (lado, pos): en el 3v3 en solitario, sus 3."""
-        p = self.partidas.get(match_id)
-        if not p: return [pos]
-        for j in p.lados.get(lado, []):
-            if pos in j.slots: return list(j.slots)
+        # Probado con telefonos: marcar los inputs con los puestos 1 y 2 hace que el juego lance NullReferenceException en
+        # RollbackNetCodeDriver.OnRecvRelayMsg con cada mensaje (no tiene lectores para esos puestos). Queda desactivado.
         return [pos]
     def jugadores_en_relay(self, match_id):
         """Cuantos telefonos deben conectarse al relay antes de dar la salida (lo consulta el hilo del relay)."""

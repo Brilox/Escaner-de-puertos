@@ -255,7 +255,7 @@ def prueba_clasificatoria():
     fa = de(a.recibir(0.3) + a.avisos, 'NotifyFinishReorderChar'); fb = de(r + b.avisos, 'NotifyFinishReorderChar')
     ok(fa is not None and fb is not None, 'cuando los dos ordenaron, ambos reciben NotifyFinishReorderChar (a elegir escenario)')
     a.avisos.clear(); b.avisos.clear()
-    escenario_y_carga(a, b, (0, 1)); pelea(mid, (0, 1), n=40, perder=(2,), puestos=3)
+    escenario_y_carga(a, b, (0, 1)); pelea(mid, (0, 1), n=40, perder=(2,))
     rb = resultado(a, b, 0)
     ok(rb['LeftPlayerChanges'][0]['WinPoint'] > rb['RightPlayerChanges'][0]['WinPoint'], 'el ganador sube puntos y el perdedor baja')
     a.pedir('ExitMatchReq', {}, ver=False); b.pedir('ExitMatchReq', {}, ver=False)
@@ -314,15 +314,17 @@ def prueba_config():
     r = c.pedir('LoginRequest', {'OpenId': 'prueba-Ines', 'DeviceId': 'dev-Ines'}, ver=False)
     ok(de(r, 'LoginGameSvrRsp')['PlayerInfo']['BaseInfo']['Level'] == 1, 'el nivel informado es el real de la cuenta (ya no se fuerza a 10)')
     ok(len(de(r, 'LoginGameSvrRsp')['PlayerInfo']['Heroes']) >= 5, 'tiene al menos 5 personajes (otro requisito de la 1v1)')
+    bd = de(r, 'LoginGameSvrRsp')['PlayerInfo']['BattleData']
+    ok(len(bd['CommonBattleStats']) == 11, 'estadisticas con un elemento por tipo de pelea (11): sin eso la sala no abre la pantalla de resultados')
     av = de(r, 'NotifySvrConfigReload')
     ok(bool(av and av['Reload'] and av['HashAll']), 'al entrar llega el aviso de configuracion nueva')
     pares = de(c.pedir('QueryAllConfigHashReq', {}, ver=False), 'QueryAllConfigHashRsp')['HashPairs']
     ok(any(p['FileName'] == 'OpenSystemConfig.json' for p in pares), 'la lista de archivos incluye OpenSystemConfig.json')
     cont = de(c.pedir('DownloadConfigReq', {'Key': 'OpenSystemConfig.json'}, ver=False), 'DownloadConfigRsp')['Content']
     cfg = {x['name']: x for x in json.loads(como_lo_lee_el_telefono(cont))['configList']}
-    abiertos = all(k in cfg and not ({'beginTime', 'endTime', 'dayBeginTime', 'dayEndTime'} & set(cfg[k]))
-                   for k in ('TeamBattle', 'RankMatch', 'RankSolo3v3', 'QuickSolo3v3'))
-    ok(abiertos, '2v2, 1v1 clasificatoria y 3v3 quedan sin fechas ni horario (tal como lo lee el telefono)')
+    abiertos = all(k in cfg and not ({'beginTime', 'endTime', 'dayBeginTime', 'dayEndTime'} & set(cfg[k])) for k in ('TeamBattle', 'RankMatch'))
+    ok(abiertos, '2v2 y 1v1 clasificatoria quedan sin fechas ni horario (tal como lo lee el telefono)')
+    ok(all(cfg[k].get('endTime', '').startswith('2021') for k in ('RankSolo3v3', 'QuickSolo3v3')), 'el 3v3 queda cerrado por ahora (fecha vencida)')
     c.pedir('FinishTutorialReq', {'Id': 'tuto-prueba', 'Finish': True}, ver=False)
     td = de(c.pedir('QueryTrainingDataReq', {}, ver=False), 'PlayerTrainingData') or {}
     hechos = {t['Id'] for t in td.get('TutorialFinishStates', []) if t.get('Finished')}

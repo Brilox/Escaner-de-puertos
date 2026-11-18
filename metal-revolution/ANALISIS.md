@@ -166,3 +166,34 @@ el protocolo LockStep de Tencent.
 - `tools/resolver_direcciones_il2cpp.py`: direcciones de métodos C# en `libil2cpp.so` para desensamblar con capstone.
 - `datos/comandos_grabados.txt`: tabla cmd ↔ mensaje.
 - `datos/fbtypes_mensajes.txt`: los 1 388 tipos FlatBuffers del protocolo.
+
+## El archivo grande del OBB (`assets/first_source.png`): abierto
+
+No es una imagen: es un paquete **IFS de Tencent GCloud** (cabecera `nifs`, lo maneja `libgcloud.so`), un MPQ v4
+modificado. Herramientas: `tools/ifs/` (`python extraer.py main.obb salida [--todo]`).
+
+- Cabecera (172 bytes): `nifs`, tamaño, versión, sector (512 << 5 = 16 KB), posiciones y tamaños de las tablas
+  BET, HET, MD5 (por trozo de 16 KB) y bitmap.
+- Tablas `HET\x1a` y `BET\x1a` cifradas con el cifrado MPQ estándar (claves de "(hash table)" y "(block table)").
+  Cada entrada BET (304 bits): posición 30, tamaño 25, comprimido 25, flags 32, MD5 128, hash de la carpeta 64.
+  Después, un hash de 56 bits por archivo con su nombre.
+- Hash del nombre: Jenkins lookup3 `hashlittle2(nombre en minúsculas con '\\', 2, 1)`, `(b << 32) | c`, 56 bits.
+- Nombres: el `(listfile)`, único archivo cifrado (MPQ estándar con la clave de "(listfile)").
+- Cada archivo: tabla de sectores (u32) y sectores con 1 byte de tipo delante (2 = zlib).
+- Contenido: 8.691 archivos: AssetBundles de Unity (personajes 1.160, efectos 5.230, interfaz 898, escenarios,
+  configuración), sonido Wwise, modelos de IA (`LocalModels/*.tflite`) y **`lua/lua.bytes`**.
+
+### Los scripts Lua del juego (`lua/lua.bytes`)
+`LuaManager.DoLoadEncryptedLuaBytes` lo descifra con `XLUAInspector.Utils.ByteArrayUtil.Decrypt`: **AES-256-CBC**
+con clave e IV de `PasswordDeriveBytes("klsdfsafsdf", sal 43 87 23 72)` (SHA1, 100 iteraciones), en la versión de
+.NET con su error histórico en la segunda llamada (el IV sale de `bloque0[8:16] + bloque2[0:8]`). Descifrado, es un
+texto con 1.242 scripts separados por `\nlua/<ruta>\n`. **Volver a cifrarlo da el archivo original byte a byte**,
+así que se pueden modificar.
+
+Hallazgos en los scripts (no se publican: son código del juego):
+- `MetalFury/UI/MainMenuScreen.lua`: el botón de clasificatoria abre un submenú con **1v1** (`GotoRankMatch`),
+  **2v2** y **3v3** (`GotoSoloRank3v3`). Cada opción se habilita según `OpenSystemConfig` ("RankMatch",
+  "RankSolo3v3"...: fechas, horarios y trofeos) y `RankMatchConfig` (nivel y número de personajes mínimos).
+- `MetalFury/Config/ConfigManager.lua`: la configuración del juego son archivos `Shared/*.csv` y `*.json`
+  (`OpenSystemConfig.json`, tienda, objetos, tareas, pase de batalla...) que se recargan cuando el servidor avisa.
+- Pantallas de fin de pelea: `UI/DerivedUI/InBattle/{Base,Common,Rank}BattleEndScreen.lua`, `UI/SoloNvN/*`.

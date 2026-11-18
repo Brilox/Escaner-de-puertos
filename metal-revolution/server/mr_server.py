@@ -156,6 +156,7 @@ class Sesion:
             tipo = (req or {}).get('DataType') or nombre; datos = (req or {}).get('Data') or {}
             log.info('[%d] <- %s seq=%d %s', self.cid, tipo, seq, json.dumps(datos, ensure_ascii=False, default=str)[:400])
             handler = srv.juego.handlers.get(tipo); rsp_payload = None
+            if self.jugador: srv.juego.actividad(self.jugador, tipo)
             if handler and (self.jugador or tipo in srv.juego.PUBLICOS):
                 self.en_handler = True
                 try:

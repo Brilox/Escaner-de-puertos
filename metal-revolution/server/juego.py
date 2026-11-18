@@ -29,7 +29,9 @@ MODOS = {
 }
 GAMEHALL = 5                                                    # MatchType de las mesas del hall
 PUNTOS_INICIALES, PUNTOS_GANAR, PUNTOS_PERDER = 1000, 25, 20
-NIVEL_MINIMO = 10                                               # la clasificatoria 1v1 del juego exige nivel 8 (RankMatchConfig.limitLevel)
+# Tutoriales que se dan por hechos en todas las cuentas. e3482f25 es la guia de entrenamiento que el juego lanza despues
+# de la primera derrota: se metia encima de la pantalla de resultados del que pierde.
+TUTORIALES_HECHOS = ('e3482f25-a92e-4215-b1b4-946e22c12c39',)
 SEGUNDOS_ORDEN = 30                                             # tiempo para ordenar personajes (3v3 y 2v2)
 ESCENARIOS = (1, 2, 3, 4)                                       # escenarios vistos en las peleas reales (para la partida rapida)
 PERSONAJE_POR_DEFECTO = 5                                       # si alguien busca partida rapida sin haber elegido personaje
@@ -50,6 +52,7 @@ class Cuentas:
             uid INTEGER, modo INTEGER, puntos INTEGER DEFAULT 1000, max_puntos INTEGER DEFAULT 1000, victorias INTEGER DEFAULT 0,
             derrotas INTEGER DEFAULT 0, racha INTEGER DEFAULT 0, mejor_racha INTEGER DEFAULT 0, PRIMARY KEY (uid, modo));
           CREATE TABLE IF NOT EXISTS favoritos (uid INTEGER, modo INTEGER, personaje INTEGER, PRIMARY KEY (uid, modo));
+          CREATE TABLE IF NOT EXISTS tutoriales (uid INTEGER, id TEXT, PRIMARY KEY (uid, id));
           CREATE TABLE IF NOT EXISTS partidas (
             id INTEGER PRIMARY KEY AUTOINCREMENT, fecha INTEGER, modo TEXT, ganador INTEGER,
             izquierda TEXT, derecha TEXT, rondas_izq INTEGER, rondas_der INTEGER, personajes TEXT, escenario INTEGER);''')
@@ -86,6 +89,11 @@ class Cuentas:
     def poner_favorito(self, uid, modo, personaje):
         self.db.execute('INSERT OR REPLACE INTO favoritos VALUES(?,?,?)', (uid, modo, personaje)); self.db.commit()
 
+    def tutoriales(self, uid):
+        return [r[0] for r in self.db.execute('SELECT id FROM tutoriales WHERE uid=?', (uid,))]
+    def terminar_tutorial(self, uid, id_):
+        self.db.execute('INSERT OR IGNORE INTO tutoriales VALUES(?,?)', (uid, id_)); self.db.commit()
+
     def top(self, modo, n=100):
         return [dict(r) for r in self.db.execute('SELECT * FROM ranking WHERE modo=? ORDER BY puntos DESC, victorias DESC LIMIT ?', (modo, n))]
 
@@ -116,6 +124,7 @@ class Jugador:
         self.hall = None; self.mesa = None; self.asiento = OBSERVER
         self.partida = None; self.lado = None; self.slots = []          # slots (pos) que controla en la partida
         self.equipo = None; self.buscando = None; self.inicio_busqueda = 0; self.pvp_prefs = None
+        self.ultima_pelea = None; self.cancelada_avisada = None          # (id, lado, pos) de su ultima pelea
     @property
     def nombre(self): return self.cuenta['nombre'] or 'Jugador%d' % (self.uid % 100000)
     def notificar(self, tipo, datos): self.sesion.enviar_notificacion(tipo, datos)
@@ -156,12 +165,13 @@ class Partida:
         self.rondas = (0, 0); self.revancha = set(); self.peleas = 0; self.puntos_antes = {}; self.puntos_despues = {}
         self.orden = {LEFT: 0, RIGHT: 0}; self.temporizador_orden = None
         self.datos_resultado = None; self.notificados = set(); self.temporizador_resultado = None
+        self.pantalla_fin = set()                                       # telefonos que llegaron a la pantalla de resultados
         self.rondas_detalle = ([], [])                                  # resultado de cada ronda (lista de RoundResult por lado)
         self.miembros = {LEFT: [], RIGHT: []}
         for lado, jugadores in self.lados.items():
             pos = 0
             for j in jugadores:
-                j.partida = self; j.lado = lado; j.slots = []
+                j.partida = self; j.lado = lado; j.slots = []; j.ultima_pelea = (id_, lado, pos)
                 for _ in range(slots):
                     self.miembros[lado].append(self.miembro(j, lado, pos)); j.slots.append(pos); pos += 1
     @staticmethod
@@ -173,7 +183,7 @@ class Partida:
     def peleando(self): return self.resultado is None and self.fase in (FIGHTING, WAITING_RESULT)
     def orden_terminado(self, lado): return self.orden[lado] >= len(self.miembros[lado]) - 1
     def limpiar_resultado(self):
-        self.resultado = None; self.datos_resultado = None; self.notificados = set(); self.rondas_detalle = ([], [])
+        self.resultado = None; self.datos_resultado = None; self.notificados = set(); self.rondas_detalle = ([], []); self.pantalla_fin = set()
         if self.temporizador_resultado: self.temporizador_resultado.cancel(); self.temporizador_resultado = None
     def volver_a_seleccion(self):
         self.fase = SELECTING_CHAR; self.escenario_confirmado = False; self.limpiar_resultado(); self.revancha.clear()
@@ -216,7 +226,7 @@ class Juego:
     # ================================================================= utilidades
     def info_detallada(self, cuenta):
         pi = copy.deepcopy(self.plantilla['PlayerInfo']); uid = cuenta['uid']; j = self.conectados.get(uid)
-        pi['BaseInfo'].update(Uid=uid, Name=cuenta['nombre'], Level=max(cuenta['nivel'], NIVEL_MINIMO), Exp=cuenta['exp'], RegisterTime=cuenta['creado'] or 0,
+        pi['BaseInfo'].update(Uid=uid, Name=cuenta['nombre'], Level=cuenta['nivel'], Exp=cuenta['exp'], RegisterTime=cuenta['creado'] or 0,
                               OnlineState=1 if j else 0, GameVersion=VERSION_JUEGO, ClientVersion=VERSION_JUEGO,
                               GameHallId=1 if j and j.hall else 0, HallRoomId=j.mesa.id if j and j.mesa else 0, TotalLoginDay=1)
         pi['BattleData'] = self.datos_batalla(cuenta)
@@ -299,6 +309,13 @@ class Juego:
             return 'Error', dict(ErrCode=11, ErrMsg='Configuracion no disponible', ErrMsgEn='Config not available')
         log.info('uid=%d descarga la configuracion %s', sesion.jugador.uid, d.get('Key'))
         return 'DownloadConfigRsp', dict(Content=contenido)
+    # ---- tutoriales: se recuerda cuales termino cada cuenta (antes se contestaba siempre "ninguno" y volvian a salir)
+    def on_QueryTrainingDataReq(self, sesion, d):
+        hechos = sorted(set(TUTORIALES_HECHOS) | set(self.cuentas.tutoriales(sesion.jugador.uid)))
+        return 'PlayerTrainingData', dict(TutorialFinishStates=[dict(Id=t, Finished=True) for t in hechos], LastTrainingCharId=0)
+    def on_FinishTutorialReq(self, sesion, d):
+        if d.get('Id') and d.get('Finish', True): self.cuentas.terminar_tutorial(sesion.jugador.uid, d['Id'])
+        return None
     def on_NameCardCdReq(self, sesion, d): return 'NameCardCdRsp', dict(TimeLeft=0)
     def on_QueryRoleIdByNameReq(self, sesion, d):
         r = self.cuentas.db.execute('SELECT uid FROM jugadores WHERE lower(nombre)=lower(?)', (d.get('Name', ''),)).fetchone()
@@ -332,6 +349,7 @@ class Juego:
             return 'QueryTopRankRsp', dict(RankData=[dict(Uid=sesion.jugador.uid, Rank=self.cuentas.posicion(sesion.jugador.uid, modo), Score=r['puntos'])])
         return 'QueryTopRankRsp', dict(RankData=[dict(Uid=r['uid'], Rank=i + 1, Score=r['puntos']) for i, r in enumerate(self.cuentas.top(modo))])
     def on_QueryPlayerRankReq(self, sesion, d):
+        self.marcar_pantalla_fin(sesion.jugador)          # la pantalla de resultados pide esto apenas se abre
         modo = d.get('RankType', 0) if d.get('RankType', 0) in MODOS else RANKING; uid = d.get('Uid') or sesion.jugador.uid
         return 'QueryPlayerRankRsp', dict(Rank=self.cuentas.posicion(uid, modo), Score=self.cuentas.rank(uid, modo)['puntos'])
     def on_QueryRankRewardTimeReq(self, sesion, d): return 'QueryRankRewardTimeRsp', dict(Time=int(time.time()) + 30 * 86400)
@@ -681,7 +699,9 @@ class Juego:
         # lo toma como un pedido entre companeros que no aplica, NO cambia el orden y la pelea se desincroniza.
         self.difundir(p.jugadores(), 'NotifyOtherRequestChangeCharOrder', dict(SourceUid=j.uid, TargetUid=0, SrcPos=src, TargetPos=dst), excepto=j)
         if p.orden_terminado(LEFT) and p.orden_terminado(RIGHT): sesion.despues.append(('__orden__', p))
-        return 'ChangeCharOrderRsp', dict(OrderingIndex=dst + 1)
+        # El telefono pone su OrderingIndex = el que le contestamos (sin autocompletar el ultimo puesto): hay que mandarle
+        # el mismo que lleva el servidor, para que los dos vean la fase de orden terminada a la vez.
+        return 'ChangeCharOrderRsp', dict(OrderingIndex=p.orden[lado])
     def on_AcceptChangeCharOrderReq(self, sesion, d):
         """2v2: el companero acepta intercambiar puestos."""
         j = sesion.jugador; p = j.partida; otro_uid = d.get('SourceTeammateId', 0)
@@ -724,6 +744,11 @@ class Juego:
         return 'ConfirmSelectStageRsp', dict(Confirm=confirma)
     def on_SyncLoadingProgressReq(self, sesion, d):
         j = sesion.jugador; p = j.partida; progreso = min(100, d.get('Progress', 0))
+        if (p is None or p.fase == END) and j.ultima_pelea and j.cancelada_avisada != j.ultima_pelea[0]:
+            mid, lado, pos = j.ultima_pelea; j.cancelada_avisada = mid
+            log.info('%s carga otra vez la pelea %d, que ya termino: se la cancelo para que vuelva al menu', j.nombre, mid)
+            sesion.despues.append(('NotifyMatchCancelled', dict(MatchId=mid, Side=lado, Pos=pos)))
+            return 'SyncLoadingProgressRsp', dict(LoadDone=False)
         if p:
             m = p.slot(j, d)
             for pos in j.slots: p.miembros[j.lado][pos]['LoadingProgress'] = progreso
@@ -739,10 +764,32 @@ class Juego:
     def on_BackToCharSelectReq(self, sesion, d):
         j = sesion.jugador; p = j.partida
         if p and p.lados[LEFT] and p.lados[RIGHT] and not p.en_curso():
-            p.volver_a_seleccion(); log.info('pelea %d: %s pide volver a elegir personaje', p.id, j.nombre)
-            self.difundir(p.jugadores(), 'NotifyOtherBackToCharSelect', dict(Side=j.lado, Pos=j.slots[0]), excepto=j)
+            self.marcar_pantalla_fin(j); atascados = self.atascados(p, j)
+            if p.fase != SELECTING_CHAR: log.info('pelea %d: %s pide volver a elegir personaje', p.id, j.nombre)
+            p.volver_a_seleccion()
+            self.difundir([x for x in p.jugadores() if x not in atascados], 'NotifyOtherBackToCharSelect', dict(Side=j.lado, Pos=j.slots[0]), excepto=j)
+            for x in atascados: self.rescatar(p, x)
         elif not p and j.mesa: sesion.despues.append(('__mesa__', j.mesa))
         return 'BackToCharSelectRsp', dict()
+
+    # ---- telefonos que se quedan pegados al terminar la pelea
+    SIN_SENAL = {'PlayerClientPing', 'UploadBattleInputDataReq', 'UploadBattleResult', 'AnalyticsBeforeLoginReq'}
+    def actividad(self, j, tipo):
+        """Cualquier peticion de verdad despues del resultado = la pantalla de resultados de ese telefono funciona."""
+        if tipo not in self.SIN_SENAL: self.marcar_pantalla_fin(j)
+    def marcar_pantalla_fin(self, j):
+        p = j and j.partida
+        if p and p.datos_resultado is not None and j in p.notificados: p.pantalla_fin.add(j)
+    def atascados(self, p, excepto=None):
+        """En la sala: jugadores a los que les llego el resultado pero cuya pantalla de resultados nunca se abrio
+        (el telefono no pidio nada mas). Les pasa sobre todo al que pierde."""
+        if not p.mesa or p.datos_resultado is None: return []
+        return [x for x in p.jugadores() if x is not excepto and x in p.notificados and x not in p.pantalla_fin]
+    def rescatar(self, p, x):
+        """Se le vuelve a mandar la mesa entera (como al armarse la pelea): el telefono sale de donde quedo y pasa a la
+        seleccion de personaje junto con el rival."""
+        log.info('pelea %d: el telefono de %s no abrio la pantalla de resultados; lo paso a elegir personaje', p.id, x.nombre)
+        x.notificar('NotifyGameHallMatchCreated', self.vista_mesa(p.mesa, x))
 
     # ----------------------------------------------------------------- resultado
     def guardar_resultado(self, p, ganador, r_izq, r_der, abandono=False):
@@ -822,6 +869,15 @@ class Juego:
         j = sesion.jugador; p = j.partida
         if not p or not (p.lados[LEFT] and p.lados[RIGHT]) or p.en_curso():
             if not p and j.mesa: sesion.despues.append(('__mesa__', j.mesa))      # el rival ya se fue: de vuelta a la sala de espera
+            return 'RefightRsp', dict(FightStarted=False)
+        self.marcar_pantalla_fin(j); atascados = self.atascados(p, j)
+        if atascados:
+            # el rival no puede aceptar (su telefono quedo pegado): en vez de esperar para siempre, los dos a elegir personaje
+            log.info('pelea %d: %s pide revancha pero el rival no puede contestar -> los dos a elegir personaje', p.id, j.nombre)
+            p.volver_a_seleccion()
+            otro = atascados[0]
+            j.notificar('NotifyOtherBackToCharSelect', dict(Side=otro.lado, Pos=otro.slots[0] if otro.slots else 0))
+            for x in atascados: self.rescatar(p, x)
             return 'RefightRsp', dict(FightStarted=False)
         p.revancha.add(j); todos = all(x in p.revancha for x in p.jugadores())
         self.difundir(p.jugadores(), 'NotifyOtherRequestRefight', dict(FightStarted=todos, Side=j.lado, Pos=j.slots[0]), excepto=j)

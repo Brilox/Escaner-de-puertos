@@ -144,8 +144,10 @@ def pelea(match_id, lados, n=120, perder=(3, 4, 40)):
     return ua, ub
 
 
-def resultado(a, b, ganador=0):
-    """Como el telefono real: cada uno sube su resultado (con la lista de rondas, que viaja como lista de numeros)."""
+def resultado(a, b, ganador=0, pantalla=(True, True)):
+    """Como el telefono real: cada uno sube su resultado (con la lista de rondas, que viaja como lista de numeros) y, al
+    abrirse su pantalla de resultados, pide los puntos de los dos (QueryPlayerRankReq). pantalla=False simula un telefono
+    cuya pantalla de resultados nunca se abre (lo que le pasaba al que perdia en la sala)."""
     datos = {'WinnerSide': ganador, 'LeftWinRound': 2, 'RightWinRound': 1, 'LeftRoundResults': [16, 48, 16], 'RightRoundResults': [48, 16, 48],
              'SnapshotHash': 'abc', 'Interrupted': False}
     a.pedir('UploadBattleResult', datos, ver=False)
@@ -157,6 +159,8 @@ def resultado(a, b, ganador=0):
     bl = (rb or {}).get('LastBattleLog', {})
     ok(bl.get('TotalRounds') == 3 and bl.get('LeftRoundResults') == [16, 48, 16] and bl.get('RightRoundResults') == [48, 16, 48],
        'el resultado trae las rondas (sin ellas la pantalla de resultados del juego falla)')
+    for c, abre in zip((a, b), pantalla):
+        if abre: c.pedir('QueryPlayerRankReq', {'Uid': 0, 'RankType': 32}, ver=False)
     a.avisos.clear(); b.avisos.clear()
     return rb
 
@@ -186,6 +190,13 @@ def prueba_mesa():
     pelea(mid, (0, 1), n=30, perder=()); resultado(a, b, 1)
     a.pedir('BackToCharSelectReq', {}, ver=False)
     ok(de(b.recibir(0.2), 'NotifyOtherBackToCharSelect') is not None, 'volver a elegir personaje: el rival recibe el aviso')
+    seleccion(a, b, (0, 1)); escenario_y_carga(a, b, (0, 1)); a.avisos.clear(); b.avisos.clear()
+    pelea(mid, (0, 1), n=10, perder=()); resultado(a, b, 0, pantalla=(True, False))
+    r = a.pedir('RefightReq', {}, ver=False)
+    vb = de(b.recibir(0.3), 'NotifyGameHallMatchCreated')
+    ok(de(r, 'RefightRsp')['FightStarted'] is False and de(r + a.recibir(0.2), 'NotifyOtherBackToCharSelect') is not None and
+       bool(vb and vb['MatchState']['Phase'] == 1),
+       'si la pantalla de resultados del que pierde no se abre, la revancha manda a los dos a elegir personaje (no se queda pegado)')
     seleccion(a, b, (0, 1)); b.avisos.clear(); a.avisos.clear()
     b.pedir('ExitHallRoomReq', {}, ver=False); va = de(a.recibir(0.3), 'NotifyGameHallMatchCreated')
     ok(bool(va and va['RoomDetail']['LeftPlayerId'] == 0 and va['MatchState']['Phase'] == 0), 'si el rival se va de la mesa, el que queda vuelve a la sala de espera')
@@ -220,7 +231,8 @@ def prueba_clasificatoria():
        'el rival recibe el cambio de orden con TargetUid=0 (si no, su telefono lo ignora y se desincroniza)')
     r = a.pedir('ChangeCharOrderReq', {'SrcPos': 1, 'TargetPos': 0}, ver=False)
     ok((de(r, 'ChangeCharOrderRsp') or {}).get('OrderingIndex') == 1, 'un pedido para un puesto ya ocupado no avanza el orden')
-    a.pedir('ChangeCharOrderReq', {'SrcPos': 2, 'TargetPos': 1}, ver=False); b.recibir(0.2)
+    r = a.pedir('ChangeCharOrderReq', {'SrcPos': 2, 'TargetPos': 1}, ver=False); b.recibir(0.2)
+    ok((de(r, 'ChangeCharOrderRsp') or {}).get('OrderingIndex') == 3, 'con el penultimo puesto el ultimo queda solo: se contesta 3 (orden terminado)')
     ok(de(a.recibir(0.2), 'NotifyFinishReorderChar') is None, 'con un solo lado ordenado todavia no se pasa al escenario')
     b.pedir('ChangeCharOrderReq', {'SrcPos': 0, 'TargetPos': 0}, ver=False)
     r = b.pedir('ChangeCharOrderReq', {'SrcPos': 1, 'TargetPos': 1}, ver=False)
@@ -248,6 +260,9 @@ def prueba_clasificatoria():
     a.pedir('UploadBattleResult', {'WinnerSide': 1, 'LeftWinRound': 0, 'RightWinRound': 2}, ver=False); b.avisos.clear()
     time.sleep(11); rb = de(b.recibir(0.5) + b.avisos, 'BattleResult')
     ok(bool(rb and rb['LastBattleLog']['WinnerSide'] == 1), 'si un telefono nunca sube su resultado, igual le llega a los 10 s')
+    a.pedir('ExitMatchReq', {}, ver=False); b.avisos.clear()
+    r = b.pedir('SyncLoadingProgressReq', {'Progress': 100, 'Side': 1, 'Pos': 0}, ver=False)
+    ok(de(r + b.recibir(0.2), 'NotifyMatchCancelled') is not None, 'si un telefono vuelve a cargar una pelea que ya termino, se le cancela (no queda en bucle)')
     a.s.close(); b.s.close()
 
 
@@ -281,7 +296,7 @@ def prueba_config():
     print('\n=== CONFIGURACION DEL JUEGO (modos de batalla abiertos) ===')
     c = Cliente('Ines', HOST, PUERTO)
     r = c.pedir('LoginRequest', {'OpenId': 'prueba-Ines', 'DeviceId': 'dev-Ines'}, ver=False)
-    ok(de(r, 'LoginGameSvrRsp')['PlayerInfo']['BaseInfo']['Level'] >= 8, 'el nivel informado alcanza el minimo de la clasificatoria 1v1 (8)')
+    ok(de(r, 'LoginGameSvrRsp')['PlayerInfo']['BaseInfo']['Level'] == 1, 'el nivel informado es el real de la cuenta (ya no se fuerza a 10)')
     ok(len(de(r, 'LoginGameSvrRsp')['PlayerInfo']['Heroes']) >= 5, 'tiene al menos 5 personajes (otro requisito de la 1v1)')
     av = de(r, 'NotifySvrConfigReload')
     ok(bool(av and av['Reload'] and av['HashAll']), 'al entrar llega el aviso de configuracion nueva')
@@ -292,6 +307,10 @@ def prueba_config():
     abiertos = all(k in cfg and not ({'beginTime', 'endTime', 'dayBeginTime', 'dayEndTime'} & set(cfg[k]))
                    for k in ('TeamBattle', 'RankMatch', 'RankSolo3v3', 'QuickSolo3v3'))
     ok(abiertos, '2v2, 1v1 clasificatoria y 3v3 quedan sin fechas ni horario (tal como lo lee el telefono)')
+    c.pedir('FinishTutorialReq', {'Id': 'tuto-prueba', 'Finish': True}, ver=False)
+    td = de(c.pedir('QueryTrainingDataReq', {}, ver=False), 'PlayerTrainingData') or {}
+    hechos = {t['Id'] for t in td.get('TutorialFinishStates', []) if t.get('Finished')}
+    ok({'tuto-prueba', 'e3482f25-a92e-4215-b1b4-946e22c12c39'} <= hechos, 'los tutoriales terminados se recuerdan (y el de la primera derrota ya viene hecho)')
     c.s.close()
 
 

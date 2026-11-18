@@ -114,8 +114,14 @@ Al acabar, los teléfonos suben el resultado (`UploadBattleResult`) y el servido
   resultado, el teléfono se queda en la imagen del ganador sin revancha ni salir.
 - **Modos de batalla abiertos:** el juego decide qué botones habilita con su `OpenSystemConfig.json` (la 2v2 venía
   con fechas de 2021 y la clasificatoria 1v1 solo de 9:00 a 20:30) y con `RankMatchConfig` (nivel 8 y 5 personajes).
-  El servidor le manda al teléfono una `OpenSystemConfig.json` sin fechas ni horario (ver `config_juego/README.md`)
-  e informa nivel 10 como mínimo. La primera vez hay que cerrar y abrir el juego.
+  El servidor le manda al teléfono una `OpenSystemConfig.json` sin fechas ni horario (ver `config_juego/README.md`).
+  La primera vez hay que cerrar y abrir el juego. El nivel es el real de la cuenta (sube 1 cada 100 de experiencia):
+  forzarlo a 10 rompía la pantalla de resultados del que pierde.
+- **Teléfono pegado al terminar:** si a un jugador le llega el resultado pero su pantalla de resultados no se abre
+  (no pide nada más), en la sala la revancha o "volver a elegir" del rival lo mandan también a elegir personaje
+  (`NotifyGameHallMatchCreated`). Si un teléfono vuelve a cargar una pelea ya terminada, se le cancela.
+- **Tutoriales:** se guardan los que termina cada cuenta (`QueryTrainingDataReq`); la guía que salía tras la primera
+  derrota viene marcada como hecha.
 - No implementado todavía: el netcode FrameSync (el servidor anuncia rollback), espectadores de una pelea en curso
   y reconexión a mitad de combate.
 

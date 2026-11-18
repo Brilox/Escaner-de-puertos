@@ -227,3 +227,17 @@ Leído de `ConfigHashNetworkHandler` / `ConfigManager` / `TextConfig` en `libil2
 - `tools/ifs/ifs.py`: corregido un sector guardado sin comprimir (como en MPQ, si comprimir no ahorra va tal cual y sin
   byte de tipo); con eso `lua.bytes` de la 1300 sale completo y se descifra con la misma clave.
 
+### Cómo pasa el teléfono de la pelea a la pantalla de resultados (C# del APK 1.0.23)
+1. `BaseMatchNetworkHandler::OnGameOver`: guarda el snapshot (su hash va en `SnapshotHash`), vuelve al relay, manda la
+   repetición y, salvo que el rival haya huido (`LastBattleResult.ExitMatchInfo.ExitPlayerId`), llama a `SendMatchResult`.
+2. `SendMatchResult` arma `UploadBattleResult` (ganador, rondas, estadísticas, `RoundResults`, hash, `ReplayId`, `NetStatus`).
+3. Al llegar la **respuesta** a esa petición (`<SendMatchResult>b__68_0`): código 188 o 408-411 = reconectar; error =
+   abre `WaitingBattleResultUI`; correcto = cierra esa espera y llama a `CheckAllMatchResultMsgProcessed`.
+4. `CheckAllMatchResultMsgProcessed`: si la pelea terminó (`FightGame.gameOver`), fase 7 y `GotoBattleEndSafely`
+   (disparador del autómata `GotoBattleEnd`). Es decir: **la pantalla de resultados se abre con la respuesta al
+   UploadBattleResult**, y `BattleResult` (`OnMatchResult`) solo rellena `lastMatchResult` (ganador, puntos, NetStatus).
+5. La pantalla (`CommonBattleEndScreen.lua`) en `BaseOnOpen` refresca los dos jugadores (C# `BattleEndPlayerInfoGroup::Refresh`)
+   y luego `RankEndRewardGroup`, que es lo que manda `QueryPlayerRankReq`. Como el perdedor de la sala no manda ese
+   `QueryPlayerRankReq`, su pantalla se corta en el refresco de jugadores o antes. Para saber la línea exacta hace falta el
+   registro del teléfono (`adb logcat`), donde Unity escribe los errores de Lua.
+

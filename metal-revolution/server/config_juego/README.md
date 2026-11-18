@@ -4,8 +4,12 @@ El juego trae sus configuraciones (qué modos están abiertos y a qué hora, la 
 dentro del OBB, pero **acepta versiones nuevas que le mande el servidor**: era el mecanismo que usaba el servidor
 oficial para cambiar cosas sin sacar una actualización. Este servidor lo implementa (`../config_juego.py`).
 
-- `activos/`: lo que se manda a **todos** los teléfonos al entrar. Ahora mismo solo `OpenSystemConfig.json`, que
-  abre **todos los modos de batalla** sin fechas ni horario (1v1 clasificatoria, 2v2, 3v3 clasificatoria y rápida).
+- `activos/`: lo que se manda a **todos** los teléfonos al entrar:
+  - `OpenSystemConfig.json`: abre la 1v1 clasificatoria y la 2v2 sin fechas ni horario. El 3v3 (clasificatoria y
+    rápida) queda **cerrado** con una fecha vencida hasta resolver su desincronización: para abrirlo, borra sus
+    líneas `beginTime` y `endTime`.
+  - `RankMatchConfig.json` (el de la versión 1.0.23): igual al original salvo `limitLevel` = 1 (antes pedía nivel 8
+    para la 1v1 clasificatoria).
 - `en_espera/`: archivos listos pero **apagados** (no se mandan). Para encender uno: moverlo a `activos/` y
   reiniciar el servidor. Para apagarlo: sacarlo de `activos/`.
 

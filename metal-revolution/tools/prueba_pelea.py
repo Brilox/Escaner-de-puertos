@@ -282,6 +282,30 @@ def prueba_clasificatoria():
     a.s.close(); b.s.close()
 
 
+def prueba_clasificatoria_1v1():
+    print('\n=== CLASIFICATORIA 1v1 (como la rapida, con puntos) y limite de revanchas ===')
+    a, uid_a = entrar_al_juego('Jose'); b, uid_b = entrar_al_juego('Kati')
+    a.pedir('ChangeFavCharReq', {'CharId': 8, 'MatchMakingType': 0}, ver=False); b.pedir('ChangeFavCharReq', {'CharId': 16, 'MatchMakingType': 0}, ver=False)
+    a.pedir('StartSearchMatchReq', {'MatchMakingType': 0}, ver=False); b.pedir('StartSearchMatchReq', {'MatchMakingType': 0}, ver=False)
+    ms = (de(a.recibir(0.3) + a.avisos, 'NotifySearchMatchRivalFound') or {}).get('MatchState', {})
+    ok(ms.get('MatchType') == 0 and ms.get('Phase') == 4 and [m['CharId'] for m in ms.get('LeftMembers', []) + ms.get('RightMembers', [])] == [8, 16],
+       'la 1v1 clasificatoria va directo a la carga con el personaje favorito de cada uno')
+    ok(ms.get('RefightRemainCount') == 2, 'la pelea anuncia 2 revanchas')
+    res = {'WinnerSide': 0, 'LeftWinRound': 2, 'RightWinRound': 0, 'LeftRoundResults': [16, 16], 'RightRoundResults': [48, 48]}
+    subs = []; inicio = None
+    for n in range(3):
+        a.avisos.clear(); b.avisos.clear()
+        a.pedir('UploadBattleResult', res, ver=False); r = b.pedir('UploadBattleResult', res, ver=False)
+        br = de(r + b.recibir(0.2), 'BattleResult') or {}; subs.append(br.get('SubMatchId'))
+        if n == 0: inicio = br.get('RightPlayerChanges', [{}])[0].get('WinPoint')
+        a.pedir('RefightReq', {}, ver=False); r = b.pedir('RefightReq', {}, ver=False)
+        if n < 2: ok((de(r, 'RefightRsp') or {}).get('FightStarted') is True, 'revancha %d aceptada' % (n + 1))
+        else: ok(de(r, 'Error') is not None, 'la tercera revancha se rechaza (maximo 2)')
+    ok(subs == [1, 2, 3], 'el resultado numera la pelea (SubMatchId 1, 2, 3): el juego muestra cuantas revanchas quedan')
+    ok(inicio is not None and inicio < 1000, 'la clasificatoria resta puntos al que pierde')
+    a.s.close(); b.s.close()
+
+
 def prueba_2v2():
     print('\n=== CLASIFICATORIA 2v2 (cuatro telefonos) ===')
     cs = [entrar_al_juego(n)[0] for n in ('Eva', 'Fran', 'Gabi', 'Hugo')]
@@ -333,6 +357,6 @@ def prueba_config():
 
 
 if __name__ == '__main__':
-    prueba_mesa(); prueba_clasificatoria(); prueba_2v2(); prueba_config()
+    prueba_mesa(); prueba_clasificatoria(); prueba_clasificatoria_1v1(); prueba_2v2(); prueba_config()
     print('\n%s' % ('TODO BIEN' if not fallos else 'FALLARON %d COMPROBACIONES:\n  - %s' % (len(fallos), '\n  - '.join(fallos))))
     sys.exit(1 if fallos else 0)

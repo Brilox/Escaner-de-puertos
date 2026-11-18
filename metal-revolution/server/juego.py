@@ -17,7 +17,9 @@ WAITING_ALL_READY, SELECTING_CHAR, ORDERING_CHAR, SELECTING_STAGE, LOADING_FIGHT
 # MatchMakingType (lo que pide el cliente al buscar) -> MatchType (el tipo de partida) y reglas
 RANKING, RANKING_2V2, RANKING_NORMAL, RANKING_SOLO_3V3, QUICK_SOLO_3V3 = range(5)
 MODOS = {
-    RANKING:          dict(nombre='Clasificatoria 1v1', match_type=0, por_lado=1, slots=1, puntua=True),
+    # Clasificatoria 1v1 (boton 1v1 del panel de clasificatoria): igual que la rapida (personaje elegido antes de buscar,
+    # ChangeFavCharReq con MatchMakingType 0) pero suma o resta puntos de clasificatoria.
+    RANKING:          dict(nombre='Clasificatoria 1v1', match_type=0, por_lado=1, slots=1, puntua=True, directo=True),
     RANKING_2V2:      dict(nombre='Clasificatoria 2v2', match_type=7, por_lado=2, slots=1, puntua=True, pantalla_equipo=True),
     # Partida rapida: el juego NO muestra seleccion de personaje; usa el favorito elegido antes de buscar (ChangeFavCharReq)
     # y pasa directo a la carga. El servidor tiene que mandar ya el personaje de cada uno y el escenario.
@@ -30,6 +32,7 @@ MODOS = {
 TIPOS_DE_PELEA = 11                                             # MatchType.COUNT
 GAMEHALL = 5                                                    # MatchType de las mesas del hall
 PUNTOS_INICIALES, PUNTOS_GANAR, PUNTOS_PERDER = 1000, 25, 20
+MAX_REVANCHAS = 2                                               # revanchas seguidas con el mismo rival (fuera de la sala)
 # Tutoriales que se dan por hechos en todas las cuentas. e3482f25 es la guia de entrenamiento que el juego lanza despues
 # de la primera derrota: se metia encima de la pantalla de resultados del que pierde.
 TUTORIALES_HECHOS = ('e3482f25-a92e-4215-b1b4-946e22c12c39',)
@@ -167,7 +170,7 @@ class Partida:
         self.id = id_; self.match_type = match_type; self.mesa = mesa; self.modo_mm = modo_mm
         self.lados = {LEFT: izquierda, RIGHT: derecha}; self.fase = SELECTING_CHAR; self.seed = random.randint(1, 2**31 - 1)
         self.escenario = 1; self.escenario_confirmado = False; self.inicio = int(time.time()); self.relay = None; self.resultado = None
-        self.rondas = (0, 0); self.revancha = set(); self.peleas = 0; self.puntos_antes = {}; self.puntos_despues = {}
+        self.rondas = (0, 0); self.revancha = set(); self.peleas = 0; self.revanchas = 0; self.puntos_antes = {}; self.puntos_despues = {}
         self.orden = {LEFT: 0, RIGHT: 0}; self.temporizador_orden = None
         self.datos_resultado = None; self.notificados = set(); self.temporizador_resultado = None
         self.pantalla_fin = set()                                       # telefonos que llegaron a la pantalla de resultados
@@ -205,7 +208,7 @@ class Partida:
         now = int(time.time())
         return dict(MatchType=self.match_type, MatchId=self.id, SubMatchId=0, Phase=self.fase, Version=VERSION_JUEGO,
                     LeftMembers=self.miembros[LEFT], RightMembers=self.miembros[RIGHT], StartTime=self.inicio, EndTime=0,
-                    RandomSeed=self.seed, RefightRemainCount=99 if self.mesa else 0, LeftWonCount=0, RightWonCount=0, StageId=self.escenario,
+                    RandomSeed=self.seed, RefightRemainCount=99 if self.mesa else MAX_REVANCHAS, LeftWonCount=0, RightWonCount=0, StageId=self.escenario,
                     RandomStage=False, StageConfirmed=self.escenario_confirmado, StartSelectCharTime=now, StartOrderCharTime=now,
                     StartSelectStageTime=now, StartWaitingReadyTime=now, SelectCharMaxTime=60, SelectStageMaxTime=30,
                     WaitingReadyMaxTime=60, OrderCharMaxTime=SEGUNDOS_ORDEN, RelayServerInfo=self.relay, LeftOrderingIndex=0, RightOrderingIndex=0,
@@ -853,7 +856,7 @@ class Juego:
                         LeftWinRound=p.rondas[0], RightWinRound=p.rondas[1], Stage=p.escenario, Unsynced=False, Interrupted=False,
                         Version=VERSION_JUEGO, AiType=-1, LeftPlayerInfos=infos(LEFT), RightPlayerInfos=infos(RIGHT), TotalRounds=total,
                         LeftRoundResults=izq[:total], RightRoundResults=der[:total])
-        return dict(LastBattleLog=registro, LeftPlayerChanges=cambios(LEFT), RightPlayerChanges=cambios(RIGHT), MatchId=p.id, SubMatchId=0,
+        return dict(LastBattleLog=registro, LeftPlayerChanges=cambios(LEFT), RightPlayerChanges=cambios(RIGHT), MatchId=p.id, SubMatchId=0 if p.mesa else p.revanchas + 1,
                     SaveBattleLogOnGamesvrId=1)
     def enviar_resultado(self, p, x):
         """BattleResult a un jugador, una sola vez por pelea."""
@@ -907,10 +910,13 @@ class Juego:
             j.notificar('NotifyOtherBackToCharSelect', dict(Side=otro.lado, Pos=otro.slots[0] if otro.slots else 0))
             for x in atascados: self.rescatar(p, x)
             return 'RefightRsp', dict(FightStarted=False)
+        if not p.mesa and p.revanchas >= MAX_REVANCHAS:
+            log.info('pelea %d: %s pide revancha pero ya se jugaron las %d', p.id, j.nombre, MAX_REVANCHAS)
+            return 'Error', dict(ErrCode=12, ErrMsg='Ya no quedan revanchas con este rival', ErrMsgEn='No rematches left')
         p.revancha.add(j); todos = all(x in p.revancha for x in p.jugadores())
         self.difundir(p.jugadores(), 'NotifyOtherRequestRefight', dict(FightStarted=todos, Side=j.lado, Pos=j.slots[0]), excepto=j)
         if todos:
-            p.limpiar_resultado(); p.fase = LOADING_FIGHT; p.revancha.clear(); p.peleas += 1
+            p.limpiar_resultado(); p.fase = LOADING_FIGHT; p.revancha.clear(); p.peleas += 1; p.revanchas += 1
             for m in p.todos_los_miembros(): m['LoadingProgress'] = 0
             log.info('pelea %d: revancha aceptada por todos', p.id)
         return 'RefightRsp', dict(FightStarted=todos)

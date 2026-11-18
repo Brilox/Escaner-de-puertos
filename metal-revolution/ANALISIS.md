@@ -211,3 +211,19 @@ Leído de `ConfigHashNetworkHandler` / `ConfigManager` / `TextConfig` en `libil2
 4. `TextConfig.GetConfig` (lo que usa Lua para leer `Shared/<archivo>`) devuelve la copia descargada si `useDoc`.
    Las respuestas solo se aceptan con código 200/188 (cualquier respuesta normal; un `Error` las rechaza).
 
+## El OBB del teléfono (`main.1300`, release `obb` del repo): es el oficial 1.0.23 y coincide con el APK
+- `main.1300.com.gtarcade.next.mrglo.obb` (944.393.108 bytes, fecha 24/10/2022): OBB **oficial** de la 1.0.23, sin
+  tocar por el mod (el mod solo cambió el APK). Es la versión que corresponde al APK Metal Offline V2.
+- Su Lua usa `TextConfig:GetConfigTextLuaCall`, la función que sí existe en el C# del mod (el Lua de la 1.0.20 usaba
+  `ConfigManager.LoadConfigTextLuaCall`, que no existe ahí). Desde ahora se analiza **este** código, no el de la 1.0.20.
+- 1.147 scripts (la 1.0.20 tenía 1.242) y 79 configuraciones: se quitó el sistema de trofeos / cultivo de héroes
+  (`trophy*`, `HeroCultivationConfig`, `HeroLevelConfig`, `Talent*`, `GameTaskConfig`).
+- `OpenSystemConfig.json` es igual al de la 1.0.20 (solo falta `icon` en BpCore): la versión que manda el servidor para
+  abrir los modos no cambia nada más.
+- La pantalla de resultados (`CommonBattleEndScreen.lua`) en la sala llama a `ArenaBattleEndMono:OnOpen()` (C#). El
+  perdedor de la sala nunca llega a abrirla (no pide `QueryPlayerRankReq`): el paso de la pelea a esa pantalla está en
+  C# (`BaseMatchNetworkHandler::OnGameOver` -> `SendMatchResult` / `OnMatchResult` / `DirectlyGotoBattleEndOnRivalFlee`).
+  Pendiente de seguir ahí.
+- `tools/ifs/ifs.py`: corregido un sector guardado sin comprimir (como en MPQ, si comprimir no ahorra va tal cual y sin
+  byte de tipo); con eso `lua.bytes` de la 1300 sale completo y se descifra con la misma clave.
+

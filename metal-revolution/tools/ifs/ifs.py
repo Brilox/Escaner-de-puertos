@@ -104,10 +104,13 @@ class IFS:
             return raw                            # sin tabla de sectores: guardado tal cual
         n = first // 4
         offs = struct.unpack_from('<%dI' % n, raw, 0)
-        out = bytearray()
+        out = bytearray(); sector = 512 << self.sector_shift
         for k in range(n - 1):
             chunk = raw[offs[k]:offs[k + 1]]
             if not chunk: continue
+            esperado = min(sector, e['size'] - k * sector)
+            if len(chunk) == esperado:            # como en MPQ: si comprimir no ahorra nada, va tal cual y sin byte de tipo
+                out += chunk; continue
             t = chunk[0]; body = chunk[1:]
             if t == 2:
                 try: out += zlib.decompress(body)

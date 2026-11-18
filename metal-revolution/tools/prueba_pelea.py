@@ -273,7 +273,29 @@ def prueba_2v2():
     for c in cs: c.s.close()
 
 
+def prueba_config():
+    """Los modos de batalla se abren mandando al telefono una OpenSystemConfig sin limites de fecha ni de horario."""
+    import json
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'server'))
+    from config_juego import como_lo_lee_el_telefono
+    print('\n=== CONFIGURACION DEL JUEGO (modos de batalla abiertos) ===')
+    c = Cliente('Ines', HOST, PUERTO)
+    r = c.pedir('LoginRequest', {'OpenId': 'prueba-Ines', 'DeviceId': 'dev-Ines'}, ver=False)
+    ok(de(r, 'LoginGameSvrRsp')['PlayerInfo']['BaseInfo']['Level'] >= 8, 'el nivel informado alcanza el minimo de la clasificatoria 1v1 (8)')
+    ok(len(de(r, 'LoginGameSvrRsp')['PlayerInfo']['Heroes']) >= 5, 'tiene al menos 5 personajes (otro requisito de la 1v1)')
+    av = de(r, 'NotifySvrConfigReload')
+    ok(bool(av and av['Reload'] and av['HashAll']), 'al entrar llega el aviso de configuracion nueva')
+    pares = de(c.pedir('QueryAllConfigHashReq', {}, ver=False), 'QueryAllConfigHashRsp')['HashPairs']
+    ok(any(p['FileName'] == 'OpenSystemConfig.json' for p in pares), 'la lista de archivos incluye OpenSystemConfig.json')
+    cont = de(c.pedir('DownloadConfigReq', {'Key': 'OpenSystemConfig.json'}, ver=False), 'DownloadConfigRsp')['Content']
+    cfg = {x['name']: x for x in json.loads(como_lo_lee_el_telefono(cont))['configList']}
+    abiertos = all(k in cfg and not ({'beginTime', 'endTime', 'dayBeginTime', 'dayEndTime'} & set(cfg[k]))
+                   for k in ('TeamBattle', 'RankMatch', 'RankSolo3v3', 'QuickSolo3v3'))
+    ok(abiertos, '2v2, 1v1 clasificatoria y 3v3 quedan sin fechas ni horario (tal como lo lee el telefono)')
+    c.s.close()
+
+
 if __name__ == '__main__':
-    prueba_mesa(); prueba_clasificatoria(); prueba_2v2()
+    prueba_mesa(); prueba_clasificatoria(); prueba_2v2(); prueba_config()
     print('\n%s' % ('TODO BIEN' if not fallos else 'FALLARON %d COMPROBACIONES:\n  - %s' % (len(fallos), '\n  - '.join(fallos))))
     sys.exit(1 if fallos else 0)

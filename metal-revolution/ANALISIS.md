@@ -197,3 +197,17 @@ Hallazgos en los scripts (no se publican: son código del juego):
 - `MetalFury/Config/ConfigManager.lua`: la configuración del juego son archivos `Shared/*.csv` y `*.json`
   (`OpenSystemConfig.json`, tienda, objetos, tareas, pase de batalla...) que se recargan cuando el servidor avisa.
 - Pantallas de fin de pelea: `UI/DerivedUI/InBattle/{Base,Common,Rank}BattleEndScreen.lua`, `UI/SoloNvN/*`.
+
+## El servidor puede cambiar la configuración del juego (implementado: `server/config_juego.py`)
+Leído de `ConfigHashNetworkHandler` / `ConfigManager` / `TextConfig` en `libil2cpp.so` (1.0.23):
+1. `NotifySvrConfigReload{Reload, HashAll}`: si `Reload` y `HashAll` distinto del guardado (y el servidor no mandó
+   el flag `disableConfigHash`), el teléfono pide `QueryAllConfigHashReq`.
+2. `QueryAllConfigHashRsp{HashPairs[{FileName, Hash}]}`: `FileName` es el nombre corto (`OpenSystemConfig.json`).
+   Para cada uno, `NeedUpgrade` compara `Hash` con el MD5 de su copia de fábrica (`hashInApp`) y con el de la
+   descargada (`hashInDoc`); si no coincide con ninguno, lo pide.
+3. `DownloadConfigReq{Key}` → `DownloadConfigRsp{Content}`. El teléfono aplica `StringUtils.JsonFromServer`
+   (reemplaza `\"`, `\\`, `\n`, `\r`, `\b`, `\f`, `\t`, en ese orden), lo guarda cifrado con XOR en su carpeta de
+   datos (`SaveDocString`) y anota en `Hash.json` que use esa copia (`useDoc`).
+4. `TextConfig.GetConfig` (lo que usa Lua para leer `Shared/<archivo>`) devuelve la copia descargada si `useDoc`.
+   Las respuestas solo se aceptan con código 200/188 (cualquier respuesta normal; un `Error` las rechaza).
+

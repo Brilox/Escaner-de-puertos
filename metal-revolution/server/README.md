@@ -112,6 +112,10 @@ Al acabar, los teléfonos suben el resultado (`UploadBattleResult`) y el servido
   con `TargetUid = 0`; con otro valor su teléfono lo ignora y la pelea se desincroniza.
 - **Sala:** al terminar la pelea no se manda `NotifyRoomDetailInfoUpdate` a los de la mesa. Si llega justo antes del
   resultado, el teléfono se queda en la imagen del ganador sin revancha ni salir.
+- **Modos de batalla abiertos:** el juego decide qué botones habilita con su `OpenSystemConfig.json` (la 2v2 venía
+  con fechas de 2021 y la clasificatoria 1v1 solo de 9:00 a 20:30) y con `RankMatchConfig` (nivel 8 y 5 personajes).
+  El servidor le manda al teléfono una `OpenSystemConfig.json` sin fechas ni horario (ver `config_juego/README.md`)
+  e informa nivel 10 como mínimo. La primera vez hay que cerrar y abrir el juego.
 - No implementado todavía: el netcode FrameSync (el servidor anuncia rollback), espectadores de una pelea en curso
   y reconexión a mitad de combate.
 
@@ -123,5 +127,5 @@ python ../tools/prueba_pelea.py 127.0.0.1 18080
 ```
 
 `tools/prueba_pelea.py` simula dos teléfonos de punta a punta: sala de espera, selección, carga, ping, KCP con
-paquetes perdidos, resultado, revancha, abandono y clasificatoria 3v3. `tools/cliente_prueba.py` es el cliente base.
+paquetes perdidos, resultado, revancha, abandono, clasificatoria 3v3, 2v2 y el envío de configuraciones. `tools/cliente_prueba.py` es el cliente base.
 Versión anterior (solo grabaciones): `mr_server_v1_replay.py`.

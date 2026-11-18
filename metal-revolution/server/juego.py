@@ -5,6 +5,7 @@ Todo se expresa como diccionarios que el codec FlatBuffers (fb_codec) convierte 
 Cada handler on_<Peticion>(sesion, datos) devuelve (TipoRespuesta, dict) o None (EmptyRsp).
 Los avisos a otros jugadores se mandan con jugador.notificar(TipoAviso, dict)."""
 import asyncio, copy, json, logging, os, random, sqlite3, time
+from config_juego import ConfigJuego
 
 log = logging.getLogger('mr.juego')
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -28,6 +29,7 @@ MODOS = {
 }
 GAMEHALL = 5                                                    # MatchType de las mesas del hall
 PUNTOS_INICIALES, PUNTOS_GANAR, PUNTOS_PERDER = 1000, 25, 20
+NIVEL_MINIMO = 10                                               # la clasificatoria 1v1 del juego exige nivel 8 (RankMatchConfig.limitLevel)
 SEGUNDOS_ORDEN = 30                                             # tiempo para ordenar personajes (3v3 y 2v2)
 ESCENARIOS = (1, 2, 3, 4)                                       # escenarios vistos en las peleas reales (para la partida rapida)
 PERSONAJE_POR_DEFECTO = 5                                       # si alguien busca partida rapida sin haber elegido personaje
@@ -208,12 +210,13 @@ class Juego:
         self.colas = {m: [] for m in MODOS}                          # modo -> [lista de grupos (listas de Jugador)]
         self.chat_hall = []                                          # ultimos mensajes del hall
         self.en_hall = []                                            # jugadores en el hall, en orden de llegada (Index)
+        self.config = ConfigJuego()                                  # archivos de config que se reemplazan en los telefonos
         self.handlers = {n[3:]: getattr(self, n) for n in dir(self) if n.startswith('on_')}
 
     # ================================================================= utilidades
     def info_detallada(self, cuenta):
         pi = copy.deepcopy(self.plantilla['PlayerInfo']); uid = cuenta['uid']; j = self.conectados.get(uid)
-        pi['BaseInfo'].update(Uid=uid, Name=cuenta['nombre'], Level=cuenta['nivel'], Exp=cuenta['exp'], RegisterTime=cuenta['creado'] or 0,
+        pi['BaseInfo'].update(Uid=uid, Name=cuenta['nombre'], Level=max(cuenta['nivel'], NIVEL_MINIMO), Exp=cuenta['exp'], RegisterTime=cuenta['creado'] or 0,
                               OnlineState=1 if j else 0, GameVersion=VERSION_JUEGO, ClientVersion=VERSION_JUEGO,
                               GameHallId=1 if j and j.hall else 0, HallRoomId=j.mesa.id if j and j.mesa else 0, TotalLoginDay=1)
         pi['BattleData'] = self.datos_batalla(cuenta)
@@ -270,6 +273,8 @@ class Juego:
             self.desconectar(viejo); viejo.sesion.jugador = None
         j = Jugador(sesion, cuenta); self.conectados[j.uid] = j; sesion.jugador = j
         log.info('login uid=%d nombre=%r (%s)', j.uid, cuenta['nombre'], 'pedira nombre' if not cuenta['nombre'] else 'ok')
+        aviso = self.config.aviso()
+        if aviso: sesion.despues.append(('NotifySvrConfigReload', aviso))   # el telefono pedira las configuraciones nuevas
         return self.respuesta_login(cuenta)
     def on_CreateRoleReq(self, sesion, d):
         j = sesion.jugador; err = self.cuentas.poner_nombre(j.uid, d.get('Name', ''))
@@ -284,6 +289,16 @@ class Juego:
         j.cuenta = self.cuentas.get(j.uid); log.info('uid=%d ahora se llama %r', j.uid, j.nombre)
         j.notificar('NotifyBasePlayerInfoChange', self.info_detallada(j.cuenta)); self.mensaje_sistema(j, 'Ahora te llamas ' + j.nombre)
         return None
+    # ---- configuraciones que el servidor reemplaza (ver config_juego.py)
+    def on_QueryAllConfigHashReq(self, sesion, d):
+        return 'QueryAllConfigHashRsp', dict(HashPairs=self.config.pares())
+    def on_DownloadConfigReq(self, sesion, d):
+        contenido = self.config.contenido(d.get('Key', ''))
+        if contenido is None:
+            log.warning('el telefono pidio la configuracion %r, que no tengo', d.get('Key'))
+            return 'Error', dict(ErrCode=11, ErrMsg='Configuracion no disponible', ErrMsgEn='Config not available')
+        log.info('uid=%d descarga la configuracion %s', sesion.jugador.uid, d.get('Key'))
+        return 'DownloadConfigRsp', dict(Content=contenido)
     def on_NameCardCdReq(self, sesion, d): return 'NameCardCdRsp', dict(TimeLeft=0)
     def on_QueryRoleIdByNameReq(self, sesion, d):
         r = self.cuentas.db.execute('SELECT uid FROM jugadores WHERE lower(nombre)=lower(?)', (d.get('Name', ''),)).fetchone()

@@ -1,0 +1,45 @@
+{
+	"configList": [
+		{
+			"name": "TeamBattle",
+			"level": 1
+		},
+		{
+			"name": "MatchEvent",
+			"level": 1
+		},
+		{
+			"name": "TreasureBox",
+			"level": 1
+		},
+		{
+			"name": "BpCore",
+			"level": 1,
+			"icon": "ommon/box_01"
+		},
+		{
+			"name": "RankMatch",
+			"level": 1
+		},
+		{
+			"name": "PveChampionship",
+			"level": 5
+		},
+		{
+			"name": "RankSolo3v3",
+			"level": 1
+		},
+		{
+			"name": "QuickSolo3v3",
+			"level": 1
+		},
+		{
+			"name": "Quick2v2",
+			"level": 1
+		},
+		{
+			"name": "PveArcade",
+			"level": 1
+		}
+	]
+}

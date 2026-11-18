@@ -4,7 +4,7 @@
     python extraer.py <main.obb | first_source.png> <carpeta_salida> [--todo]
 
 Sin --todo solo saca la lista de archivos, los scripts Lua (descifrados y separados uno por archivo) y la
-configuracion. Con --todo saca los ~8.700 archivos (unos 840 MB).
+configuracion (en config_txt/, en texto, si esta instalado UnityPy). Con --todo saca los ~8.700 archivos (unos 840 MB).
 
 Notas del formato (ver ANALISIS.md): MPQ v4 modificado ("nifs"); tablas HET/BET cifradas con las claves MPQ
 estandar; nombres en el (listfile), que es el unico archivo cifrado; cada archivo = tabla de sectores + sectores
@@ -47,6 +47,28 @@ def main():
             dest = os.path.join(out, 'lua', *ruta.split('/')); os.makedirs(os.path.dirname(dest), exist_ok=True)
             open(dest, 'w', encoding='utf-8').write(cuerpo); k += 1
         print(k, 'scripts Lua descifrados en', os.path.join(out, 'lua'))
+    sacar_configuraciones(os.path.join(out, 'archivos'), os.path.join(out, 'config_txt'))
+
+def sacar_configuraciones(origen, destino):
+    """Saca los archivos de configuracion (OpenSystemConfig.json, ShoppingMallConfig.csv...) de los bundles de config.
+    Estos son los que se pueden copiar a server/config_juego/ para cambiarlos. Necesita UnityPy (pip install UnityPy)."""
+    try:
+        import UnityPy
+    except ImportError:
+        print('(para sacar tambien las configuraciones en texto instala UnityPy:  pip install UnityPy)'); return
+    k = 0
+    for raiz, _, archivos in os.walk(origen):
+        if 'config' not in raiz.lower(): continue
+        for nombre in archivos:
+            if not nombre.endswith('.bundle'): continue
+            for obj in UnityPy.load(os.path.join(raiz, nombre)).objects:
+                if obj.type.name != 'TextAsset': continue
+                d = obj.read(); texto = d.m_Script
+                if isinstance(texto, str): texto = texto.encode('utf-8', 'surrogateescape')
+                os.makedirs(destino, exist_ok=True)
+                ext = '.json' if texto.lstrip(b'\xef\xbb\xbf \t\r\n')[:1] in (b'{', b'[', b'/') else '.csv'
+                open(os.path.join(destino, d.m_Name + ext), 'wb').write(texto); k += 1
+    print(k, 'configuraciones en texto en', destino)
 
 if __name__ == '__main__':
     sys.exit(main())

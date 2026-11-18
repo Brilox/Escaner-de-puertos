@@ -255,7 +255,7 @@ async def main():
                         handlers=[logging.StreamHandler(), logging.handlers.RotatingFileHandler(a.log, maxBytes=20 * 1024 * 1024, backupCount=3, encoding='utf-8')])
     srv = Server(a)
     loop = asyncio.get_running_loop()
-    relay = Relay(a.listen, srv.juego.puerto_relay, esperados=srv.juego.jugadores_en_relay,
+    relay = Relay(a.listen, srv.juego.puerto_relay, esperados=srv.juego.jugadores_en_relay, puestos=srv.juego.puestos_relay,
                   al_empezar=lambda mid: loop.call_soon_threadsafe(srv.juego.pelea_iniciada, mid))
     relay.start(); srv.relay = relay
     server = await asyncio.start_server(srv.handle, a.listen, a.port)

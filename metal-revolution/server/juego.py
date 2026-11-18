@@ -35,6 +35,7 @@ TUTORIALES_HECHOS = ('e3482f25-a92e-4215-b1b4-946e22c12c39',)
 SEGUNDOS_ORDEN = 30                                             # tiempo para ordenar personajes (3v3 y 2v2)
 ESCENARIOS = (1, 2, 3, 4)                                       # escenarios vistos en las peleas reales (para la partida rapida)
 PERSONAJE_POR_DEFECTO = 5                                       # si alguien busca partida rapida sin haber elegido personaje
+SEGUNDOS_RESCATE = 12                                           # sala: si un telefono no abre la pantalla de resultados
 SEGUNDOS_RESULTADO = 10                                         # si un telefono no sube su resultado, se le manda igual tras este tiempo
 ANUNCIO = ('Bienvenido a Metal Online', 'Servidor privado sin fines de lucro, hecho por fans. '
            'Escribe /nombre TuNombre en el chat del hall para cambiar tu nombre.')
@@ -125,6 +126,9 @@ class Jugador:
         self.partida = None; self.lado = None; self.slots = []          # slots (pos) que controla en la partida
         self.equipo = None; self.buscando = None; self.inicio_busqueda = 0; self.pvp_prefs = None
         self.ultima_pelea = None; self.cancelada_avisada = None          # (id, lado, pos) de su ultima pelea
+        # El nivel que ve el telefono no cambia durante la sesion: subir de nivel justo al terminar una pelea dejaba
+        # el telefono sin abrir la pantalla de resultados (paso en la sala). El nivel nuevo se ve al volver a entrar.
+        self.nivel_sesion = cuenta['nivel']
     @property
     def nombre(self): return self.cuenta['nombre'] or 'Jugador%d' % (self.uid % 100000)
     def notificar(self, tipo, datos): self.sesion.enviar_notificacion(tipo, datos)
@@ -226,7 +230,7 @@ class Juego:
     # ================================================================= utilidades
     def info_detallada(self, cuenta):
         pi = copy.deepcopy(self.plantilla['PlayerInfo']); uid = cuenta['uid']; j = self.conectados.get(uid)
-        pi['BaseInfo'].update(Uid=uid, Name=cuenta['nombre'], Level=cuenta['nivel'], Exp=cuenta['exp'], RegisterTime=cuenta['creado'] or 0,
+        pi['BaseInfo'].update(Uid=uid, Name=cuenta['nombre'], Level=j.nivel_sesion if j else cuenta['nivel'], Exp=cuenta['exp'], RegisterTime=cuenta['creado'] or 0,
                               OnlineState=1 if j else 0, GameVersion=VERSION_JUEGO, ClientVersion=VERSION_JUEGO,
                               GameHallId=1 if j and j.hall else 0, HallRoomId=j.mesa.id if j and j.mesa else 0, TotalLoginDay=1)
         pi['BattleData'] = self.datos_batalla(cuenta)
@@ -611,6 +615,13 @@ class Juego:
             if j.partida is p: j.partida = None; j.lado = None; j.slots = []
         if p.mesa and p.mesa.partida is p: p.mesa.partida = None
         self.partidas.pop(p.id, None)
+    def puestos_relay(self, match_id, lado, pos):
+        """Todos los puestos que maneja el telefono que entro al relay con (lado, pos): en el 3v3 en solitario, sus 3."""
+        p = self.partidas.get(match_id)
+        if not p: return [pos]
+        for j in p.lados.get(lado, []):
+            if pos in j.slots: return list(j.slots)
+        return [pos]
     def jugadores_en_relay(self, match_id):
         """Cuantos telefonos deben conectarse al relay antes de dar la salida (lo consulta el hilo del relay)."""
         p = self.partidas.get(match_id); return len(p.jugadores()) if p else None
@@ -785,6 +796,16 @@ class Juego:
         (el telefono no pidio nada mas). Les pasa sobre todo al que pierde."""
         if not p.mesa or p.datos_resultado is None: return []
         return [x for x in p.jugadores() if x is not excepto and x in p.notificados and x not in p.pantalla_fin]
+    def rescate_mesa(self, p, pelea):
+        """Sala: si pasado el plazo algun telefono sigue sin abrir la pantalla de resultados, los dos vuelven a elegir
+        personaje (es la revancha que el telefono pegado no puede pedir)."""
+        if self.partidas.get(p.id) is not p or p.peleas != pelea or p.fase != END or not p.mesa: return
+        pegados = self.atascados(p)
+        if not pegados: return
+        log.info('pelea %d: %s sin pantalla de resultados tras %d s -> los dos a elegir personaje', p.id,
+                 [x.nombre for x in pegados], SEGUNDOS_RESCATE)
+        p.volver_a_seleccion()
+        for x in p.jugadores(): x.notificar('NotifyGameHallMatchCreated', self.vista_mesa(p.mesa, x))
     def rescatar(self, p, x):
         """Se le vuelve a mandar la mesa entera (como al armarse la pelea): el telefono sale de donde quedo y pasa a la
         seleccion de personaje junto con el rival."""
@@ -855,7 +876,9 @@ class Juego:
             self.guardar_resultado(p, ganador, rondas[0], rondas[1]); p.datos_resultado = self.resultado_batalla(p)
             # (en la sala NO se manda NotifyRoomDetailInfoUpdate aqui: los asientos no cambian y, si le llega al telefono
             #  justo antes del resultado, se queda en la imagen del ganador sin revancha ni salir)
-            try: p.temporizador_resultado = asyncio.get_running_loop().call_later(SEGUNDOS_RESULTADO, self.resultado_pendiente, p)
+            try:
+                p.temporizador_resultado = asyncio.get_running_loop().call_later(SEGUNDOS_RESULTADO, self.resultado_pendiente, p)
+                if p.mesa: asyncio.get_running_loop().call_later(SEGUNDOS_RESCATE, self.rescate_mesa, p, p.peleas)
             except RuntimeError: pass
         elif (p.resultado, p.rondas) != (ganador if ganador in (LEFT, RIGHT) else p.resultado, rondas):
             log.warning('pelea %d: %s subio un resultado distinto (lado %s, %s) al registrado (lado %s, %s): posible desincronizacion',

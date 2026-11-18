@@ -241,3 +241,12 @@ Leído de `ConfigHashNetworkHandler` / `ConfigManager` / `TextConfig` en `libil2
    `QueryPlayerRankReq`, su pantalla se corta en el refresco de jugadores o antes. Para saber la línea exacta hace falta el
    registro del teléfono (`adb logcat`), donde Unity escribe los errores de Lua.
 
+### Relay en el 3v3 en solitario (C# `BaseMatchNetworkHandler::PrepareFightContext` y `RollbackNetCodeDriver::OnRecvRelayMsg`)
+- Por cada personaje del combate (lado, índice) el teléfono crea un lector de inputs: **local solo para el índice igual a
+  `localPlayerIndex` (0)**; todos los demás, incluidos los otros dos personajes del propio jugador, son lectores remotos.
+- Los mensajes del relay se entregan al lector de `[lado][pos]` (si no es remoto se descartan).
+- Por eso en el 3v3 el relay debe repartir cada input del jugador marcado con **sus 3 puestos** y devolvérselo también a
+  él para los puestos 1 y 2. Marcando siempre el puesto 0, al entrar el segundo personaje nadie lo controlaba.
+- Sala: subir de nivel justo al terminar la pelea dejó a los dos teléfonos sin abrir la pantalla de resultados; el nivel
+  mostrado queda fijo durante la sesión.
+

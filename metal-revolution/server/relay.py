@@ -157,7 +157,7 @@ class Par:
     """Un telefono conectado al relay."""
 
     def __init__(self, addr, kcp):
-        self.addr = addr; self.kcp = kcp; self.sala = None; self.lado = 0; self.pos = 0; self.sub = 0
+        self.addr = addr; self.kcp = kcp; self.sala = None; self.lado = 0; self.pos = 0; self.sub = 0; self.puestos = [0]
         self.esperando = False; self.ultimo = time.monotonic(); self.rapido = []; self.recibidos = 0; self.enviados = 0
 
 
@@ -170,7 +170,7 @@ class Relay(threading.Thread):
     """esperados(match_id) -> cuantos telefonos tienen que entrar antes de empezar (None si la partida no existe).
     al_empezar(match_id) y al_salir(match_id, lado, pos) se llaman desde el hilo del relay."""
 
-    def __init__(self, escucha, puerto, esperados=None, al_empezar=None, puerto_ping=None):
+    def __init__(self, escucha, puerto, esperados=None, al_empezar=None, puerto_ping=None, puestos=None):
         super().__init__(name='relay', daemon=True)
         self.sock = self._socket(escucha, puerto); self.puerto = self.sock.getsockname()[1]
         if puerto_ping is None: puerto_ping = self.puerto - 1
@@ -178,6 +178,8 @@ class Relay(threading.Thread):
         self.puerto_ping = self.sock_ping.getsockname()[1] if self.sock_ping else self.puerto
         self.socks = [x for x in (self.sock, self.sock_ping) if x]
         self.esperados = esperados or (lambda mid: 2); self.al_empezar = al_empezar
+        # puestos(match_id, lado, pos) -> todos los puestos (pos) que maneja ese telefono: en el 3v3 en solitario son 3
+        self.puestos = puestos or (lambda mid, lado, pos: [pos])
         self.pares = {}; self.salas = {}; self.sucios = set(); self.activo = True
         self.pings = 0; self.raros = 0; self._ult_tick = 0.0; self._ult_limpieza = 0.0
 
@@ -291,10 +293,20 @@ class Relay(threading.Thread):
             elif t == 1: self.salir(par)
             elif t == 2: pass
             elif par.sala is not None:
-                rsp = m[:5] + bytes((par.lado, par.pos)) + m[5:]
                 if t == 14: par.sala.inputs += 1
-                for otro in par.sala.pares.values():
-                    if otro is not par: self.enviar(otro, rsp, fiable)
+                if t in (14, 15) and len(par.puestos) > 1:
+                    # 3v3 en solitario: cada telefono mueve con el dedo SOLO a su personaje del puesto 0 (lector local);
+                    # los de los puestos 1 y 2 (tambien en su propio telefono) se mueven con lo que llega del relay
+                    # marcado con ese puesto. Por eso cada input se reparte a todos sus puestos y tambien vuelve al que
+                    # lo mando para los puestos que no son el suyo (el juego descarta lo que va a su lector local).
+                    for p in par.puestos:
+                        rsp = m[:5] + bytes((par.lado, p)) + m[5:]
+                        for otro in par.sala.pares.values():
+                            if otro is not par or p != par.pos: self.enviar(otro, rsp, fiable)
+                else:
+                    rsp = m[:5] + bytes((par.lado, par.pos)) + m[5:]
+                    for otro in par.sala.pares.values():
+                        if otro is not par: self.enviar(otro, rsp, fiable)
 
     def entrar(self, par, m):
         _, mid, sub, lado, pos, reentra, equipo = struct.unpack('<BiHBBBB', m)
@@ -304,6 +316,8 @@ class Relay(threading.Thread):
             if otro is not par and (otro.lado, otro.pos) == (lado, pos): self.quitar(otro)
         if par.sala is not None and par.sala is not sala: self.quitar(par, borrar=False)
         par.sala = sala; par.lado = lado; par.pos = pos; par.sub = sub; par.esperando = True; sala.pares[par.addr] = par
+        try: par.puestos = list(self.puestos(mid, lado, pos) or [pos])
+        except Exception: par.puestos = [pos]
         esperados = self.esperados(mid) or 2
         log.info('relay: pelea %d: entra lado=%d pos=%d desde %s:%d (%d de %d)%s', mid, lado, pos, par.addr[0], par.addr[1],
                  sum(1 for o in sala.pares.values() if o.esperando), esperados, ' [reconexion]' if reentra else '')

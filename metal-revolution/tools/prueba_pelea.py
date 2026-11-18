@@ -116,7 +116,7 @@ def escenario_y_carga(a, b, lados):
     b.pedir('SyncLoadingProgressReq', {'Progress': 100, 'Side': lados[1], 'Pos': 0}, ver=False); a.recibir(0.1)
 
 
-def pelea(match_id, lados, n=120, perder=(3, 4, 40)):
+def pelea(match_id, lados, n=120, perder=(3, 4, 40), puestos=1):
     """Los dos entran al relay y se mandan n inputs por el canal fiable (con paquetes perdidos) y unos pocos por el rapido."""
     ua = TelefonoUDP(perder=perder); ub = TelefonoUDP()
     ok(ua.ping() and ub.ping(), 'ping UDP previo contestado')
@@ -132,6 +132,22 @@ def pelea(match_id, lados, n=120, perder=(3, 4, 40)):
         if f % 10 == 9: ua.bombear(0.02); ub.bombear(0.02)
     for _ in range(6): ua.bombear(0.1); ub.bombear(0.1)
     en_b = b''.join(ub.mensajes); en_a = b''.join(ua.mensajes)
+    if puestos > 1:
+        # 3v3 en solitario: cada input llega marcado con los 3 puestos del emisor, y al emisor le vuelve para los puestos 1 y 2
+        def por_puesto(buf):
+            r = {}
+            for i in range(0, len(buf) - 8, 9):
+                if buf[i] == 14:
+                    fr, lado, pos, bot = struct.unpack_from('<iBBH', buf, i + 1); r.setdefault((lado, pos), []).append((fr, bot))
+            return r
+        rb, ra = por_puesto(en_b), por_puesto(en_a)
+        de_a = [(f, f & 0xFF) for f in range(n)]; de_b = [(f, 0x100 | (f & 0xFF)) for f in range(n)]
+        ok(all(rb.get((lados[0], q)) == de_a for q in range(puestos)), '3v3: el rival recibe cada input marcado para los %d puestos del emisor' % puestos)
+        ok(all(ra.get((lados[1], q)) == de_b for q in range(puestos)), '3v3: lo mismo en el otro sentido')
+        ok((lados[0], 0) not in ra and all(ra.get((lados[0], q)) == de_a for q in range(1, puestos)),
+           '3v3: al emisor le vuelven sus inputs para los puestos 1 y 2 (sus otros personajes), no para el 0')
+        ua.fiable(b'\x01'); ub.fiable(b'\x01'); ua.bombear(0.1); ub.bombear(0.1)
+        return ua, ub
     esperado_a = b''.join(struct.pack('<BiBBH', 14, f, lados[1], 0, 0x100 | (f & 0xFF)) for f in range(n))
     inputs_b = b''.join(en_b[i:i + 9] for i in range(0, len(en_b), 9) if en_b[i] == 14)
     esperado_b = b''.join(struct.pack('<BiBBH', 14, f, lados[0], 0, f & 0xFF) for f in range(n))
@@ -239,7 +255,7 @@ def prueba_clasificatoria():
     fa = de(a.recibir(0.3) + a.avisos, 'NotifyFinishReorderChar'); fb = de(r + b.avisos, 'NotifyFinishReorderChar')
     ok(fa is not None and fb is not None, 'cuando los dos ordenaron, ambos reciben NotifyFinishReorderChar (a elegir escenario)')
     a.avisos.clear(); b.avisos.clear()
-    escenario_y_carga(a, b, (0, 1)); pelea(mid, (0, 1), n=40, perder=(2,))
+    escenario_y_carga(a, b, (0, 1)); pelea(mid, (0, 1), n=40, perder=(2,), puestos=3)
     rb = resultado(a, b, 0)
     ok(rb['LeftPlayerChanges'][0]['WinPoint'] > rb['RightPlayerChanges'][0]['WinPoint'], 'el ganador sube puntos y el perdedor baja')
     a.pedir('ExitMatchReq', {}, ver=False); b.pedir('ExitMatchReq', {}, ver=False)

@@ -135,3 +135,16 @@ python ../tools/prueba_pelea.py 127.0.0.1 18080
 `tools/prueba_pelea.py` simula dos teléfonos de punta a punta: sala de espera, selección, carga, ping, KCP con
 paquetes perdidos, resultado, revancha, abandono, clasificatoria 3v3, 2v2 y el envío de configuraciones. `tools/cliente_prueba.py` es el cliente base.
 Versión anterior (solo grabaciones): `mr_server_v1_replay.py`.
+
+## Perfil del jugador
+- **Estadísticas:** cada pelea se guarda por jugador y personaje (tabla `registros` de `cuentas.db`) con las estadísticas
+  que sube su teléfono (daño, combos, golpes, bloqueos…). De ahí salen `CommonBattleStats` (por tipo de pelea),
+  `HeroBattleDatas` (por personaje) y la temporada (`QuerySeasonInfoReq`): porcentaje de victorias y los seis puntajes
+  de 0 a 20 del radar (daño por segundo, movimiento, combo, ataque, técnica, defensa), con el total sobre 100.
+- **Avatar:** los 18 avatares de personaje (`PlayerHeadReq`/`PlayerHeadChangeReq`). Una foto propia no se puede: el
+  juego la subía a una nube de Tencent que ya no existe.
+- **Marcos:** se desbloquean con las reglas del propio juego (`datos/marcos.json`, de `HeadFrameConfig`): puntos de
+  clasificatoria, victorias con un personaje y nivel. Los de objeto/especiales quedan bloqueados para campeones y
+  colaboradores.
+- **Me gusta** (`PraiseOtherReq`) se acumula en el perfil.
+

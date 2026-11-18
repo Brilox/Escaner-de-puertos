@@ -293,7 +293,9 @@ def prueba_clasificatoria_1v1():
     ok(ms.get('MatchType') == 0 and ms.get('Phase') == 4 and [m['CharId'] for m in ms.get('LeftMembers', []) + ms.get('RightMembers', [])] == [8, 16],
        'la 1v1 clasificatoria va directo a la carga con el personaje favorito de cada uno')
     ok(ms.get('RefightRemainCount') == 2, 'la pelea anuncia 2 revanchas')
-    res = {'WinnerSide': 0, 'LeftWinRound': 2, 'RightWinRound': 0, 'LeftRoundResults': [16, 16], 'RightRoundResults': [48, 48]}
+    res = {'WinnerSide': 0, 'LeftWinRound': 2, 'RightWinRound': 0, 'LeftRoundResults': [16, 16], 'RightRoundResults': [48, 48],
+           'BattleStats': {'TotalRoundTime': 40, 'TotalRounds': 2, 'TotalDamage': 1585, 'MaxCombo': 8, 'TotalCombo': 44, 'ComboFinishCount': 11,
+                           'AllHitCastCount': 93, 'HitBeBlockedCount': 10, 'BlockCount': 6, 'BeHitConfirmCount': 9, 'WinByPerfectKo': 1, 'MoveDistance': 150.5}}
     subs = []; inicio = None
     for n in range(3):
         a.avisos.clear(); b.avisos.clear()
@@ -305,6 +307,15 @@ def prueba_clasificatoria_1v1():
         else: ok(de(r, 'Error') is not None, 'la tercera revancha se rechaza (maximo 2)')
     ok(subs == [1, 2, 3], 'el resultado numera la pelea (SubMatchId 1, 2, 3): el juego muestra cuantas revanchas quedan')
     ok(inicio is not None and inicio < 1000, 'la clasificatoria resta puntos al que pierde')
+    t = (de(a.pedir('QuerySeasonInfoReq', {'All': True}, ver=False), 'PlayerSeasonData') or {}).get('SeasonDatas', [{}])[0]
+    ok(t.get('Index') == 1 and t.get('WinRate', 0) > 0 and 0 < t.get('Dps', 0) <= 20 and t.get('Score', 0) > 0,
+       'perfil: la temporada trae porcentaje de victorias y puntajes de habilidad calculados de las peleas')
+    bd = de(a.pedir('QueryBattleDataReq', {'Uid': uid_a, 'DetailLevel': 2}, ver=False), 'PlayerBattleData') or {}
+    h = [x for x in bd.get('HeroBattleDatas', []) if x['HeroId'] == 8 and x['BattleMode'] == 0]
+    ok(bool(h and h[0]['TotalCount'] == 3 and h[0]['WinCount'] == 3 and h[0].get('InBattleStats', {}).get('TotalDamage') == 3 * 1585)
+       and bd['CommonBattleStats'][0]['TotalCount'] == 3, 'perfil: peleas, victorias y estadisticas acumuladas por personaje y por modo')
+    r = a.pedir('PlayerHeadChangeReq', {'Id': 5}, ver=False)
+    ok((de(r, 'PlayerHeadRsp') or {}).get('CurrHead') == 5, 'perfil: el avatar elegido se guarda')
     a.s.close(); b.s.close()
 
 

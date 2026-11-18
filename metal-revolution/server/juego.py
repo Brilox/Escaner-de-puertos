@@ -29,6 +29,14 @@ MODOS = {
     RANKING_SOLO_3V3: dict(nombre='Clasificatoria 3v3', match_type=8, por_lado=1, slots=3, puntua=True, pantalla_equipo=True),
     QUICK_SOLO_3V3:   dict(nombre='Rapida 3v3',         match_type=9, por_lado=1, slots=3, puntua=False, pantalla_equipo=True),
 }
+TIPOS_ONLINE = (0, 1, 5, 7, 8, 9)                               # MatchType de peleas contra personas (sin IA ni local)
+TIPOS_CLASIFICATORIA = (0, 7, 8)
+STATS_MAXIMOS = ('MaxRoundTime', 'MaxCombo')                    # en InBattleStats: estos se guardan como maximo, el resto se suma
+try:
+    MARCOS = [tuple(x) for x in json.load(open(os.path.join(HERE, '..', 'datos', 'marcos.json')))]   # (id, condicion, parametros)
+except (OSError, ValueError):
+    MARCOS = []
+AVATARES = range(1, 19)                                         # PlayerHead.csv: un avatar por personaje
 TIPOS_DE_PELEA = 11                                             # MatchType.COUNT
 GAMEHALL = 5                                                    # MatchType de las mesas del hall
 PUNTOS_INICIALES, PUNTOS_GANAR, PUNTOS_PERDER = 1000, 25, 20
@@ -61,10 +69,39 @@ class Cuentas:
           CREATE TABLE IF NOT EXISTS partidas (
             id INTEGER PRIMARY KEY AUTOINCREMENT, fecha INTEGER, modo TEXT, ganador INTEGER,
             izquierda TEXT, derecha TEXT, rondas_izq INTEGER, rondas_der INTEGER, personajes TEXT, escenario INTEGER);''')
+        cj = [r[1] for r in self.db.execute('PRAGMA table_info(jugadores)')]
+        for col, defecto in (('cabeza', 1), ('marco', 0), ('elogios', 0)):
+            if col not in cj: self.db.execute(f'ALTER TABLE jugadores ADD COLUMN {col} INTEGER DEFAULT {defecto}')
+        # una fila por jugador, personaje y pelea; stats = las estadisticas que sube su telefono (InBattleStats)
+        self.db.execute('CREATE TABLE IF NOT EXISTS registros (id INTEGER PRIMARY KEY AUTOINCREMENT, uid INTEGER, fecha INTEGER, '
+                        'tipo INTEGER, heroe INTEGER, resultado INTEGER, stats TEXT)')
+        self.db.execute('CREATE INDEX IF NOT EXISTS registros_uid ON registros(uid)')
+        if not self.db.execute('SELECT 1 FROM registros LIMIT 1').fetchone():
+            self._rellenar_registros()
         cols = [r[1] for r in self.db.execute('PRAGMA table_info(partidas)')]
         if 'modo' not in cols:   # base creada por la version anterior
             self.db.execute('ALTER TABLE partidas RENAME TO partidas_v1'); self.__init__(ruta); return
         self.db.commit()
+
+    def _rellenar_registros(self):
+        """Una sola vez: pasa las peleas guardadas antes (tabla partidas) al registro del perfil, sin estadisticas detalladas."""
+        try: filas = self.db.execute('SELECT fecha, modo, ganador, izquierda, derecha, personajes FROM partidas ORDER BY id').fetchall()
+        except sqlite3.Error: return
+        tipos = {'Clasificatoria 1v1': 0, 'Normal 1v1': 1, 'Clasificatoria 2v2': 7, 'Clasificatoria 3v3': 8, 'Rapida 3v3': 9}
+        n = 0
+        for f in filas:
+            modo = (f['modo'] or '').replace(' (abandono)', '')
+            tipo = 5 if modo.startswith('Mesa') else tipos.get(modo)
+            if tipo is None: continue
+            try: lados = (json.loads(f['izquierda']), json.loads(f['derecha'])); pj = json.loads(f['personajes'] or '{}')
+            except ValueError: continue
+            for lado, uids in enumerate(lados):
+                for uid in uids:
+                    res = 2 if f['ganador'] not in (0, 1) else (1 if f['ganador'] == lado else 0)
+                    for clave, heroe in pj.items():
+                        if clave.split(':')[0] == str(uid):
+                            self.db.execute('INSERT INTO registros(uid,fecha,tipo,heroe,resultado) VALUES(?,?,?,?,?)', (uid, f['fecha'], tipo, heroe, res)); n += 1
+        if n: logging.getLogger('mr.juego').info('perfil: %d peleas antiguas pasadas al registro de estadisticas', n)
 
     def login(self, openid, dispositivo):
         now = int(time.time()); r = self.db.execute('SELECT uid FROM jugadores WHERE openid=?', (openid,)).fetchone()
@@ -93,6 +130,20 @@ class Cuentas:
         r = self.db.execute('SELECT personaje FROM favoritos WHERE uid=? AND modo=?', (uid, modo)).fetchone(); return r[0] if r else 0
     def poner_favorito(self, uid, modo, personaje):
         self.db.execute('INSERT OR REPLACE INTO favoritos VALUES(?,?,?)', (uid, modo, personaje)); self.db.commit()
+
+    # ---- perfil: avatar, marco, me gusta y registro de peleas
+    def poner(self, uid, columna, valor):
+        assert columna in ('cabeza', 'marco')
+        self.db.execute(f'UPDATE jugadores SET {columna}=? WHERE uid=?', (valor, uid)); self.db.commit()
+    def elogiar(self, uid):
+        self.db.execute('UPDATE jugadores SET elogios=elogios+1 WHERE uid=?', (uid,)); self.db.commit()
+    def nuevo_registro(self, uid, tipo, heroe, resultado):
+        c = self.db.execute('INSERT INTO registros(uid,fecha,tipo,heroe,resultado) VALUES(?,?,?,?,?)', (uid, int(time.time()), tipo, heroe, resultado))
+        self.db.commit(); return c.lastrowid
+    def stats_registro(self, fila, stats):
+        self.db.execute('UPDATE registros SET stats=? WHERE id=?', (json.dumps(stats), fila)); self.db.commit()
+    def registros(self, uid):
+        return [dict(r) for r in self.db.execute('SELECT tipo, heroe, resultado, stats FROM registros WHERE uid=? ORDER BY id', (uid,))]
 
     def tutoriales(self, uid):
         return [r[0] for r in self.db.execute('SELECT id FROM tutoriales WHERE uid=?', (uid,))]
@@ -237,6 +288,8 @@ class Juego:
         pi['BaseInfo'].update(Uid=uid, Name=cuenta['nombre'], Level=j.nivel_sesion if j else cuenta['nivel'], Exp=cuenta['exp'], RegisterTime=cuenta['creado'] or 0,
                               OnlineState=1 if j else 0, GameVersion=VERSION_JUEGO, ClientVersion=VERSION_JUEGO,
                               GameHallId=1 if j and j.hall else 0, HallRoomId=j.mesa.id if j and j.mesa else 0, TotalLoginDay=1)
+        pi['BaseInfo'].update(CurPlayerHead=cuenta.get('cabeza') or 1, CurHeadFrame=cuenta.get('marco') or 0,
+                              BePraisedCount=cuenta.get('elogios') or 0, UnlockedHeadFrames=self.marcos_desbloqueados(cuenta))
         pi['BattleData'] = self.datos_batalla(cuenta)
         return pi
 
@@ -246,14 +299,95 @@ class Juego:
             r = self.cuentas.rank(uid, modo)
             mm.append(dict(Happiness=0, RankPoint=r['puntos'], WinPoint=r['puntos'], MaxWinPoint=r['max_puntos'], ContinueRewardAiCount=0,
                            FavorHeroId=self.cuentas.favorito(uid, modo), ExitInBattleCountToday=0, ForbidMatchUntilTime=0))
-        total = dict(WinCount=cuenta['victorias'], TotalCount=cuenta['partidas'], ContinueWinCount=0, MaxContinueWinCount=0)
+        r = self.resumen(uid)
+        total = r['tipos'].get('online') or dict(WinCount=0, TotalCount=0, ContinueWinCount=0, MaxContinueWinCount=0)
         vacio = dict(WinCount=0, TotalCount=0, ContinueWinCount=0, MaxContinueWinCount=0)
         # CommonBattleStats va indexada por MatchType (0..10). Al llegar el resultado, el telefono suma la pelea en
         # CommonBattleStats[BattleLog.Type]: con una lista mas corta (antes iba 1 solo elemento) lanza
         # ArgumentOutOfRangeException en PlayerBattleDataWrapper.ApplyLastBattleStats y NUNCA abre la pantalla de
         # resultados. Le paso en la sala (tipo 5); visto en el registro del telefono (adb logcat).
-        comun = [total] + [dict(vacio) for _ in range(TIPOS_DE_PELEA - 1)]
-        return dict(Uid=uid, DetailLevel=nivel, PreferNetCode=0, CommonBattleStats=comun, MatchMakingBattleStats=mm)
+        comun = [r['tipos'].get(t) or dict(vacio) for t in range(TIPOS_DE_PELEA)]
+        return dict(Uid=uid, DetailLevel=nivel, PreferNetCode=0, CommonBattleStats=comun, MatchMakingBattleStats=mm,
+                    HeroBattleDatas=r['heroes'])
+
+    # ================================================================= perfil
+    def resumen(self, uid):
+        """Todo lo del perfil calculado del registro de peleas: por tipo de pelea, por personaje y la temporada."""
+        def racha(lista):
+            act = mejor = 0
+            for g in lista:
+                act = act + 1 if g == 1 else 0; mejor = max(mejor, act)
+            return act, mejor
+        def bloque(lista):
+            act, mejor = racha(lista)
+            return dict(WinCount=sum(1 for g in lista if g == 1), TotalCount=len(lista), ContinueWinCount=act, MaxContinueWinCount=mejor)
+        filas = self.cuentas.registros(uid)
+        por_tipo, por_heroe, stats_heroe, online = {}, {}, {}, []
+        for f in filas:
+            por_tipo.setdefault(f['tipo'], []).append(f['resultado'])
+            por_heroe.setdefault((f['heroe'], f['tipo']), []).append(f['resultado'])
+            if f['tipo'] in TIPOS_ONLINE: online.append(f)
+            if f['stats']:
+                acc = stats_heroe.setdefault((f['heroe'], f['tipo']), {})
+                for k, v in json.loads(f['stats']).items():
+                    if isinstance(v, (int, float)) and not isinstance(v, bool):
+                        acc[k] = max(acc.get(k, 0), v) if k in STATS_MAXIMOS else acc.get(k, 0) + v
+        tipos = {t: bloque(l) for t, l in por_tipo.items()}
+        tipos['online'] = bloque([f['resultado'] for f in online])
+        heroes = []
+        for (h, t), l in sorted(por_heroe.items()):
+            d = dict(HeroId=h, BattleMode=t, **bloque(l))
+            st = stats_heroe.get((h, t))
+            if st: d['InBattleStats'] = {k: (int(v) if k != 'MoveDistance' else float(v)) for k, v in st.items()}
+            heroes.append(d)
+        return dict(tipos=tipos, heroes=heroes, online=online)
+
+    def temporada(self, uid):
+        """PlayerSeasonData para la pestana de combate del perfil. Cada habilidad es un puntaje de 0 a 20 (lo que dibuja el
+        radar) calculado de las estadisticas que suben los telefonos; Score es el total sobre 100."""
+        online = self.resumen(uid)['online']
+        def una(filas, indice=1):
+            if not filas: return dict(Index=indice)
+            st = {}
+            for f in filas:
+                for k, v in (json.loads(f['stats']) if f['stats'] else {}).items():
+                    if isinstance(v, (int, float)) and not isinstance(v, bool): st[k] = st.get(k, 0) + v
+            con_stats = sum(1 for f in filas if f['stats']) or 1
+            rondas = max(1, st.get('TotalRounds', 0)); tiempo = max(1, st.get('TotalRoundTime', 0))
+            golpes = st.get('AllHitCastCount', 0); bloqueados = st.get('HitBeBlockedCount', 0) + st.get('HitBeParriedCount', 0)
+            defensas = st.get('BlockCount', 0) + st.get('GroundParryCount', 0) + st.get('AirParryCount', 0) + st.get('TechThrowCount', 0)
+            recibidos = st.get('BeHitConfirmCount', 0)
+            tecnica = (st.get('WinByPerfectKo', 0) + st.get('CounterCount', 0) + st.get('CrossUpCount', 0) + st.get('ComboFinishCount', 0)
+                       + st.get('WinByUltimate', 0) + st.get('ThrowHitConfirmedCount', 0)) / rondas
+            tope = lambda x: round(max(0.0, min(20.0, x)), 2)
+            dps = tope(st.get('TotalDamage', 0) / tiempo / 60 * 20)                  # ~60 de dano por segundo = 20
+            mov = tope(st.get('MoveDistance', 0) / rondas / 100 * 20)
+            combo = tope(st.get('TotalCombo', 0) / rondas / 25 * 20)
+            ataque = tope((golpes - bloqueados) / golpes * 20 if golpes else 0)
+            defensa = tope(defensas / (defensas + recibidos) * 20 if defensas + recibidos else 0)
+            tec = tope(tecnica / 8 * 20)
+            ganadas = sum(1 for f in filas if f['resultado'] == 1)
+            clasif = [f for f in filas if f['tipo'] in TIPOS_CLASIFICATORIA]
+            return dict(Index=indice, TopRate=0.0, Score=round((dps + mov + combo + ataque + defensa + tec) / 120 * 100, 1),
+                        WinRate=ganadas / len(filas), WinRateRank=(sum(1 for f in clasif if f['resultado'] == 1) / len(clasif)) if clasif else 0.0,
+                        Dps=dps, MoveDistance=mov, Combo=combo, AttackRate=ataque, TechniqueScore=tec, DefendRate=defensa,
+                        MvpCount=0, AssistScore=0.0)
+        return dict(SeasonDatas=[una([f for f in online if f['tipo'] != 7])], Season2v2Datas=[una([f for f in online if f['tipo'] == 7])])
+
+    def marcos_desbloqueados(self, cuenta):
+        """Marcos que se ganan jugando, segun las reglas del juego (HeadFrameConfig): 1 = puntos maximos de clasificatoria,
+        2 = victorias con un personaje, 4 = nivel. Los de tipo 3 y 99 (objetos/especiales) quedan para torneos y
+        colaboradores: no se desbloquean solos."""
+        uid = cuenta['uid']; puntos = max(self.cuentas.rank(uid, m)['max_puntos'] for m in (RANKING, RANKING_SOLO_3V3))
+        victorias = {}
+        for f in self.cuentas.registros(uid):
+            if f['resultado'] == 1 and f['tipo'] in TIPOS_ONLINE: victorias[f['heroe']] = victorias.get(f['heroe'], 0) + 1
+        out = []
+        for mid, cond, par in MARCOS:
+            if (cond == 1 and par and puntos >= par[0]) or (cond == 2 and len(par) == 2 and victorias.get(par[0], 0) >= par[1]) \
+                    or (cond == 4 and par and cuenta['nivel'] >= par[0]):
+                out.append(mid)
+        return out
 
     def respuesta_login(self, cuenta):
         return 'LoginGameSvrRsp', dict(self.plantilla, PlayerInfo=self.info_detallada(cuenta), UtcTimeOffset=0, GameServerId=1, PayZoneId=0)
@@ -337,7 +471,42 @@ class Juego:
     def on_QueryServerTimeReq(self, sesion, d): return 'QueryServerTimeRsp', dict(ServerTime=int(time.time()), TimeOffset=0, ServerTimeOffset=0)
     def on_PlayerClientPing(self, sesion, d): return 'PlayerClientPong', dict(Timestamp=d.get('Timestamp') or int(time.time() * 1000))
     def on_QueryPlayerInfoReq(self, sesion, d):
-        c = self.cuentas.get(d.get('Uid', 0)); return 'QueryPlayerInfoRsp', dict(Result=self.info_detallada(c) if c else None)
+        c = self.cuentas.get(d.get('Uid', 0))
+        if not c: return 'QueryPlayerInfoRsp', dict(Result=None)
+        info = self.info_detallada(c)
+        if d.get('QuerySeason'): info['SeasonInfo'] = self.temporada(c['uid'])     # perfil de OTRO jugador: su pestana de combate
+        return 'QueryPlayerInfoRsp', dict(Result=info)
+
+    # ---- perfil propio: temporada (pestana de combate), avatar, marco, me gusta
+    def on_QuerySeasonInfoReq(self, sesion, d):
+        return 'PlayerSeasonData', self.temporada(sesion.jugador.uid)
+    def on_PlayerHeadReq(self, sesion, d):
+        c = sesion.jugador.cuenta
+        return 'PlayerHeadRsp', dict(CurrHead=c.get('cabeza') or 1, UnlockHead=[dict(Id=i, Read=1) for i in AVATARES])
+    def on_PlayerHeadChangeReq(self, sesion, d):
+        j = sesion.jugador; nuevo = d.get('Id', 1)
+        if nuevo in AVATARES:
+            self.cuentas.poner(j.uid, 'cabeza', nuevo); j.cuenta = self.cuentas.get(j.uid)
+            log.info('%s cambia su avatar a %d', j.nombre, nuevo)
+            sesion.despues.append(('NotifyBasePlayerInfoChange', self.info_detallada(j.cuenta)))
+        return self.on_PlayerHeadReq(sesion, d)
+    def on_PlayerHeadMarkRead(self, sesion, d): return None
+    def on_ChangeHeadFrameReq(self, sesion, d):
+        j = sesion.jugador; nuevo = d.get('HeadFrameId', 0)
+        if nuevo and nuevo not in self.marcos_desbloqueados(j.cuenta):
+            return 'Error', dict(ErrCode=13, ErrMsg='Ese marco todavia esta bloqueado', ErrMsgEn='Frame locked')
+        self.cuentas.poner(j.uid, 'marco', nuevo); j.cuenta = self.cuentas.get(j.uid)
+        log.info('%s cambia su marco a %d', j.nombre, nuevo)
+        sesion.despues.append(('NotifyBasePlayerInfoChange', self.info_detallada(j.cuenta)))
+        return None
+    def on_PraiseOtherReq(self, sesion, d):
+        j = sesion.jugador; destino = d.get('TargetUid', 0); c = self.cuentas.get(destino)
+        if not c or destino == j.uid: return None
+        self.cuentas.elogiar(destino); total = (c.get('elogios') or 0) + 1
+        sesion.despues.append(('NotifyPraiseOther', dict(TargetUid=destino, BePraisedCount=total)))
+        otro = self.conectados.get(destino)
+        if otro: otro.notificar('NotifyBePraised', dict(FromUid=j.uid, FromName=j.nombre)); otro.cuenta = self.cuentas.get(destino)
+        return None
     def on_BatchQueryPlayerInfoReq(self, sesion, d):
         return 'BatchQueryPlayerInfoRsp', dict(Result=[self.info_detallada(c) for c in (self.cuentas.get(u) for u in d.get('Uids', [])) if c])
     def on_QueryBattleDataReq(self, sesion, d):
@@ -834,6 +1003,13 @@ class Juego:
         self.cuentas.registrar(nombre_modo + (' (abandono)' if abandono else ''), modo_rank, [x.uid for x in p.lados[LEFT]],
                                [x.uid for x in p.lados[RIGHT]], ganador, r_izq, r_der, personajes, p.escenario)
         p.puntos_despues = {x.uid: self.cuentas.rank(x.uid, modo_pts)['puntos'] for x in p.jugadores()}
+        p.filas = {}
+        for x in p.jugadores():
+            res = 2 if ganador not in (LEFT, RIGHT) else (1 if ganador == x.lado else 0)
+            for pos in x.slots:
+                m = p.miembros[x.lado][pos]
+                fila = self.cuentas.nuevo_registro(x.uid, p.match_type, m['CharId'], res)
+                p.filas.setdefault(x.uid, fila)                  # las estadisticas del telefono van en su primer personaje
         for x in p.jugadores():
             x.cuenta = self.cuentas.get(x.uid)
         log.info('RESULTADO pelea %d (%s): gana el lado %s, rondas %d-%d%s', p.id, nombre_modo,
@@ -882,7 +1058,8 @@ class Juego:
         j = sesion.jugador; p = j.partida
         ganador = d.get('WinnerSide', -1); rondas = (d.get('LeftWinRound', 0), d.get('RightWinRound', 0))
         if not p or p.fase < LOADING_FIGHT: return None
-        if p.resultado is None:
+        primero = p.resultado is None
+        if primero:
             p.rondas_detalle = (list(d.get('LeftRoundResults') or []), list(d.get('RightRoundResults') or []))
             self.guardar_resultado(p, ganador, rondas[0], rondas[1]); p.datos_resultado = self.resultado_batalla(p)
             # (en la sala NO se manda NotifyRoomDetailInfoUpdate aqui: los asientos no cambian y, si le llega al telefono
@@ -891,6 +1068,9 @@ class Juego:
                 p.temporizador_resultado = asyncio.get_running_loop().call_later(SEGUNDOS_RESULTADO, self.resultado_pendiente, p)
                 if p.mesa: asyncio.get_running_loop().call_later(SEGUNDOS_RESCATE, self.rescate_mesa, p, p.peleas)
             except RuntimeError: pass
+        if d.get('BattleStats') and getattr(p, 'filas', {}).get(j.uid):
+            self.cuentas.stats_registro(p.filas[j.uid], d['BattleStats'])
+        if primero: pass
         elif (p.resultado, p.rondas) != (ganador if ganador in (LEFT, RIGHT) else p.resultado, rondas):
             log.warning('pelea %d: %s subio un resultado distinto (lado %s, %s) al registrado (lado %s, %s): posible desincronizacion',
                         p.id, j.nombre, ganador, rondas, p.resultado, p.rondas)

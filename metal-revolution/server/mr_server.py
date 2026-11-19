@@ -254,6 +254,8 @@ async def main():
     ap.add_argument('--debug-hex', action='store_true', help='ademas guarda cada paquete en hexadecimal (pesado: solo para investigar)')
     ap.add_argument('--puerto-relay', type=int, default=0, help='puerto UDP de la pelea (por defecto el mismo que --port); el ping va a este menos 1')
     ap.add_argument('--nombre-automatico', action='store_true', help='asigna JugadorNNN sin pedir nombre')
+    ap.add_argument('--puerto-admin', type=int, default=8090, help='API del panel de administracion (0 = apagada)')
+    ap.add_argument('--admin-escucha', default='127.0.0.1', help='por defecto solo este PC; en un VPS usa un tunel SSH')
     a = ap.parse_args()
     logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s',
                         handlers=[logging.StreamHandler(), logging.handlers.RotatingFileHandler(a.log, maxBytes=20 * 1024 * 1024, backupCount=3, encoding='utf-8')])
@@ -265,6 +267,9 @@ async def main():
     server = await asyncio.start_server(srv.handle, a.listen, a.port)
     log.info('fase 3: juego en TCP %d; pelea en UDP %d y %d (abre los dos en el firewall); escuchando en %s; los telefonos usaran %s; %d handlers',
              a.port, relay.puerto_ping, relay.puerto, a.listen, a.host, len(srv.juego.handlers))
+    if a.puerto_admin:
+        import admin
+        await admin.iniciar(srv.juego, a.admin_escucha, a.puerto_admin)
     async with server: await server.serve_forever()
 
 if __name__ == '__main__':

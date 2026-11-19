@@ -71,8 +71,16 @@ class Cuentas:
             id INTEGER PRIMARY KEY AUTOINCREMENT, fecha INTEGER, modo TEXT, ganador INTEGER,
             izquierda TEXT, derecha TEXT, rondas_izq INTEGER, rondas_der INTEGER, personajes TEXT, escenario INTEGER);''')
         cj = [r[1] for r in self.db.execute('PRAGMA table_info(jugadores)')]
-        for col, defecto in (('cabeza', 1), ('marco', 0), ('elogios', 0)):
-            if col not in cj: self.db.execute(f'ALTER TABLE jugadores ADD COLUMN {col} INTEGER DEFAULT {defecto}')
+        for col, defecto in (('cabeza', '1'), ('marco', '0'), ('elogios', '0'), ('rol', "''"), ('baneado_hasta', '0'),
+                             ('silenciado_hasta', '0'), ('motivo', "''")):
+            if col not in cj: self.db.execute(f'ALTER TABLE jugadores ADD COLUMN {col} DEFAULT {defecto}')
+        # administracion: historial de chat, desbloqueos por jugador y ajustes globales (JSON)
+        self.db.executescript('''
+          CREATE TABLE IF NOT EXISTS chat (id INTEGER PRIMARY KEY AUTOINCREMENT, fecha INTEGER, uid INTEGER, nombre TEXT,
+                                           canal TEXT, destino TEXT, texto TEXT);
+          CREATE INDEX IF NOT EXISTS chat_uid ON chat(uid);
+          CREATE TABLE IF NOT EXISTS desbloqueos (uid INTEGER, tipo TEXT, id INTEGER, permitido INTEGER, PRIMARY KEY (uid, tipo, id));
+          CREATE TABLE IF NOT EXISTS ajustes (clave TEXT PRIMARY KEY, valor TEXT);''')
         # una fila por jugador, personaje y pelea; stats = las estadisticas que sube su telefono (InBattleStats)
         self.db.execute('CREATE TABLE IF NOT EXISTS registros (id INTEGER PRIMARY KEY AUTOINCREMENT, uid INTEGER, fecha INTEGER, '
                         'tipo INTEGER, heroe INTEGER, resultado INTEGER, stats TEXT)')
@@ -145,6 +153,32 @@ class Cuentas:
         self.db.execute('UPDATE registros SET stats=? WHERE id=?', (json.dumps(stats), fila)); self.db.commit()
     def registros(self, uid):
         return [dict(r) for r in self.db.execute('SELECT tipo, heroe, resultado, stats FROM registros WHERE uid=? ORDER BY id', (uid,))]
+
+    # ---- administracion
+    def ajuste(self, clave, defecto=None):
+        r = self.db.execute('SELECT valor FROM ajustes WHERE clave=?', (clave,)).fetchone()
+        return json.loads(r[0]) if r else defecto
+    def poner_ajuste(self, clave, valor):
+        self.db.execute('INSERT OR REPLACE INTO ajustes VALUES(?,?)', (clave, json.dumps(valor, ensure_ascii=False))); self.db.commit()
+    def anotar_chat(self, uid, nombre, canal, destino, texto):
+        self.db.execute('INSERT INTO chat(fecha,uid,nombre,canal,destino,texto) VALUES(?,?,?,?,?,?)',
+                        (int(time.time()), uid, nombre, canal, str(destino or ''), texto)); self.db.commit()
+    def buscar_chat(self, uid=None, texto=None, limite=500):
+        q = 'SELECT * FROM chat WHERE 1=1'; a = []
+        if uid: q += ' AND (uid=? OR destino=?)'; a += [uid, str(uid)]
+        if texto: q += ' AND texto LIKE ?'; a.append('%' + texto + '%')
+        return [dict(r) for r in self.db.execute(q + ' ORDER BY id DESC LIMIT ?', a + [limite])]
+    def desbloqueos(self, uid):
+        return {(r['tipo'], r['id']): bool(r['permitido']) for r in self.db.execute('SELECT * FROM desbloqueos WHERE uid=?', (uid,))}
+    def poner_desbloqueo(self, uid, tipo, id_, permitido):
+        if permitido is None: self.db.execute('DELETE FROM desbloqueos WHERE uid=? AND tipo=? AND id=?', (uid, tipo, id_))
+        else: self.db.execute('INSERT OR REPLACE INTO desbloqueos VALUES(?,?,?,?)', (uid, tipo, id_, int(bool(permitido))))
+        self.db.commit()
+    def poner_campo(self, uid, campo, valor):
+        assert campo in ('rol', 'baneado_hasta', 'silenciado_hasta', 'motivo', 'nombre', 'nivel', 'exp')
+        self.db.execute(f'UPDATE jugadores SET {campo}=? WHERE uid=?', (valor, uid)); self.db.commit()
+    def todos(self):
+        return [dict(r) for r in self.db.execute('SELECT * FROM jugadores ORDER BY ultimo_login DESC')]
 
     def tutoriales(self, uid):
         return [r[0] for r in self.db.execute('SELECT id FROM tutoriales WHERE uid=?', (uid,))]
@@ -290,17 +324,21 @@ class Juego:
         pi['BaseInfo'].update(Uid=uid, Name=cuenta['nombre'], Level=j.nivel_sesion if j else cuenta['nivel'], Exp=cuenta['exp'], RegisterTime=cuenta['creado'] or 0,
                               OnlineState=1 if j else 0, GameVersion=VERSION_JUEGO, ClientVersion=VERSION_JUEGO,
                               GameHallId=1 if j and j.hall else 0, HallRoomId=j.mesa.id if j and j.mesa else 0, TotalLoginDay=1)
+        self.aplicar_permisos(cuenta, pi)
         pi['BaseInfo'].update(CurPlayerHead=cuenta.get('cabeza') or 1, CurHeadFrame=cuenta.get('marco') or 0,
                               BePraisedCount=cuenta.get('elogios') or 0, UnlockedHeadFrames=self.marcos_desbloqueados(cuenta))
-        pi['Heroes'] = self.heroes(cuenta)
+        pi['Heroes'] = self.heroes(cuenta, pi['Heroes'])
         pi['BattleData'] = self.datos_batalla(cuenta)
         return pi
 
-    def heroes(self, cuenta):
-        """Personajes de la plantilla con las skins de cada jugador: las de la plantilla (iguales para todos) mas las de
-        colaborador y regalos (colaboradores.py), y la skin que eligio para cada uno (UseSkinId)."""
+    def heroes(self, cuenta, base=None):
+        """Personajes con las skins de cada jugador: las que permite el panel (catalogo, bloqueos, exclusivos y ajustes
+        por jugador, ver aplicar_permisos) mas las de colaborador y regalos (colaboradores.py), y la skin que eligio
+        para cada uno (UseSkinId)."""
+        if base is None:
+            pi = dict(Heroes=copy.deepcopy(self.plantilla['PlayerInfo'].get('Heroes', []))); self.aplicar_permisos(cuenta, pi); base = pi['Heroes']
         uid = cuenta['uid']; extra = self.colab.skins(uid); en_uso = self.colab.skins_en_uso(uid); out = []
-        for h in copy.deepcopy(self.plantilla['PlayerInfo'].get('Heroes', [])):
+        for h in copy.deepcopy(base):
             skins = sorted(set(h.get('UnlockedSkins') or []) | extra.get(h['Id'], set()))
             if skins: h['UnlockedSkins'] = skins
             usa = en_uso.get(h['Id'], 0)
@@ -308,7 +346,7 @@ class Juego:
             out.append(h)
         return out
     def skins_de(self, uid, heroe):
-        h = next((x for x in self.heroes(dict(uid=uid)) if x['Id'] == heroe), None)
+        c = self.cuentas.get(uid); h = next((x for x in self.heroes(c) if x['Id'] == heroe), None) if c else None
         return set(h.get('UnlockedSkins') or []) if h else set()
 
     def datos_batalla(self, cuenta, nivel=1):
@@ -392,6 +430,41 @@ class Juego:
                         MvpCount=0, AssistScore=0.0)
         return dict(SeasonDatas=[una([f for f in online if f['tipo'] != 7])], Season2v2Datas=[una([f for f in online if f['tipo'] == 7])])
 
+    # ================================================================= permisos de heroes, skins y marcos
+    def catalogo(self):
+        """Todo lo que existe: heroes y sus skins (de la ficha de login + las agregadas a mano) y marcos (del juego + nuevos)."""
+        heroes = {}
+        for h in self.plantilla['PlayerInfo']['Heroes']:
+            heroes[h['Id']] = sorted(set(h.get('UnlockedSkins') or []))
+        for skin, heroe in (self.cuentas.ajuste('skins_extra', {}) or {}).items():
+            heroes.setdefault(int(heroe), [])
+            if int(skin) not in heroes[int(heroe)]: heroes[int(heroe)].append(int(skin))
+        marcos = [dict(id=m, condicion=c, parametros=list(p)) for m, c, p in MARCOS]
+        for m in self.cuentas.ajuste('marcos_extra', []) or []:
+            if not any(x['id'] == m['id'] for x in marcos): marcos.append(dict(id=m['id'], condicion=99, parametros=[], nombre=m.get('nombre', '')))
+        return dict(heroes=heroes, marcos=marcos, nombres=self.cuentas.ajuste('nombres_heroes', {}) or {},
+                    bloqueados=self.cuentas.ajuste('bloqueados', {}) or {}, exclusivos=self.cuentas.ajuste('exclusivos', {}) or {})
+    def permitido(self, cuenta, tipo, id_, por_defecto, cat=None, propios=None):
+        """Orden: ajuste a mano del jugador > exclusivo de un rol (solo quien lo tiene) > bloqueado para todos > lo normal."""
+        cat = cat or self.catalogo(); propios = self.cuentas.desbloqueos(cuenta['uid']) if propios is None else propios
+        if (tipo, id_) in propios: return propios[(tipo, id_)]
+        roles = {r for r in (cuenta.get('rol') or '').split(',') if r}
+        exclusivo_de = [r for r, cosas in cat['exclusivos'].items() if id_ in (cosas.get(tipo) or [])]
+        if exclusivo_de: return any(r in roles for r in exclusivo_de)
+        if id_ in (cat['bloqueados'].get(tipo) or []): return False
+        return por_defecto
+    def aplicar_permisos(self, cuenta, pi):
+        cat = self.catalogo(); propios = self.cuentas.desbloqueos(cuenta['uid'])
+        presentes = {h['Id'] for h in pi['Heroes']}
+        for (tipo, id_), ok in propios.items():                  # heroes dados a mano que no vienen en la ficha
+            if tipo == 'heroe' and ok and id_ not in presentes:
+                pi['Heroes'].append(dict(Id=id_, Unlock=True, UseSkinId=0, ShowSkinId=0, ExpireTime=0, ExpireCount=0)); presentes.add(id_)
+        for h in pi['Heroes']:
+            h['Unlock'] = self.permitido(cuenta, 'heroe', h['Id'], True, cat, propios)
+            skins = [sk for sk in cat['heroes'].get(h['Id'], []) if self.permitido(cuenta, 'skin', sk, True, cat, propios)]
+            h['UnlockedSkins'] = skins
+            if h.get('UseSkinId') and h['UseSkinId'] not in skins: h['UseSkinId'] = 0; h['ShowSkinId'] = 0
+
     def marcos_desbloqueados(self, cuenta):
         """Marcos que se ganan jugando, segun las reglas del juego (HeadFrameConfig): 1 = puntos maximos de clasificatoria,
         2 = victorias con un personaje, 4 = nivel. Los de tipo 3 y 99 (objetos/especiales) quedan para torneos y
@@ -400,13 +473,15 @@ class Juego:
         victorias = {}
         for f in self.cuentas.registros(uid):
             if f['resultado'] == 1 and f['tipo'] in TIPOS_ONLINE: victorias[f['heroe']] = victorias.get(f['heroe'], 0) + 1
-        out = []
-        for mid, cond, par in MARCOS:
-            if (cond == 1 and par and puntos >= par[0]) or (cond == 2 and len(par) == 2 and victorias.get(par[0], 0) >= par[1]) \
-                    or (cond == 4 and par and cuenta['nivel'] >= par[0]):
-                out.append(mid)
-        validos = {m[0] for m in MARCOS}
-        return sorted(set(out) | {m for m in self.colab.marcos(uid) if not validos or m in validos})
+        out = []; cat = self.catalogo(); propios = self.cuentas.desbloqueos(uid)
+        for m in cat['marcos']:
+            mid, cond, par = m['id'], m['condicion'], m['parametros']
+            normal = bool((cond == 1 and par and puntos >= par[0]) or (cond == 2 and len(par) == 2 and victorias.get(par[0], 0) >= par[1])
+                          or (cond == 4 and par and cuenta['nivel'] >= par[0]))
+            if self.permitido(cuenta, 'marco', mid, normal, cat, propios): out.append(mid)
+        # ademas, los de colaborador y regalos (colaboradores.py), si el marco existe en el juego o en el panel
+        validos = {m['id'] for m in cat['marcos']}
+        return sorted(set(out) | {m for m in self.colab.marcos(uid) if m in validos})
 
     def respuesta_login(self, cuenta):
         return 'LoginGameSvrRsp', dict(self.plantilla, PlayerInfo=self.info_detallada(cuenta), UtcTimeOffset=0, GameServerId=1, PayZoneId=0)
@@ -442,6 +517,11 @@ class Juego:
     def on_LoginRequest(self, sesion, d):
         openid = d.get('OpenId') or d.get('DeviceId') or d.get('YzDeviceId') or 'anon-%s' % sesion.peer[0]
         cuenta = self.cuentas.login(openid, d.get('Model', ''))
+        if (cuenta.get('baneado_hasta') or 0) > time.time():
+            hasta = time.strftime('%d/%m/%Y %H:%M', time.localtime(cuenta['baneado_hasta']))
+            log.info('login rechazado: uid=%d %r suspendido hasta %s', cuenta['uid'], cuenta['nombre'], hasta)
+            texto = 'Cuenta suspendida hasta %s. %s' % (hasta, cuenta.get('motivo') or '')
+            return 'Error', dict(ErrCode=14, ErrMsg=texto, ErrMsgEn=texto)
         if not cuenta['nombre'] and self.nombre_automatico:
             self.cuentas.poner_nombre(cuenta['uid'], 'Jugador%d' % (cuenta['uid'] % 100000)); cuenta = self.cuentas.get(cuenta['uid'])
         viejo = self.conectados.get(cuenta['uid'])
@@ -565,9 +645,17 @@ class Juego:
     def on_QueryRankRewardTimeReq(self, sesion, d): return 'QueryRankRewardTimeRsp', dict(Time=int(time.time()) + 30 * 86400)
 
     # ================================================================= chat
+    def silenciado(self, j, canal, destino, texto):
+        """Anota el mensaje en el historial y dice si el jugador esta silenciado (entonces no se reparte)."""
+        self.cuentas.anotar_chat(j.uid, j.nombre, canal, destino, texto)
+        hasta = j.cuenta.get('silenciado_hasta') or 0
+        if hasta > time.time():
+            self.mensaje_sistema(j, 'Estas silenciado hasta %s' % time.strftime('%d/%m %H:%M', time.localtime(hasta))); return True
+        return False
     def on_SendHallChatReq(self, sesion, d):
         j = sesion.jugador; texto = (d.get('Content') or '').strip()
         if texto.lower().startswith('/nombre '): self.renombrar(j, texto[8:]); return None
+        if self.silenciado(j, 'hall', '', texto[:200]): return None
         msg = dict(Uid=j.uid, Content=texto[:200], Timestamp=int(time.time()))
         self.chat_hall = (self.chat_hall + [msg])[-50:]; self.difundir_hall('NotifyGameHallChat', msg); return None
     def on_QueryRecentChatReq(self, sesion, d):
@@ -575,15 +663,19 @@ class Juego:
     def on_SendRoomChatReq(self, sesion, d):
         j = sesion.jugador; texto = (d.get('Content') or '').strip()[:200]
         if texto.lower().startswith('/nombre '): self.renombrar(j, texto[8:]); return 'SendRoomChatRsp', dict(Content=texto)
+        if self.silenciado(j, 'mesa', j.mesa.id if j.mesa else '', texto): return 'SendRoomChatRsp', dict(Content=texto)
         if j.mesa: self.difundir(j.mesa.jugadores(), 'NotifyGameHallRoomChat', dict(Uid=j.uid, Content=texto, Timestamp=int(time.time())), excepto=j)
         return 'SendRoomChatRsp', dict(Content=texto)
     def on_SendChatReq(self, sesion, d):
         j = sesion.jugador; dest = self.conectados.get(d.get('TargetUid', 0))
         rsp = dict(Req=d, SenderUid=j.uid, SenderName=j.nombre, SendTime=int(time.time()))
+        if self.silenciado(j, 'privado', d.get('TargetUid', 0), str(d.get('Content') or d.get('Msg') or json.dumps(d, ensure_ascii=False))[:300]):
+            return 'SendChatRsp', rsp
         if dest: dest.notificar('RecvChat', rsp)
         return 'SendChatRsp', rsp
     def on_ChatInMatchReq(self, sesion, d):
         j = sesion.jugador
+        if self.silenciado(j, 'pelea', j.partida.id if j.partida else '', str(d.get('Content', ''))): return None
         if j.partida:
             self.difundir(j.partida.jugadores(), 'NotifyOtherChatInMatch', dict(Sender=j.uid, Content=d.get('Content', ''), MatchType=j.partida.match_type,
                           Range=d.get('Range', 0)), excepto=j)

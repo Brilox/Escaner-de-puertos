@@ -15,6 +15,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))   # usa la copia 
 from fb_codec import Codec
 from juego import Juego
 from relay import Relay
+from actualizaciones import Actualizaciones, METODO as METODO_VERSION
+import actualizaciones
 
 log = logging.getLogger('mr')
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -201,6 +203,9 @@ class Server:
         cat = json.load(open(os.path.join(HERE, '..', 'datos', 'catalogo_mensajes_grabados.json'), encoding='utf-8'))
         plantilla = cat['mroffline_assets_kGameLoginMikeKimSkinsRsp843']['msg']['Data']
         self.juego = Juego(a.host, a.port, a.puerto_relay or a.port, plantilla, a.nombre_automatico); self.conns = 0
+        # actualizaciones del juego (marcos, skins...): responden al actualizador de Tencent y sirven las descargas
+        self.act = Actualizaciones(self.juego, a.host, a.puerto_http, self.blobs.raw['mroffline_assets_kVersionUpdateNoUpdateRsp171'], tgcp_set_extra_len)
+        self.juego.actualizaciones = self.act
     async def handle(self, reader, writer):
         self.conns += 1; cid = self.conns; peer = writer.get_extra_info('peername'); ses = None
         log.info('[%d] conexion de %s', cid, peer)
@@ -236,7 +241,10 @@ class Server:
             elif cmd == 0x2001: writer.write(self.blobs.authrsp + self.blobs.bingo); log.info('[%d] -> AUTHRSP54 + BINGO55', cid)
             else:
                 for name, rsp in self.dir.items():
-                    if name in extra or name in pkt: writer.write(rsp); log.info('[%d] -> %s', cid, name.decode()); break
+                    if name in extra or name in pkt:
+                        if name == METODO_VERSION:           # actualizador de Tencent: version y descarga del juego
+                            rsp = self.act.respuesta_version((writer.get_extra_info('peername') or ('?',))[0], pkt, extra)
+                        writer.write(rsp); log.info('[%d] -> %s', cid, name.decode()); break
                 else:
                     if n == 1: writer.write(self.blobs.ack); log.info('[%d] -> ACK63 (por orden)', cid)
                     elif n == 2: writer.write(self.blobs.authrsp + self.blobs.bingo); log.info('[%d] -> AUTHRSP54 + BINGO55 (por orden)', cid)
@@ -256,6 +264,7 @@ async def main():
     ap.add_argument('--nombre-automatico', action='store_true', help='asigna JugadorNNN sin pedir nombre')
     ap.add_argument('--puerto-admin', type=int, default=8090, help='API del panel de administracion (0 = apagada)')
     ap.add_argument('--admin-escucha', default='127.0.0.1', help='por defecto solo este PC; en un VPS usa un tunel SSH')
+    ap.add_argument('--puerto-http', type=int, default=8081, help='descargas de actualizaciones para los telefonos (0 = apagado; abrir en el firewall)')
     a = ap.parse_args()
     logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s',
                         handlers=[logging.StreamHandler(), logging.handlers.RotatingFileHandler(a.log, maxBytes=20 * 1024 * 1024, backupCount=3, encoding='utf-8')])
@@ -267,6 +276,8 @@ async def main():
     server = await asyncio.start_server(srv.handle, a.listen, a.port)
     log.info('fase 3: juego en TCP %d; pelea en UDP %d y %d (abre los dos en el firewall); escuchando en %s; los telefonos usaran %s; %d handlers',
              a.port, relay.puerto_ping, relay.puerto, a.listen, a.host, len(srv.juego.handlers))
+    if a.puerto_http:
+        await actualizaciones.iniciar(srv.act, a.listen, a.puerto_http)
     if a.puerto_admin:
         import admin
         await admin.iniciar(srv.juego, a.admin_escucha, a.puerto_admin)

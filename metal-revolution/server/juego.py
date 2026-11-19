@@ -522,6 +522,11 @@ class Juego:
             log.info('login rechazado: uid=%d %r suspendido hasta %s', cuenta['uid'], cuenta['nombre'], hasta)
             texto = 'Cuenta suspendida hasta %s. %s' % (hasta, cuenta.get('motivo') or '')
             return 'Error', dict(ErrCode=14, ErrMsg=texto, ErrMsgEn=texto)
+        act = getattr(self, 'actualizaciones', None)
+        bloqueo = act.bloquear_login(sesion.peer[0] if sesion.peer else '?') if act else None
+        if bloqueo:                                                # actualizacion obligatoria pendiente
+            log.info('login rechazado: uid=%d %r sin la actualizacion obligatoria', cuenta['uid'], cuenta['nombre'])
+            return 'Error', dict(ErrCode=15, ErrMsg=bloqueo, ErrMsgEn=bloqueo)
         if not cuenta['nombre'] and self.nombre_automatico:
             self.cuentas.poner_nombre(cuenta['uid'], 'Jugador%d' % (cuenta['uid'] % 100000)); cuenta = self.cuentas.get(cuenta['uid'])
         viejo = self.conectados.get(cuenta['uid'])

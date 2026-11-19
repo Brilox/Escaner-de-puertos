@@ -73,6 +73,7 @@ class Admin:
         if p[0] == 'ajustes': self.cuentas.poner_ajuste(p[1], c['valor']); return dict(ok=True)
         if p[0] == 'config': return self.config(metodo, p, c)
         if p[0] == 'anuncio': return self.anuncio(c['texto'])
+        if p[0] == 'actualizaciones': return self.actualizaciones(metodo, c)
         raise KeyError('/'.join(partes))
 
     # ------------------------------------------------------------------ estado y jugadores
@@ -189,6 +190,27 @@ class Admin:
         self.juego.config = ConfigJuego()
         log.info('admin: configuracion %s %s/%s', c.get('accion'), p[1], nombre)
         return dict(ok=True, activos=[n for n, _, _ in self.juego.config.archivos.values()])
+
+    def actualizaciones(self, metodo, c):
+        """GET -> estado; POST {accion: subir (nombre, datos_b64) | activar (version) | retirar | obligatoria (valor) | borrar (version)}."""
+        act = getattr(self.juego, 'actualizaciones', None)
+        if act is None: raise ValueError('el servidor no tiene el modulo de actualizaciones activo')
+        if metodo == 'GET': return act.estado()
+        a = c.get('accion')
+        if a == 'subir':
+            import base64, tempfile
+            t = tempfile.NamedTemporaryFile(suffix='.mrupd', delete=False); t.write(base64.b64decode(c['datos_b64'])); t.close()
+            try: m = act.instalar(t.name, activar=c.get('activar', True))
+            finally: os.remove(t.name)
+            log.info('admin: actualizacion %s subida (%s)', m['version'], c.get('nombre'))
+            return dict(ok=True, version=m['version'], nombre=m.get('nombre'))
+        if a == 'activar': act.activar(int(c['version'])); return dict(ok=True)
+        if a == 'retirar': act.retirar(); return dict(ok=True)
+        if a == 'obligatoria': act.poner('obligatoria', bool(c.get('valor'))); return dict(ok=True)
+        if a == 'borrar':
+            v = int(c['version']); assert v != act.ajuste('vigente', 0), 'no se puede borrar la version publicada'
+            import actualizaciones as mod; shutil.rmtree(os.path.join(mod.CARPETA, str(v)), ignore_errors=True); return dict(ok=True)
+        raise ValueError('accion de actualizacion desconocida')
 
     def anuncio(self, texto):
         for j in list(self.juego.conectados.values()): self.juego.mensaje_sistema(j, '[Anuncio] ' + texto)

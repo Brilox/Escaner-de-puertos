@@ -27,12 +27,12 @@ def fecha(t):
 class Api:
     def __init__(self, url, clave): self.url = url.rstrip('/'); self.clave = clave
 
-    def llamar(self, ruta, datos=None, metodo=None):
+    def llamar(self, ruta, datos=None, metodo=None, espera=8):
         cuerpo = json.dumps(datos).encode('utf-8') if datos is not None else None
         req = urllib.request.Request(self.url + ruta, data=cuerpo, method=metodo or ('POST' if datos is not None else 'GET'),
                                      headers={'X-Clave': self.clave, 'Content-Type': 'application/json'})
         try:
-            with urllib.request.urlopen(req, timeout=8) as r: return json.loads(r.read().decode('utf-8'))
+            with urllib.request.urlopen(req, timeout=espera) as r: return json.loads(r.read().decode('utf-8'))
         except urllib.error.HTTPError as e:
             try: msg = json.loads(e.read().decode('utf-8')).get('error')
             except Exception: msg = str(e)
@@ -51,10 +51,11 @@ class Panel(tk.Tk):
         nb = ttk.Notebook(self); nb.pack(fill='both', expand=True, padx=6, pady=6)
         for titulo, fn in (('Estado', self.pest_estado), ('Jugadores', self.pest_jugadores), ('Chat', self.pest_chat),
                            ('Héroes y skins', self.pest_heroes), ('Marcos', self.pest_marcos),
-                           ('Configuración del juego', self.pest_config), ('Economía y tienda', self.pest_economia)):
+                           ('Configuración del juego', self.pest_config), ('Actualizaciones', self.pest_actualizaciones),
+                           ('Economía y tienda', self.pest_economia)):
             f = ttk.Frame(nb, padding=8); nb.add(f, text=titulo); fn(f)
         self.estado_barra = ttk.Label(self, text='', anchor='w'); self.estado_barra.pack(fill='x', padx=8, pady=(0, 4))
-        self.refrescar_estado(); self.refrescar_jugadores(); self.cargar_catalogo()
+        self.refrescar_estado(); self.refrescar_jugadores(); self.cargar_catalogo(); self.refrescar_act()
 
     # ------------------------------------------------------------------ conexion
     def conectar(self):
@@ -73,9 +74,9 @@ class Panel(tk.Tk):
             except RuntimeError as e:
                 if not messagebox.askretrycancel('No se pudo conectar', str(e)): return False
 
-    def llamar(self, ruta, datos=None, metodo=None, aviso=None):
+    def llamar(self, ruta, datos=None, metodo=None, aviso=None, espera=8):
         try:
-            r = self.api.llamar(ruta, datos, metodo)
+            r = self.api.llamar(ruta, datos, metodo, espera)
             if aviso: self.estado_barra.config(text='✔ ' + aviso + '  (' + time.strftime('%H:%M:%S') + ')')
             return r
         except RuntimeError as e:
@@ -89,6 +90,74 @@ class Panel(tk.Tk):
         sb = ttk.Scrollbar(marco, orient='vertical', command=t.yview); t.configure(yscrollcommand=sb.set)
         t.pack(side='left', fill='both', expand=True); sb.pack(side='right', fill='y')
         return marco, t
+
+    # ------------------------------------------------------------------ Actualizaciones
+    def pest_actualizaciones(self, f):
+        self.lbl_act = ttk.Label(f, text='', font=('Segoe UI', 11), justify='left'); self.lbl_act.pack(anchor='w', pady=(0, 6))
+        bot = ttk.Frame(f); bot.pack(fill='x', pady=(0, 6))
+        ttk.Button(bot, text='Subir actualización (.mrupd)…', command=self.subir_act).pack(side='left', padx=2)
+        self.act_obligatoria = tk.BooleanVar(value=False)
+        ttk.Checkbutton(bot, text='Obligatoria (sin actualizar no se puede entrar)', variable=self.act_obligatoria,
+                        command=lambda: self.llamar('/api/actualizaciones', dict(accion='obligatoria', valor=self.act_obligatoria.get()),
+                                                    aviso='Obligatoria: %s' % ('sí' if self.act_obligatoria.get() else 'no'))).pack(side='left', padx=10)
+        ttk.Button(bot, text='Retirar (no ofrecer ninguna)', command=lambda: messagebox.askyesno('Retirar', '¿Dejar de ofrecer la actualización?')
+                   and self.llamar('/api/actualizaciones', dict(accion='retirar'), aviso='Actualización retirada') and self.refrescar_act(False)).pack(side='left', padx=2)
+        ttk.Button(bot, text='Actualizar', command=lambda: self.refrescar_act(False)).pack(side='left', padx=2)
+        cuerpo = ttk.PanedWindow(f, orient='vertical'); cuerpo.pack(fill='both', expand=True)
+        arriba = ttk.Frame(cuerpo); cuerpo.add(arriba, weight=1)
+        izq = ttk.LabelFrame(arriba, text='Versiones instaladas en el servidor', padding=4); izq.pack(side='left', fill='both', expand=True)
+        m, self.t_vers = self.tabla(izq, ('Versión', 'Nombre', 'Archivos', 'Tamaño', 'Creada'), (60, 200, 70, 80, 120), 6); m.pack(fill='both', expand=True)
+        b2 = ttk.Frame(izq); b2.pack(fill='x')
+        ttk.Button(b2, text='Publicar esta versión', command=self.activar_act).pack(side='left', padx=2)
+        ttk.Button(b2, text='Borrar', command=self.borrar_act).pack(side='left', padx=2)
+        der = ttk.LabelFrame(arriba, text='Teléfonos que preguntaron (por IP)', padding=4); der.pack(side='left', fill='both', expand=True, padx=(6, 0))
+        m, self.t_cli = self.tabla(der, ('IP', 'Versión que reporta', 'Archivos bajados', 'Al día', 'Última consulta'), (110, 120, 100, 60, 120), 6)
+        m.pack(fill='both', expand=True)
+        abajo = ttk.LabelFrame(cuerpo, text='Registro: lo que pide cada teléfono (para seguir la prueba junto con adb logcat)', padding=4)
+        cuerpo.add(abajo, weight=2)
+        self.txt_act = tk.Text(abajo, height=12, wrap='none', font=('Consolas', 9)); self.txt_act.pack(fill='both', expand=True)
+
+    def refrescar_act(self, auto=True):
+        e = self.api and self.api_silenciosa('/api/actualizaciones')
+        if e:
+            v = e.get('vigente')
+            self.lbl_act.config(text=('Publicada: versión %s — %s  (%s)' % (v['version'], v.get('nombre', ''), 'OBLIGATORIA' if e['obligatoria'] else 'opcional')
+                                      if v else 'No hay ninguna actualización publicada: los teléfonos reciben "sin actualización".') +
+                                     '\nDescargas para los teléfonos: %s   (abre ese puerto TCP en el firewall)' % e['url_descargas'])
+            self.act_obligatoria.set(e['obligatoria'])
+            self.t_vers.delete(*self.t_vers.get_children())
+            for x in e['instaladas']:
+                self.t_vers.insert('', 'end', iid=str(x['version']), values=(x['version'], x.get('nombre', ''), len(x.get('telefono', [])),
+                                   '%.1f MB' % (sum(a['tamano'] for a in x.get('telefono', [])) / 1e6), fecha(x.get('creado'))))
+            self.t_cli.delete(*self.t_cli.get_children())
+            for c in e['clientes']:
+                self.t_cli.insert('', 'end', values=(c['ip'], c['version'] or '?', len(c['descargados']), 'sí' if c['al_dia'] else 'NO', fecha(c['ultima_consulta'])))
+            self.txt_act.delete('1.0', 'end')
+            for r in reversed(e['registro']):
+                self.txt_act.insert('end', '%s  %-7s %-15s %s\n' % (time.strftime('%H:%M:%S', time.localtime(r['fecha'])), r['tipo'], r['ip'], r['texto']))
+        if auto: self.after(5000, self.refrescar_act)
+
+    def api_silenciosa(self, ruta):
+        try: return self.api.llamar(ruta)
+        except RuntimeError: return None
+
+    def subir_act(self):
+        ruta = filedialog.askopenfilename(title='Archivo de actualización', filetypes=[('Actualización de Metal Online', '*.mrupd'), ('Todos', '*.*')])
+        if not ruta: return
+        import base64
+        datos = base64.b64encode(open(ruta, 'rb').read()).decode('ascii')
+        self.estado_barra.config(text='Subiendo %s (%.1f MB)…' % (os.path.basename(ruta), os.path.getsize(ruta) / 1e6)); self.update()
+        r = self.llamar('/api/actualizaciones', dict(accion='subir', nombre=os.path.basename(ruta), datos_b64=datos), aviso='Actualización subida y publicada', espera=300)
+        if r: messagebox.showinfo('Actualización', 'Versión %s publicada: %s' % (r['version'], r.get('nombre', ''))); self.refrescar_act(False)
+
+    def activar_act(self):
+        s = self.t_vers.selection()
+        if s and self.llamar('/api/actualizaciones', dict(accion='activar', version=int(s[0])), aviso='Versión %s publicada' % s[0]): self.refrescar_act(False)
+
+    def borrar_act(self):
+        s = self.t_vers.selection()
+        if s and messagebox.askyesno('Borrar', '¿Borrar la versión %s del servidor?' % s[0]) and \
+                self.llamar('/api/actualizaciones', dict(accion='borrar', version=int(s[0])), aviso='Versión %s borrada' % s[0]): self.refrescar_act(False)
 
     # ------------------------------------------------------------------ Estado
     def pest_estado(self, f):

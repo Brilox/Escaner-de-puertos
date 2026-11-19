@@ -176,3 +176,17 @@ Programa con ventanas (Python con Tkinter, sin instalar nada más). En Windows: 
 - **Configuración del juego:** editar, activar o desactivar e importar los archivos que se mandan a los teléfonos.
 - **Economía:** precios y monedas guardados en el servidor, listos para la tienda y el pase de batalla.
 
+
+## Actualizaciones del juego (un solo archivo .mrupd)
+Todo cambio del cliente (marcos, skins, imágenes, efectos, textos, configuraciones) va en **un archivo `.mrupd`**,
+siempre con el mismo formato (descrito en `server/actualizaciones.py`). Se arma con
+`tools/actualizacion/crear_actualizacion.py` y se sube en el panel, pestaña **Actualizaciones**.
+
+- El juego trae el actualizador de Tencent (Dolphin) y el mod lo apunta a este servidor. Al abrir el juego pregunta
+  la versión (`VersionUpdate:ReqUpdateVersion`). Si hay una actualización publicada, el servidor responde con la versión
+  nueva (1.0.21.1116 + N), `update_type` 2 (obligatoria) o 1 (opcional) y la dirección de descarga.
+- Descargas: `http://<host>:8081/mo/actualizacion/<N>/` (`--puerto-http`, por defecto 8081). **Abrir ese puerto TCP en el firewall.**
+- Con "Obligatoria" marcada, quien no actualizó no puede entrar (el login responde con el mensaje de la actualización).
+- La pestaña muestra cada consulta de versión y cada descarga de los teléfonos. Para la primera prueba con un teléfono
+  real, seguir eso junto con `adb logcat`: lo que pide el actualizador después de la versión se está descubriendo.
+- Si algo falla, "Retirar" vuelve a responder "sin actualización" como antes, y desmarcar "Obligatoria" deja entrar a todos.

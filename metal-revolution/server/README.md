@@ -184,7 +184,7 @@ siempre con el mismo formato (descrito en `server/actualizaciones.py`). Se arma 
 
 - El juego trae el actualizador de Tencent (Dolphin) y el mod lo apunta a este servidor. Al abrir el juego pregunta
   la versión (`VersionUpdate:ReqUpdateVersion`). Si hay una actualización publicada, el servidor responde con la versión
-  nueva (1.0.21.1116 + N), `update_type` 2 (obligatoria) o 1 (opcional) y la dirección de descarga.
+  de recursos nueva (1.0.0.(1 + N)), solo en la etapa de recursos (la etapa del programa/APK siempre responde "sin actualizacion"), `update_type` 2 (obligatoria) o 1 (opcional) y la dirección de descarga.
 - Descargas: `http://<host>:8081/mo/actualizacion/<N>/` (`--puerto-http`, por defecto 8081). **Abrir ese puerto TCP en el firewall.**
 - Con "Obligatoria" marcada, quien no actualizó no puede entrar (el login responde con el mensaje de la actualización).
 - La pestaña muestra cada consulta de versión y cada descarga de los teléfonos. Para la primera prueba con un teléfono

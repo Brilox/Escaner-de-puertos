@@ -26,7 +26,7 @@ Estructura Thrift (reconstruida de libgcloud.so, funciones write de version_serv
     VersionPackageInfo {1: i64 version, 2: string name, 3: string description, 4: string http_url, 5: string md5sum,
                         6: string custom_str}
     La version es de 4 numeros de 16 bits: 1.0.21.1116 = 0x0001_0000_0015_045C (la del juego). La actualizacion N
-    publica 1.0.21.(1116 + N).
+    publica la version de recursos 1.0.0.(1 + N) (el telefono reporta res 1.0.0.1).
 Lo que el actualizador descarga despues desde http_url todavia se esta descubriendo: el servidor HTTP anota cada
 peticion (ruta, cabeceras) y el panel las muestra, para seguirlo junto con `adb logcat` del telefono.
 
@@ -40,7 +40,9 @@ from urllib.parse import unquote, urlsplit
 log = logging.getLogger('mr.actualizaciones')
 HERE = os.path.dirname(os.path.abspath(__file__))
 CARPETA = os.path.join(HERE, 'actualizaciones')
-VERSION_BASE = (1, 0, 21, 1116)                       # version de recursos del juego (la que devolvia el mod)
+VERSION_BASE = (1, 0, 0, 1)                           # version de RECURSOS del juego ("res v: 1.0.0.1" en el logcat)
+VERSION_APP = (1, 0, 21, 1116)                        # version del programa (APK): nunca se ofrece una nueva
+ETAPA_PROGRAMA, ETAPA_RECURSOS = 1, 2                 # campo 3 de la peticion (m_update_type 20 y 21 en el telefono)
 
 def version_i64(n):
     a, b, c, d = VERSION_BASE; d += n
@@ -217,12 +219,20 @@ class Actualizaciones:
         """Bytes de respuesta a VersionUpdate:ReqUpdateVersion (o la grabada "sin actualizacion")."""
         c = self.cliente(ip); c['ultima_consulta'] = int(time.time())
         pet = leer_peticion(extra); c['peticion'] = pet
-        com = (pet or {}).get(1) if isinstance((pet or {}).get(1), dict) else {}
-        tipo_producto = com.get(3); version_cliente = com.get(5)
-        self.anotar('version', ip, 'peticion: %s | producto=%s version=%s' % (json.dumps(pet, default=str)[:600], tipo_producto,
-                                                                            version_txt(version_cliente) if isinstance(version_cliente, int) else version_cliente))
+        # la peticion llega como {1: {1: {1:?, 2:servicio 10003, 3:etapa, 4:?, 5:version app, 6:version recursos, 7:uuid, 8:juego}, 2:''}}
+        com = (pet or {}).get(1, {})
+        if isinstance(com, dict) and isinstance(com.get(1), dict): com = com[1]
+        if not isinstance(com, dict): com = {}
+        etapa = com.get(3); version_app = com.get(5); version_cliente = com.get(6)
+        txt = lambda v: version_txt(v) if isinstance(v, int) and v else v
+        self.anotar('version', ip, 'peticion: etapa=%s (%s) app=%s recursos=%s' % (
+            etapa, {1: 'programa/APK', 2: 'recursos'}.get(etapa, '?'), txt(version_app), txt(version_cliente)))
         m = self.publicada()
-        if isinstance(version_cliente, int) and version_cliente >= version_i64(0): c['version'] = version_cliente
+        # Etapa 1 = actualizacion del PROGRAMA (APK). Si aqui se ofrece algo, el telefono lo trata como una APK nueva y
+        # muestra "Connection Error. Please Get the Latest Version of the App" (prueba real del 19/11). Nunca se ofrece.
+        if etapa != ETAPA_RECURSOS:
+            return self.plantilla
+        if isinstance(version_cliente, int) and version_cliente: c['version'] = version_cliente
         if not m or self.al_dia(ip):
             return self.plantilla
         v = version_i64(int(m['version']))

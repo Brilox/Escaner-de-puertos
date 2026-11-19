@@ -1,0 +1,31 @@
+{
+ "_ayuda": "Descripcion de los marcos nuevos. Se construye con: python tools/marcos/construir.py datos/marcos_beta/marcos_nuevos.json <juego extraido> <salida>",
+ "marcos": [
+  {"id": 100, "nombre": "beta_founder", "imagen": "juego/founder_256.png",
+   "titulo": {"es": "Founder", "en": "Founder"},
+   "descripcion": {"es": "Exclusivo de los 10 elegidos de la primera beta de Metal Online.", "en": "Exclusive to the 10 chosen players of the first Metal Online beta."},
+   "bloqueado": {"es": "Solo para los probadores de la primera beta.", "en": "Only for first beta testers."},
+   "efecto": {"base": "bp_max", "tinte": "ff8a3a"}},
+  {"id": 101, "nombre": "beta_bughunter", "imagen": "juego/bughunter_256.png",
+   "titulo": {"es": "Bug Hunter", "en": "Bug Hunter"},
+   "descripcion": {"es": "Exclusivo de los 10 elegidos de la primera beta de Metal Online.", "en": "Exclusive to the 10 chosen players of the first Metal Online beta."},
+   "bloqueado": {"es": "Solo para los probadores de la primera beta.", "en": "Only for first beta testers."},
+   "efecto": {"base": "christmas_001", "tinte": "47ff5f",
+              "cuadros": {"hoja": "arana_8cuadros.png", "columnas": 4, "filas": 2, "particula": "1111", "vueltas": 4}}},
+  {"id": 102, "nombre": "beta_vanguard", "imagen": "juego/vanguard_256.png",
+   "titulo": {"es": "Beta Vanguard", "en": "Beta Vanguard"},
+   "descripcion": {"es": "Exclusivo de los 10 elegidos de la primera beta de Metal Online.", "en": "Exclusive to the 10 chosen players of the first Metal Online beta."},
+   "bloqueado": {"es": "Solo para los probadores de la primera beta.", "en": "Only for first beta testers."},
+   "efecto": {"base": "gjhyd_max", "tinte": "3da2ff"}},
+  {"id": 103, "nombre": "beta_patcher", "imagen": "juego/patcher_256.png",
+   "titulo": {"es": "Elite Patcher", "en": "Elite Patcher"},
+   "descripcion": {"es": "Exclusivo de los 10 elegidos de la primera beta de Metal Online.", "en": "Exclusive to the 10 chosen players of the first Metal Online beta."},
+   "bloqueado": {"es": "Solo para los probadores de la primera beta.", "en": "Only for first beta testers."},
+   "efecto": {"base": "xc_max", "tinte": "c05cff"}},
+  {"id": 104, "nombre": "beta_hero", "imagen": "juego/hero_256.png",
+   "titulo": {"es": "Revolution Hero", "en": "Revolution Hero"},
+   "descripcion": {"es": "Exclusivo de los 10 elegidos de la primera beta de Metal Online.", "en": "Exclusive to the 10 chosen players of the first Metal Online beta."},
+   "bloqueado": {"es": "Solo para los probadores de la primera beta.", "en": "Only for first beta testers."},
+   "efecto": {"base": "nck_001_max", "tinte": "ff4a2a"}}
+ ]
+}

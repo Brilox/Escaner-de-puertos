@@ -148,11 +148,11 @@ class Panel(tk.Tk):
         datos = base64.b64encode(open(ruta, 'rb').read()).decode('ascii')
         self.estado_barra.config(text='Subiendo %s (%.1f MB)…' % (os.path.basename(ruta), os.path.getsize(ruta) / 1e6)); self.update()
         r = self.llamar('/api/actualizaciones', dict(accion='subir', nombre=os.path.basename(ruta), datos_b64=datos), aviso='Actualización subida y publicada', espera=300)
-        if r: messagebox.showinfo('Actualización', 'Versión %s publicada: %s' % (r['version'], r.get('nombre', ''))); self.refrescar_act(False)
+        if r: messagebox.showinfo('Actualización', 'Versión %s publicada: %s' % (r['version'], r.get('nombre', ''))); self.refrescar_act(False); self.cargar_catalogo()
 
     def activar_act(self):
         s = self.t_vers.selection()
-        if s and self.llamar('/api/actualizaciones', dict(accion='activar', version=int(s[0])), aviso='Versión %s publicada' % s[0]): self.refrescar_act(False)
+        if s and self.llamar('/api/actualizaciones', dict(accion='activar', version=int(s[0])), aviso='Versión %s publicada' % s[0]): self.refrescar_act(False); self.cargar_catalogo()
 
     def borrar_act(self):
         s = self.t_vers.selection()
@@ -381,6 +381,7 @@ class Panel(tk.Tk):
             n = i and simpledialog.askstring('Marco nuevo', 'Nombre (para reconocerlo):', parent=self)
             if i and self.llamar('/api/catalogo', dict(nuevo_marco=i, nombre=n or ''), aviso='Marco %d agregado' % i): self.cargar_catalogo()
         ttk.Button(bot, text='Agregar marco nuevo', command=nuevo).pack(side='left', padx=8)
+        ttk.Button(bot, text='Actualizar lista', command=self.cargar_catalogo).pack(side='left', padx=2)
         ttk.Label(f, text='Los marcos de "puntos", "victorias" y "nivel" se ganan jugando. Los de "objeto" y "especial" solo los tiene '
                           'quien los recibe (rol o desbloqueo propio). Un marco nuevo necesita también su entrada en '
                           'HeadFrameConfig.json (pestaña Configuración) y su imagen en el juego.', wraplength=1000).pack(anchor='w')

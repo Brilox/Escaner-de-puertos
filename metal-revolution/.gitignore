@@ -2,3 +2,4 @@ mr.keystore
 *.apk
 server/cuentas.db
 server/mr_server.log
+server/clave_admin.txt

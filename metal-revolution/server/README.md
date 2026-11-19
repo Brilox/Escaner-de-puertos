@@ -148,3 +148,17 @@ Versión anterior (solo grabaciones): `mr_server_v1_replay.py`.
   colaboradores.
 - **Me gusta** (`PraiseOtherReq`) se acumula en el perfil.
 
+## Panel de administración (`tools/admin/panel_admin.py`)
+Programa con ventanas (Python con Tkinter, sin instalar nada más). En Windows: doble clic en `tools/admin/abrir_panel.bat`.
+- **Conexión:** el servidor abre la API de administración en `127.0.0.1:8090` (`--puerto-admin`, `0` la apaga). La clave
+  se crea sola en `server/clave_admin.txt` la primera vez (no se sube a GitHub). En un VPS: `ssh -L 8090:127.0.0.1:8090 usuario@IP`
+  y el panel se conecta a `http://127.0.0.1:8090`.
+- **Estado:** conectados, cuentas, peleas en curso, mesas y anuncios a todos.
+- **Jugadores:** lista con en línea/offline, ficha (estadísticas, chat, desbloqueos propios), mensaje, silenciar,
+  suspender (con horas y motivo), expulsar, renombrar y roles (`colaborador`, `campeon`).
+- **Chat:** todo el chat queda guardado (salón, mesas, privados, peleas); búsqueda por jugador o texto y exportación.
+- **Héroes y skins / Marcos:** bloquear para todos, marcar como exclusivo de un rol, agregar skins y marcos nuevos.
+  Lo que se cambia les llega al momento a los jugadores conectados.
+- **Configuración del juego:** editar, activar o desactivar e importar los archivos que se mandan a los teléfonos.
+- **Economía:** precios y monedas guardados en el servidor, listos para la tienda y el pase de batalla.
+

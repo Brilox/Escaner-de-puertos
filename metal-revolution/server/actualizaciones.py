@@ -113,6 +113,15 @@ class Actualizaciones:
         self.clientes = {}                                        # ip -> estado del telefono
         self.registro = deque(maxlen=400)                          # peticiones HTTP y de version, para el panel
         os.makedirs(CARPETA, exist_ok=True)
+        self.reaplicar()
+
+    def reaplicar(self):
+        """Al arrancar vuelve a poner la parte del servidor de las versiones ya instaladas (HeadFrameConfig.json en
+        config_juego/activos, datos/marcos.json...). Asi, reemplazar la carpeta del servidor por una version nueva del
+        repositorio no borra los marcos nuevos: basta conservar cuentas.db y la carpeta actualizaciones/."""
+        for v in self.ajuste('aplicadas', []) or []:
+            try: self.aplicar_servidor(int(v), silencioso=True)
+            except Exception as e: log.warning('no pude volver a aplicar la actualizacion %s: %s', v, e)
 
     # ---- estado guardado en los ajustes del servidor (cuentas.db)
     def ajuste(self, clave, defecto=None): return self.juego.cuentas.ajuste('actualizacion_' + clave, defecto)
@@ -155,6 +164,13 @@ class Actualizaciones:
 
     def activar(self, v):
         """Publica la version v: el servidor aplica su parte y empieza a ofrecerla a los telefonos."""
+        m = self.aplicar_servidor(v)
+        self.poner('vigente', v)
+        if 'obligatoria' in m and self.ajuste('obligatoria') is None: self.poner('obligatoria', bool(m['obligatoria']))
+        log.info('actualizacion %d publicada (version de recursos %s)', v, version_txt(version_i64(v)))
+
+    def aplicar_servidor(self, v, silencioso=False):
+        """Solo la parte del servidor de la version v (configuraciones, reglas de marcos, catalogo). "Retirar" no la deshace."""
         destino = os.path.join(CARPETA, str(v)); m = json.load(open(os.path.join(destino, 'manifest.json'), encoding='utf-8'))
         sv = m.get('servidor', {})
         import config_juego, juego as modjuego
@@ -169,9 +185,10 @@ class Actualizaciones:
             for x in sv['marcos_extra']: extra[int(x['id'])] = dict(id=int(x['id']), nombre=x.get('nombre', ''))
             self.juego.cuentas.poner_ajuste('marcos_extra', sorted(extra.values(), key=lambda x: x['id']))
         self.juego.config = config_juego.ConfigJuego()
-        self.poner('vigente', v)
-        if 'obligatoria' in m and self.ajuste('obligatoria') is None: self.poner('obligatoria', bool(m['obligatoria']))
-        log.info('actualizacion %d publicada (version de recursos %s)', v, version_txt(version_i64(v)))
+        aplicadas = [int(x) for x in self.ajuste('aplicadas', []) or [] if int(x) != v] + [v]
+        if not silencioso: self.poner('aplicadas', aplicadas)
+        if silencioso: log.info('actualizacion %d: parte del servidor aplicada otra vez', v)
+        return m
 
     def retirar(self):
         self.poner('vigente', 0); log.info('actualizaciones retiradas: los telefonos ya no reciben ninguna')

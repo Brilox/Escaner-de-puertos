@@ -4,3 +4,4 @@ server/cuentas.db
 server/mr_server.log
 datos/marcos_beta/cuadros/
 server/clave_admin.txt
+server/actualizaciones/

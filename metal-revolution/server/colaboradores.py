@@ -45,6 +45,18 @@ class Colaboradores:
                                               nota TEXT DEFAULT '', PRIMARY KEY (uid, tipo, id));
           CREATE TABLE IF NOT EXISTS skins_en_uso (uid INTEGER, heroe INTEGER, skin INTEGER, PRIMARY KEY (uid, heroe));''')
         db.commit()
+        self._marcos_nuevos()
+
+    def _marcos_nuevos(self):
+        """Suma al catalogo los marcos agregados por una actualizacion (ids 100+), que no vienen en el OBB."""
+        try:
+            for x in json.loads((self.db.execute("SELECT valor FROM ajustes WHERE clave='marcos_extra'").fetchone() or ['[]'])[0]):
+                self.cat['marco'].setdefault(int(x['id']), dict(id=int(x['id']), nombre=x.get('nombre') or 'marco nuevo', condicion=99))
+        except (sqlite3.Error, ValueError, TypeError, KeyError): pass
+        try:
+            for r in json.load(open(os.path.join(HERE, '..', 'datos', 'marcos.json'))):
+                self.cat['marco'].setdefault(int(r[0]), dict(id=int(r[0]), nombre='marco nuevo', condicion=r[1]))
+        except (OSError, ValueError, TypeError, IndexError): pass
 
     # ---- consultas (las usa el servidor)
     def nivel(self, uid):
@@ -144,7 +156,7 @@ def main(argv=None):
         elif a.cmd == 'catalogo':
             if a.que == 'marcos':
                 tipos = {1: 'clasificatoria', 2: 'victorias con personaje', 3: 'especial (no se gana jugando)', 4: 'dias de juego', 99: 'especial (no se gana jugando)'}
-                for m in cat['marcos']: print('%3d  %-45s %s' % (m['id'], m['nombre'], tipos.get(m['condicion'], m['condicion'])))
+                for m in sorted(cat['marco'].values(), key=lambda x: x['id']): print('%3d  %-45s %s' % (m['id'], m['nombre'], tipos.get(m['condicion'], m['condicion'])))
             else:
                 for s in cat['skins']:
                     pj = cat['personajes'].get(str(s['heroe']), str(s['heroe']))

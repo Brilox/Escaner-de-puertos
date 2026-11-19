@@ -209,7 +209,8 @@ class Admin:
         if a == 'obligatoria': act.poner('obligatoria', bool(c.get('valor'))); return dict(ok=True)
         if a == 'borrar':
             v = int(c['version']); assert v != act.ajuste('vigente', 0), 'no se puede borrar la version publicada'
-            import actualizaciones as mod; shutil.rmtree(os.path.join(mod.CARPETA, str(v)), ignore_errors=True); return dict(ok=True)
+            import actualizaciones as mod; shutil.rmtree(os.path.join(mod.CARPETA, str(v)), ignore_errors=True)
+            act.poner('aplicadas', [x for x in act.ajuste('aplicadas', []) or [] if int(x) != v]); return dict(ok=True)
         raise ValueError('accion de actualizacion desconocida')
 
     def anuncio(self, texto):

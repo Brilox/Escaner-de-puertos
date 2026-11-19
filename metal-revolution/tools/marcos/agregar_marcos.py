@@ -36,7 +36,7 @@ def quad(w, h):
     idx = struct.pack('<6H', 0, 1, 2, 2, 1, 3)
     return datos, list(idx), len(s0) + pad
 
-def agregar(entrada, salida, marcos):
+def agregar(entrada, salida, marcos, solo_cuerpo=()):
     env = UnityPy.load(entrada)
     objs = list(env.objects); sf = objs[0].assets_file
     ab_r = next(o for o in objs if o.type.name == 'AssetBundle')
@@ -48,6 +48,8 @@ def agregar(entrada, salida, marcos):
         nombre = nombre.lower(); clave = RUTA + nombre + '.png'
         if clave in existentes: raise SystemExit('ya existe un marco llamado ' + nombre)
         img = Image.open(png).convert('RGBA'); w, h = img.size
+        if nombre in solo_cuerpo:                     # marco con animacion exacta: el resplandor lo pone la animacion
+            al = img.getchannel('A').point(lambda v: v if v >= 217 else 0); img.putalpha(al)
         # ---- textura: se clona la del atlas y se le pone la imagen nueva (datos dentro del objeto, sin .resS)
         tid = nuevo_id(sf); tr = clonar(sf, tex_r, tid)
         t = copy.deepcopy(base_tex)

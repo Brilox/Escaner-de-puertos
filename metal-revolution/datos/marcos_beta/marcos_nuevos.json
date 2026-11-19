@@ -1,31 +1,156 @@
 {
- "_ayuda": "Descripcion de los marcos nuevos. Se construye con: python tools/marcos/construir.py datos/marcos_beta/marcos_nuevos.json <juego extraido> <salida>",
+ "_ayuda": "Descripcion de los marcos nuevos. Pasos: 1) node tools/marcos/exportar_animaciones.js  2) python tools/marcos/construir.py datos/marcos_beta/marcos_nuevos.json <juego extraido> <salida>",
  "marcos": [
-  {"id": 100, "nombre": "beta_founder", "imagen": "juego/founder_256.png",
-   "titulo": {"es": "Founder", "en": "Founder"},
-   "descripcion": {"es": "Exclusivo de los 10 elegidos de la primera beta de Metal Online.", "en": "Exclusive to the 10 chosen players of the first Metal Online beta."},
-   "bloqueado": {"es": "Solo para los probadores de la primera beta.", "en": "Only for first beta testers."},
-   "efecto": {"base": "bp_max", "tinte": "ff8a3a"}},
-  {"id": 101, "nombre": "beta_bughunter", "imagen": "juego/bughunter_256.png",
-   "titulo": {"es": "Bug Hunter", "en": "Bug Hunter"},
-   "descripcion": {"es": "Exclusivo de los 10 elegidos de la primera beta de Metal Online.", "en": "Exclusive to the 10 chosen players of the first Metal Online beta."},
-   "bloqueado": {"es": "Solo para los probadores de la primera beta.", "en": "Only for first beta testers."},
-   "efecto": {"base": "christmas_001", "tinte": "47ff5f",
-              "cuadros": {"hoja": "arana_8cuadros.png", "columnas": 4, "filas": 2, "particula": "1111", "vueltas": 4}}},
-  {"id": 102, "nombre": "beta_vanguard", "imagen": "juego/vanguard_256.png",
-   "titulo": {"es": "Beta Vanguard", "en": "Beta Vanguard"},
-   "descripcion": {"es": "Exclusivo de los 10 elegidos de la primera beta de Metal Online.", "en": "Exclusive to the 10 chosen players of the first Metal Online beta."},
-   "bloqueado": {"es": "Solo para los probadores de la primera beta.", "en": "Only for first beta testers."},
-   "efecto": {"base": "gjhyd_max", "tinte": "3da2ff"}},
-  {"id": 103, "nombre": "beta_patcher", "imagen": "juego/patcher_256.png",
-   "titulo": {"es": "Elite Patcher", "en": "Elite Patcher"},
-   "descripcion": {"es": "Exclusivo de los 10 elegidos de la primera beta de Metal Online.", "en": "Exclusive to the 10 chosen players of the first Metal Online beta."},
-   "bloqueado": {"es": "Solo para los probadores de la primera beta.", "en": "Only for first beta testers."},
-   "efecto": {"base": "xc_max", "tinte": "c05cff"}},
-  {"id": 104, "nombre": "beta_hero", "imagen": "juego/hero_256.png",
-   "titulo": {"es": "Revolution Hero", "en": "Revolution Hero"},
-   "descripcion": {"es": "Exclusivo de los 10 elegidos de la primera beta de Metal Online.", "en": "Exclusive to the 10 chosen players of the first Metal Online beta."},
-   "bloqueado": {"es": "Solo para los probadores de la primera beta.", "en": "Only for first beta testers."},
-   "efecto": {"base": "nck_001_max", "tinte": "ff4a2a"}}
- ]
+  {
+   "id": 100,
+   "nombre": "beta_founder",
+   "imagen": "juego/founder_256.png",
+   "titulo": {
+    "es": "Founder",
+    "en": "Founder"
+   },
+   "descripcion": {
+    "es": "Exclusivo de los 10 elegidos de la primera beta de Metal Online.",
+    "en": "Exclusive to the 10 chosen players of the first Metal Online beta."
+   },
+   "bloqueado": {
+    "es": "Solo para los probadores de la primera beta.",
+    "en": "Only for first beta testers."
+   },
+   "efecto": {
+    "animacion": {
+     "carpeta": "cuadros/founder",
+     "fps": 24,
+     "columnas": 16
+    }
+   }
+  },
+  {
+   "id": 101,
+   "nombre": "beta_bughunter",
+   "imagen": "juego/bughunter_256.png",
+   "titulo": {
+    "es": "Bug Hunter",
+    "en": "Bug Hunter"
+   },
+   "descripcion": {
+    "es": "Exclusivo de los 10 elegidos de la primera beta de Metal Online.",
+    "en": "Exclusive to the 10 chosen players of the first Metal Online beta."
+   },
+   "bloqueado": {
+    "es": "Solo para los probadores de la primera beta.",
+    "en": "Only for first beta testers."
+   },
+   "efecto": {
+    "animacion": {
+     "carpeta": "cuadros/bughunter",
+     "fps": 20,
+     "columnas": 16
+    }
+   }
+  },
+  {
+   "id": 102,
+   "nombre": "beta_vanguard",
+   "imagen": "juego/vanguard_256.png",
+   "titulo": {
+    "es": "Beta Vanguard",
+    "en": "Beta Vanguard"
+   },
+   "descripcion": {
+    "es": "Exclusivo de los 10 elegidos de la primera beta de Metal Online.",
+    "en": "Exclusive to the 10 chosen players of the first Metal Online beta."
+   },
+   "bloqueado": {
+    "es": "Solo para los probadores de la primera beta.",
+    "en": "Only for first beta testers."
+   },
+   "efecto": {
+    "animacion": {
+     "carpeta": "cuadros/vanguard",
+     "fps": 24,
+     "columnas": 16
+    }
+   }
+  },
+  {
+   "id": 103,
+   "nombre": "beta_patcher",
+   "imagen": "juego/patcher_256.png",
+   "titulo": {
+    "es": "Elite Patcher",
+    "en": "Elite Patcher"
+   },
+   "descripcion": {
+    "es": "Exclusivo de los 10 elegidos de la primera beta de Metal Online.",
+    "en": "Exclusive to the 10 chosen players of the first Metal Online beta."
+   },
+   "bloqueado": {
+    "es": "Solo para los probadores de la primera beta.",
+    "en": "Only for first beta testers."
+   },
+   "efecto": {
+    "animacion": {
+     "carpeta": "cuadros/patcher",
+     "fps": 24,
+     "columnas": 16
+    }
+   }
+  },
+  {
+   "id": 104,
+   "nombre": "beta_hero",
+   "imagen": "juego/hero_256.png",
+   "titulo": {
+    "es": "Revolution Hero",
+    "en": "Revolution Hero"
+   },
+   "descripcion": {
+    "es": "Exclusivo de los 10 elegidos de la primera beta de Metal Online.",
+    "en": "Exclusive to the 10 chosen players of the first Metal Online beta."
+   },
+   "bloqueado": {
+    "es": "Solo para los probadores de la primera beta.",
+    "en": "Only for first beta testers."
+   },
+   "efecto": {
+    "animacion": {
+     "carpeta": "cuadros/hero",
+     "fps": 24,
+     "columnas": 16
+    }
+   }
+  },
+  {
+   "id": 105,
+   "nombre": "beta_calibracion",
+   "imagen": "calibracion/calibracion_256.png",
+   "titulo": {
+    "es": "Calibración",
+    "en": "Calibration"
+   },
+   "descripcion": {
+    "es": "Marco de prueba: el cuadrado que coincide con el borde azul indica el ajuste de tamaño.",
+    "en": "Test frame for effect size calibration."
+   },
+   "bloqueado": {
+    "es": "Solo para pruebas.",
+    "en": "Test only."
+   },
+   "efecto": {
+    "animacion": {
+     "carpeta": "calibracion/cuadros",
+     "fps": 1,
+     "columnas": 1,
+     "escala": 1.2
+    }
+   }
+  }
+ ],
+ "calibracion": {
+  "tamano": 1.38,
+  "x": 0.0,
+  "y": 0.0,
+  "_ayuda": "tamano y posicion de las animaciones exactas en unidades del efecto; se corrige con el marco 105: tamano nuevo = 1.38 x (numero del cuadrado que coincide con el borde azul) / 100; si el centro rojo no cae sobre la cruz azul, mover x / y"
+ }
 }

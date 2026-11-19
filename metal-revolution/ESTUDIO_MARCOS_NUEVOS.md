@@ -113,3 +113,43 @@ archivos nuevos: su teléfono buscaría una imagen que no existe.
   (`AssetBundles/Android/Android`), un bundle modificado no cargaría. Se arregla actualizando ese manifiesto.
 - **Idioma:** la imagen se busca primero en el bundle del idioma del teléfono (`english/...`) y luego en el chino.
   Con los nuevos solo en el chino debería funcionar igual que con los originales (el bundle inglés solo tiene 1 marco).
+
+## 6. Efectos EXACTOS: la misma animación del video, dentro del juego
+
+Los efectos copiados y recoloreados (`clonar_efecto.py`) se parecen, pero no son iguales a lo promocionado. Para que
+el juego muestre **exactamente** lo del video se usa la animación misma:
+
+1. `node tools/marcos/exportar_animaciones.js`: el **mismo motor** del video y la página (`datos/marcos_beta/motor.js`,
+   modo bucle) dibuja cada marco cuadro por cuadro. Cada cuadro usa una semilla fija y las velocidades se ajustan a
+   un múltiplo exacto del bucle (cambios de pocos %), así la última imagen empalma con la primera.
+   Se comprueba solo: 0 píxeles distintos en el empalme de los 5 marcos.
+2. `tools/marcos/efecto_cuadros.py` (lo llama `construir.py`): arma la hoja de cuadros y crea un efecto nuevo con
+   piezas que el juego ya usa:
+   - una partícula eterna y quieta con *Texture Sheet Animation* en modo FPS (`timeMode` 2: cuadros por segundo fijos, en bucle);
+   - el shader del juego **`UFOEffect/Alpha Blended`**, que calcula `2 × color × _TintColor × textura`. Con
+     `_TintColor` 0,5 sale la textura tal cual, con mezcla alfa normal, igual que en el navegador;
+   - la textura en ETC2 RGBA8, el formato de las texturas del juego.
+3. Diferencias con el navegador, ya corregidas:
+   - **Espacio de color:** el juego mezcla en espacio lineal (`m_ActiveColorSpace = 1`). El alfa de los píxeles
+     semitransparentes se compensa en la hoja para que sobre fondo oscuro dé lo mismo que el video.
+   - **Doble resplandor:** en los marcos animados, la imagen fija guarda solo el cuerpo sólido, sin el resplandor.
+     El resplandor lo dibuja la animación.
+
+Resultado medido con los datos del bundle, simulando el dibujo del juego: error medio de 2,5 a 3,6 sobre 255 frente
+al video (sobre todo por la compresión ETC2). Comparación de lado a lado en `comparacion_video_vs_juego.mp4`.
+
+| Marco | Cuadros | Bucle | Hoja | Memoria de la textura |
+|---|---|---|---|---|
+| Founder, Vanguard, Patcher, Hero | 192 de 192 px | 8 s a 24 fps | 3072×2304 | 6,75 MB c/u |
+| Bug Hunter | 240 de 192 px | 12 s a 20 fps (la araña da una vuelta completa) | 3072×2880 | 8,4 MB |
+
+El bundle de efectos pasa de 0,7 a 5,6 MB. Si todos se ven a la vez (pantalla de marcos), son ~36 MB de memoria
+de video.
+
+### Tamaño y posición: marco de calibración (id 105)
+El tamaño del efecto respecto de la imagen del marco se midió en los efectos del juego (1,38 unidades, ±4 %).
+El marco 105 lo confirma en el teléfono: su imagen tiene un **borde azul** y su efecto dibuja cuadrados del 90 al 110 %.
+- Si el rojo (100) tapa al azul, está perfecto.
+- Si coincide otro número, en `marcos_nuevos.json` se pone `"calibracion": {"tamano": 1.38 × número / 100}`.
+- Si la cruz roja no cae sobre la azul, se ajustan `x` e `y`.
+Después se vuelve a construir.

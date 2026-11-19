@@ -1112,6 +1112,16 @@
    "lockDesc": "item/lockdesc/52004",
    "icon": "common/HeadFrame/beta_hero",
    "effect": "beta_hero_fx"
+  },
+  {
+   "id": 105,
+   "headName": "item/name/52005",
+   "conditionType": 99,
+   "conditionParams": [],
+   "desc": "item/desc/52005",
+   "lockDesc": "item/lockdesc/52005",
+   "icon": "common/HeadFrame/beta_calibracion",
+   "effect": "beta_calibracion_fx"
   }
  ]
 }

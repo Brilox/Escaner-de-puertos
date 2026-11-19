@@ -22,12 +22,15 @@ marcos_nuevos.json (ver datos/marcos_beta/marcos_nuevos.json):
                  "titulo": {"es": "...", "en": "..."}, "descripcion": {...}, "bloqueado": {...},
                  "efecto": {"base": "bp_max", "tinte": "ff8a3a",
                             "cuadros": {"hoja": "arana.png", "columnas": 4, "filas": 2, "particula": "1111", "vueltas": 4}}}]}
-"efecto" es opcional; sin "base" se puede usar un efecto del juego tal cual con {"usar": "nck_001_max"}.
+"efecto" puede ser: {"animacion": {"carpeta": "cuadros/x", "fps": 24, "columnas": 16}} (animacion EXACTA, hoja de cuadros
+exportada con exportar_animaciones.js), {"base": ..., "tinte": ...} (efecto del juego copiado y recoloreado) o
+{"usar": "nck_001_max"} (un efecto del juego tal cual). "calibracion": {"tamano": 1.38, "x": 0, "y": 0} ajusta el
+tamano y la posicion de las animaciones exactas (ver el marco de calibracion).
 Las rutas de imagenes son relativas al archivo JSON. Los marcos nuevos quedan con condicion 99 (no se ganan
 jugando): se entregan desde el servidor con colaboradores.py."""
 import json, os, re, shutil, sys, tempfile
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import agregar_marcos, clonar_efecto, agregar_textos
+import agregar_marcos, clonar_efecto, agregar_textos, efecto_cuadros
 
 B_IMG = 'AssetBundles/Android/gui/textures/items/chinese/common/headframe.bundle'
 B_FX = 'AssetBundles/Android/effects/prefab/ui/headframe/prefab.bundle'
@@ -47,16 +50,24 @@ def construir(spec_ruta, juego, salida):
     tmp = tempfile.mkdtemp()
     # 1) imagenes
     agregar_marcos.agregar(os.path.join(arch, B_IMG), os.path.join(salida, B_IMG),
-                           [(m['nombre'], os.path.join(base_dir, m['imagen'])) for m in spec['marcos']])
+                           [(m['nombre'], os.path.join(base_dir, m['imagen'])) for m in spec['marcos']],
+                           solo_cuerpo={m['nombre'].lower() for m in spec['marcos'] if (m.get('efecto') or {}).get('animacion')
+                                        and not (m['efecto']['animacion'].get('escala'))})
     # 2) efectos (uno detras de otro sobre el mismo bundle)
     actual = os.path.join(arch, B_FX); n = 0
+    cal = spec.get('calibracion', {})
     for m in spec['marcos']:
         e = m.get('efecto') or {}
-        if not e.get('base'): continue
+        if not (e.get('base') or e.get('animacion')): continue
         sig = os.path.join(tmp, 'fx%d.bundle' % n); n += 1
-        cu = e.get('cuadros')
-        cu = (os.path.join(base_dir, cu['hoja']), cu['columnas'], cu['filas'], cu['particula'], cu.get('vueltas', 3)) if cu else None
-        clonar_efecto.clonar(actual, sig, e['base'], m['nombre'] + '_fx', e.get('tinte'), cu)
+        if e.get('animacion'):                          # animacion exacta: hoja de cuadros exportada del motor
+            an = e['animacion']
+            efecto_cuadros.crear(actual, sig, m['nombre'] + '_fx', os.path.join(base_dir, an['carpeta']), an['fps'],
+                                 an.get('columnas', 16), cal.get('tamano', 1.38) * an.get('escala', 1.0), cal.get('x', 0.0), cal.get('y', 0.0))
+        else:                                           # efecto del juego copiado y recoloreado
+            cu = e.get('cuadros')
+            cu = (os.path.join(base_dir, cu['hoja']), cu['columnas'], cu['filas'], cu['particula'], cu.get('vueltas', 3)) if cu else None
+            clonar_efecto.clonar(actual, sig, e['base'], m['nombre'] + '_fx', e.get('tinte'), cu)
         actual = sig
     shutil.copyfile(actual, os.path.join(salida, B_FX))
     # 3) textos y 4) configuracion
@@ -69,7 +80,7 @@ def construir(spec_ruta, juego, salida):
         e = m.get('efecto') or {}
         fila = {'id': m['id'], 'headName': 'item/name/%d' % k, 'conditionType': 99, 'conditionParams': [],
                 'desc': 'item/desc/%d' % k, 'lockDesc': 'item/lockdesc/%d' % k, 'icon': 'common/HeadFrame/' + m['nombre'].lower()}
-        efecto = (m['nombre'].lower() + '_fx') if e.get('base') else e.get('usar')
+        efecto = (m['nombre'].lower() + '_fx') if (e.get('base') or e.get('animacion')) else e.get('usar')
         if efecto: fila['effect'] = efecto
         cfg['headFrames'].append(fila)
     json.dump(textos, open(os.path.join(tmp, 'textos.json'), 'w', encoding='utf-8'), ensure_ascii=False)

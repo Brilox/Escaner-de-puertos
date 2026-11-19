@@ -6,6 +6,7 @@ Cada handler on_<Peticion>(sesion, datos) devuelve (TipoRespuesta, dict) o None 
 Los avisos a otros jugadores se mandan con jugador.notificar(TipoAviso, dict)."""
 import asyncio, copy, json, logging, os, random, sqlite3, time
 from config_juego import ConfigJuego
+from colaboradores import Colaboradores
 
 log = logging.getLogger('mr.juego')
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -273,6 +274,7 @@ class Juego:
         self.host = host; self.puerto = puerto; self.puerto_relay = puerto_relay; self.plantilla = plantilla_login
         self.nombre_automatico = nombre_automatico
         self.cuentas = Cuentas(os.path.join(HERE, 'cuentas.db'))
+        self.colab = Colaboradores(self.cuentas.db)                  # marcos y skins de agradecimiento (colaboradores.json)
         self.conectados = {}                                         # uid -> Jugador
         self.mesas = {i: Mesa(i) for i in range(1, NUM_MESAS + 1)}
         self.partidas = {}; self._sig_partida = 1
@@ -290,8 +292,24 @@ class Juego:
                               GameHallId=1 if j and j.hall else 0, HallRoomId=j.mesa.id if j and j.mesa else 0, TotalLoginDay=1)
         pi['BaseInfo'].update(CurPlayerHead=cuenta.get('cabeza') or 1, CurHeadFrame=cuenta.get('marco') or 0,
                               BePraisedCount=cuenta.get('elogios') or 0, UnlockedHeadFrames=self.marcos_desbloqueados(cuenta))
+        pi['Heroes'] = self.heroes(cuenta)
         pi['BattleData'] = self.datos_batalla(cuenta)
         return pi
+
+    def heroes(self, cuenta):
+        """Personajes de la plantilla con las skins de cada jugador: las de la plantilla (iguales para todos) mas las de
+        colaborador y regalos (colaboradores.py), y la skin que eligio para cada uno (UseSkinId)."""
+        uid = cuenta['uid']; extra = self.colab.skins(uid); en_uso = self.colab.skins_en_uso(uid); out = []
+        for h in copy.deepcopy(self.plantilla['PlayerInfo'].get('Heroes', [])):
+            skins = sorted(set(h.get('UnlockedSkins') or []) | extra.get(h['Id'], set()))
+            if skins: h['UnlockedSkins'] = skins
+            usa = en_uso.get(h['Id'], 0)
+            if usa in skins: h['UseSkinId'] = h['ShowSkinId'] = usa
+            out.append(h)
+        return out
+    def skins_de(self, uid, heroe):
+        h = next((x for x in self.heroes(dict(uid=uid)) if x['Id'] == heroe), None)
+        return set(h.get('UnlockedSkins') or []) if h else set()
 
     def datos_batalla(self, cuenta, nivel=1):
         uid = cuenta['uid']; mm = []
@@ -377,7 +395,7 @@ class Juego:
     def marcos_desbloqueados(self, cuenta):
         """Marcos que se ganan jugando, segun las reglas del juego (HeadFrameConfig): 1 = puntos maximos de clasificatoria,
         2 = victorias con un personaje, 4 = nivel. Los de tipo 3 y 99 (objetos/especiales) quedan para torneos y
-        colaboradores: no se desbloquean solos."""
+        colaboradores: no se desbloquean solos, se dan con colaboradores.py."""
         uid = cuenta['uid']; puntos = max(self.cuentas.rank(uid, m)['max_puntos'] for m in (RANKING, RANKING_SOLO_3V3))
         victorias = {}
         for f in self.cuentas.registros(uid):
@@ -387,7 +405,8 @@ class Juego:
             if (cond == 1 and par and puntos >= par[0]) or (cond == 2 and len(par) == 2 and victorias.get(par[0], 0) >= par[1]) \
                     or (cond == 4 and par and cuenta['nivel'] >= par[0]):
                 out.append(mid)
-        return out
+        validos = {m[0] for m in MARCOS}
+        return sorted(set(out) | {m for m in self.colab.marcos(uid) if not validos or m in validos})
 
     def respuesta_login(self, cuenta):
         return 'LoginGameSvrRsp', dict(self.plantilla, PlayerInfo=self.info_detallada(cuenta), UtcTimeOffset=0, GameServerId=1, PayZoneId=0)
@@ -498,6 +517,14 @@ class Juego:
         self.cuentas.poner(j.uid, 'marco', nuevo); j.cuenta = self.cuentas.get(j.uid)
         log.info('%s cambia su marco a %d', j.nombre, nuevo)
         sesion.despues.append(('NotifyBasePlayerInfoChange', self.info_detallada(j.cuenta)))
+        return None
+    def on_ChangeHeroSkinReq(self, sesion, d):
+        """Elegir skin en la pantalla del personaje. SkinId 0 = la de por defecto. Se guarda para el login y para la
+        partida rapida, donde el servidor pone la skin (CostumeId = id de skin) porque no hay pantalla de seleccion."""
+        j = sesion.jugador; heroe = d.get('HeroId', 0); skin = d.get('SkinId', 0)
+        if skin and skin not in self.skins_de(j.uid, heroe):
+            return 'Error', dict(ErrCode=13, ErrMsg='Esa skin todavia esta bloqueada', ErrMsgEn='Skin locked')
+        self.colab.usar_skin(j.uid, heroe, skin); log.info('%s usa la skin %d con el personaje %d', j.nombre, skin, heroe)
         return None
     def on_PraiseOtherReq(self, sesion, d):
         j = sesion.jugador; destino = d.get('TargetUid', 0); c = self.cuentas.get(destino)
@@ -740,6 +767,8 @@ class Juego:
                 # sin seleccion: cada uno pelea con su favorito de este modo, en un escenario al azar, directo a la carga
                 for m in p.todos_los_miembros():
                     m.update(CharId=self.cuentas.favorito(m['Uid'], modo) or PERSONAJE_POR_DEFECTO, CharConfirmed=True)
+                    skin = self.colab.skin_en_uso(m['Uid'], m['CharId'])
+                    m['CostumeId'] = skin if skin in self.skins_de(m['Uid'], m['CharId']) else 0
                 p.escenario = random.choice(ESCENARIOS); p.escenario_confirmado = True; p.fase = LOADING_FIGHT
                 log.info('pelea %d: directo a la carga con personajes %s en el escenario %d', p.id,
                          [m['CharId'] for m in p.todos_los_miembros()], p.escenario)

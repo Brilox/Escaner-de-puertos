@@ -1,0 +1,17 @@
+{
+ "_ayuda": [
+  "Niveles de colaborador (agradecimiento a quien dona). Cada nivel incluye lo de los niveles anteriores.",
+  "marcos: ids de marco (ver: python colaboradores.py catalogo marcos). Usa marcos que no se ganan jugando (condicion 3 o 99).",
+  "skins: ids de skin que se dan fijas (ver: python colaboradores.py catalogo skins).",
+  "skins_a_eleccion: cuantas skins en total puede elegir el colaborador de ese nivel (no se suma con los anteriores); el staff se las asigna con: python colaboradores.py skin <uid> <skin>.",
+  "todas_las_skins: true da todas las skins del juego.",
+  "Los cambios de este archivo se aplican al reiniciar el servidor; lo que se da a cada jugador, cuando vuelve a entrar al juego."
+ ],
+ "niveles": [
+  {"nivel": 1, "nombre": "Colaborador Bronce", "marcos": [74], "skins": [], "skins_a_eleccion": 0},
+  {"nivel": 2, "nombre": "Colaborador Plata",  "marcos": [81], "skins": [], "skins_a_eleccion": 1},
+  {"nivel": 3, "nombre": "Colaborador Oro",    "marcos": [80], "skins": [], "skins_a_eleccion": 3},
+  {"nivel": 4, "nombre": "Colaborador Leyenda", "marcos": [], "skins": [], "skins_a_eleccion": 0, "todas_las_skins": true}
+ ],
+ "_campeones": "El marco 73 (Fision definitiva) y el 75 quedan fuera de los niveles: se dan a mano a campeones de torneo con: python colaboradores.py marco <uid> 73"
+}

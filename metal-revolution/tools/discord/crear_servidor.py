@@ -78,7 +78,12 @@ Sanciones: advertencia → silencio o suspensión de 1 a 7 días → expulsión 
 • Avatares 150, marcos 200 y skins 300 monedas.
 • Marcos que se ganan jugando: por rango de clasificatoria, por victorias con un personaje y por nivel.
 • Skins de **Campeón**: solo para ganadores de torneos oficiales.
-• **Donaciones:** voluntarias y solo para pagar el servidor (unos US$6 al mes). Cada mes publicamos cuánto entró y en qué se gastó. Donar no da monedas, personajes ni ventajas. Como agradecimiento, quien ayuda al servidor recibe el rol y el marco de **Colaborador**.""",
+• **Donaciones:** voluntarias y solo para pagar el servidor (unos US$6 al mes). Cada mes publicamos cuánto entró y en qué se gastó. Donar no da monedas, personajes ni ventajas en la pelea: solo cosas que se ven. Como agradecimiento, quien ayuda al servidor recibe el rol **Colaborador** y, según su nivel:
+  🥉 **Bronce:** marco *Heraldo metálico*.
+  🥈 **Plata:** + marco *Mentor de Metal* y 1 skin a elección.
+  🥇 **Oro:** + marco *Carnaval navideño* y 3 skins a elección.
+  💎 **Leyenda:** todas las skins del juego.
+  Pide tu skin al staff con tu nombre del juego.""",
 'torneos-info': """🏆 **Torneos**
 Formato: eliminación directa, 1v1, al mejor de 3 peleas. Inscripción en <#inscripciones> con tu nombre del juego.
 El campeón recibe el rol **Campeón** y una skin o marco exclusivo con la fecha del torneo.""",

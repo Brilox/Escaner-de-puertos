@@ -1,0 +1,1933 @@
+{
+ "personajes": {
+  "2": "Inari",
+  "3": "Cromaleón",
+  "5": "Jamal Ritter",
+  "6": "Kim Woo Ryong",
+  "7": "Ted Graham",
+  "8": "Miyamoto Ren",
+  "9": "Trishula",
+  "10": "Mike Lee",
+  "11": "Xofi-IX",
+  "12": "Kong",
+  "13": "Mikhail",
+  "14": "Justixia",
+  "15": "Ethan Ledger",
+  "16": "Gindy Connor",
+  "17": "Prueba de Umi",
+  "18": "Catalina Gomez",
+  "5786": "Paulo Silva (1 d)",
+  "5938": "Prueba de XuanCuo"
+ },
+ "skins": [
+  {
+   "heroe": 2,
+   "skin": 4,
+   "nombre": "Samurái del santuario",
+   "calidad": 0,
+   "oculto": false
+  },
+  {
+   "heroe": 2,
+   "skin": 758,
+   "nombre": "Crisantemo marchito",
+   "calidad": 2,
+   "oculto": false
+  },
+  {
+   "heroe": 2,
+   "skin": 759,
+   "nombre": "Sakura y nieve",
+   "calidad": 2,
+   "oculto": false
+  },
+  {
+   "heroe": 2,
+   "skin": 896,
+   "nombre": "Heroína de rosa",
+   "calidad": 2,
+   "oculto": false
+  },
+  {
+   "heroe": 2,
+   "skin": 900,
+   "nombre": "Triunfo carmesí",
+   "calidad": 3,
+   "oculto": false
+  },
+  {
+   "heroe": 2,
+   "skin": 5701,
+   "nombre": "Fantasma suprema",
+   "calidad": 4,
+   "oculto": false
+  },
+  {
+   "heroe": 2,
+   "skin": 5709,
+   "nombre": "Guerrera sakura",
+   "calidad": 2,
+   "oculto": false
+  },
+  {
+   "heroe": 2,
+   "skin": 5869,
+   "nombre": "Kitsune escarlata",
+   "calidad": 1,
+   "oculto": false
+  },
+  {
+   "heroe": 2,
+   "skin": 5997,
+   "nombre": "Tigre Oni",
+   "calidad": 3,
+   "oculto": false
+  },
+  {
+   "heroe": 2,
+   "skin": 6136,
+   "nombre": "Retiro veraniego",
+   "calidad": 3,
+   "oculto": false
+  },
+  {
+   "heroe": 3,
+   "skin": 237,
+   "nombre": "Cazador de fantasmas",
+   "calidad": 0,
+   "oculto": false
+  },
+  {
+   "heroe": 3,
+   "skin": 752,
+   "nombre": "Murloquio",
+   "calidad": 3,
+   "oculto": false
+  },
+  {
+   "heroe": 3,
+   "skin": 768,
+   "nombre": "Cacique",
+   "calidad": 2,
+   "oculto": false
+  },
+  {
+   "heroe": 3,
+   "skin": 769,
+   "nombre": "Fantasma azur",
+   "calidad": 2,
+   "oculto": false
+  },
+  {
+   "heroe": 3,
+   "skin": 904,
+   "nombre": "Demonio desgarrador",
+   "calidad": 3,
+   "oculto": false
+  },
+  {
+   "heroe": 3,
+   "skin": 5842,
+   "nombre": "Tiburón blanco",
+   "calidad": 3,
+   "oculto": false
+  },
+  {
+   "heroe": 3,
+   "skin": 5866,
+   "nombre": "Sable azur",
+   "calidad": 1,
+   "oculto": false
+  },
+  {
+   "heroe": 3,
+   "skin": 5867,
+   "nombre": "Purgatorio afilado",
+   "calidad": 4,
+   "oculto": false
+  },
+  {
+   "heroe": 5,
+   "skin": 1,
+   "nombre": "Boxeador ardiente",
+   "calidad": 0,
+   "oculto": false
+  },
+  {
+   "heroe": 5,
+   "skin": 753,
+   "nombre": "Hades umbrío",
+   "calidad": 3,
+   "oculto": false
+  },
+  {
+   "heroe": 5,
+   "skin": 762,
+   "nombre": "El patriota",
+   "calidad": 2,
+   "oculto": false
+  },
+  {
+   "heroe": 5,
+   "skin": 763,
+   "nombre": "Estilo hawaiano",
+   "calidad": 1,
+   "oculto": false
+  },
+  {
+   "heroe": 5,
+   "skin": 897,
+   "nombre": "Boxeador callejero",
+   "calidad": 3,
+   "oculto": false
+  },
+  {
+   "heroe": 5,
+   "skin": 898,
+   "nombre": "Campeón vigente",
+   "calidad": 2,
+   "oculto": false
+  },
+  {
+   "heroe": 5,
+   "skin": 899,
+   "nombre": "Caballero enigmático",
+   "calidad": 3,
+   "oculto": false
+  },
+  {
+   "heroe": 5,
+   "skin": 5785,
+   "nombre": "Boxeador sombrío",
+   "calidad": 4,
+   "oculto": false
+  },
+  {
+   "heroe": 5,
+   "skin": 5862,
+   "nombre": "Puño helado",
+   "calidad": 2,
+   "oculto": false
+  },
+  {
+   "heroe": 5,
+   "skin": 6134,
+   "nombre": "Vajra Parrot",
+   "calidad": 3,
+   "oculto": false
+  },
+  {
+   "heroe": 5,
+   "skin": 6135,
+   "nombre": "Buceador",
+   "calidad": 3,
+   "oculto": false
+  },
+  {
+   "heroe": 6,
+   "skin": 191,
+   "nombre": "Instructor entusiasta",
+   "calidad": 0,
+   "oculto": false
+  },
+  {
+   "heroe": 6,
+   "skin": 751,
+   "nombre": "Rastreador",
+   "calidad": 1,
+   "oculto": false
+  },
+  {
+   "heroe": 6,
+   "skin": 766,
+   "nombre": "Discípulo rebelde",
+   "calidad": 2,
+   "oculto": false
+  },
+  {
+   "heroe": 6,
+   "skin": 767,
+   "nombre": "Instructor retirado",
+   "calidad": 1,
+   "oculto": false
+  },
+  {
+   "heroe": 6,
+   "skin": 5707,
+   "nombre": "Chico con chaqueta",
+   "calidad": 2,
+   "oculto": false
+  },
+  {
+   "heroe": 6,
+   "skin": 5708,
+   "nombre": "Instructor honrado",
+   "calidad": 3,
+   "oculto": false
+  },
+  {
+   "heroe": 6,
+   "skin": 5865,
+   "nombre": "Instructor amable",
+   "calidad": 2,
+   "oculto": false
+  },
+  {
+   "heroe": 6,
+   "skin": 5921,
+   "nombre": "Furia de carreras",
+   "calidad": 4,
+   "oculto": false
+  },
+  {
+   "heroe": 7,
+   "skin": 145,
+   "nombre": "Capitán de fútbol",
+   "calidad": 0,
+   "oculto": false
+  },
+  {
+   "heroe": 7,
+   "skin": 754,
+   "nombre": "Asaltante de polvo",
+   "calidad": 1,
+   "oculto": false
+  },
+  {
+   "heroe": 7,
+   "skin": 755,
+   "nombre": "Gigante punk",
+   "calidad": 2,
+   "oculto": false
+  },
+  {
+   "heroe": 7,
+   "skin": 764,
+   "nombre": "Toro salvaje",
+   "calidad": 2,
+   "oculto": false
+  },
+  {
+   "heroe": 7,
+   "skin": 765,
+   "nombre": "Caballero melancólico",
+   "calidad": 1,
+   "oculto": false
+  },
+  {
+   "heroe": 7,
+   "skin": 5863,
+   "nombre": "Gigante de la arena",
+   "calidad": 1,
+   "oculto": false
+  },
+  {
+   "heroe": 7,
+   "skin": 5864,
+   "nombre": "Meca avanzado",
+   "calidad": 3,
+   "oculto": false
+  },
+  {
+   "heroe": 7,
+   "skin": 5933,
+   "nombre": "Rey buey",
+   "calidad": 4,
+   "oculto": false
+  },
+  {
+   "heroe": 7,
+   "skin": 6004,
+   "nombre": "San Ted",
+   "calidad": 4,
+   "oculto": false
+  },
+  {
+   "heroe": 7,
+   "skin": 6138,
+   "nombre": "Playa Fuerza",
+   "calidad": 3,
+   "oculto": false
+  },
+  {
+   "heroe": 8,
+   "skin": 471,
+   "nombre": "Líder de Sasoriza-Kai",
+   "calidad": 0,
+   "oculto": false
+  },
+  {
+   "heroe": 8,
+   "skin": 757,
+   "nombre": "Guerrero blindado",
+   "calidad": 3,
+   "oculto": false
+  },
+  {
+   "heroe": 8,
+   "skin": 760,
+   "nombre": "Caballero rosa",
+   "calidad": 1,
+   "oculto": false
+  },
+  {
+   "heroe": 8,
+   "skin": 761,
+   "nombre": "Guardia real",
+   "calidad": 2,
+   "oculto": false
+  },
+  {
+   "heroe": 8,
+   "skin": 901,
+   "nombre": "Beisbolista profesional",
+   "calidad": 2,
+   "oculto": false
+  },
+  {
+   "heroe": 8,
+   "skin": 5721,
+   "nombre": "Ronin",
+   "calidad": 4,
+   "oculto": false
+  },
+  {
+   "heroe": 8,
+   "skin": 5843,
+   "nombre": "Espada liberada",
+   "calidad": 3,
+   "oculto": false
+  },
+  {
+   "heroe": 8,
+   "skin": 5844,
+   "nombre": "Pionero de epidemia",
+   "calidad": 3,
+   "oculto": false
+  },
+  {
+   "heroe": 8,
+   "skin": 5871,
+   "nombre": "Caballero de traje",
+   "calidad": 1,
+   "oculto": false
+  },
+  {
+   "heroe": 8,
+   "skin": 6260,
+   "nombre": "Amante de Ikebukuro",
+   "calidad": 3,
+   "oculto": false
+  },
+  {
+   "heroe": 8,
+   "skin": 6271,
+   "nombre": "Samurái jade",
+   "calidad": 3,
+   "oculto": false
+  },
+  {
+   "heroe": 9,
+   "skin": 281,
+   "nombre": "Boxeador antiguo",
+   "calidad": 0,
+   "oculto": false
+  },
+  {
+   "heroe": 9,
+   "skin": 282,
+   "nombre": "Asura",
+   "calidad": 3,
+   "oculto": false
+  },
+  {
+   "heroe": 9,
+   "skin": 770,
+   "nombre": "Sanguinaria",
+   "calidad": 1,
+   "oculto": false
+  },
+  {
+   "heroe": 9,
+   "skin": 771,
+   "nombre": "Guerrero real",
+   "calidad": 1,
+   "oculto": false
+  },
+  {
+   "heroe": 9,
+   "skin": 902,
+   "nombre": "Guerrera de la fe",
+   "calidad": 2,
+   "oculto": false
+  },
+  {
+   "heroe": 9,
+   "skin": 903,
+   "nombre": "Música",
+   "calidad": 3,
+   "oculto": false
+  },
+  {
+   "heroe": 9,
+   "skin": 5868,
+   "nombre": "Verano casual",
+   "calidad": 2,
+   "oculto": false
+  },
+  {
+   "heroe": 9,
+   "skin": 5935,
+   "nombre": "Sha Wujing",
+   "calidad": 3,
+   "oculto": false
+  },
+  {
+   "heroe": 9,
+   "skin": 6009,
+   "nombre": "Guerrero invernal",
+   "calidad": 3,
+   "oculto": false
+  },
+  {
+   "heroe": 10,
+   "skin": 0,
+   "nombre": "Espíritu Loong",
+   "calidad": 4,
+   "oculto": false
+  },
+  {
+   "heroe": 10,
+   "skin": 382,
+   "nombre": "Chico kung-fu",
+   "calidad": 0,
+   "oculto": false
+  },
+  {
+   "heroe": 10,
+   "skin": 750,
+   "nombre": "Fashionista",
+   "calidad": 2,
+   "oculto": false
+  },
+  {
+   "heroe": 10,
+   "skin": 772,
+   "nombre": "Traje Tang clásico",
+   "calidad": 1,
+   "oculto": false
+  },
+  {
+   "heroe": 10,
+   "skin": 773,
+   "nombre": "Traje Tang moderno",
+   "calidad": 1,
+   "oculto": false
+  },
+  {
+   "heroe": 10,
+   "skin": 5710,
+   "nombre": "Bailarín callejero",
+   "calidad": 3,
+   "oculto": false
+  },
+  {
+   "heroe": 10,
+   "skin": 5719,
+   "nombre": "Loong chino",
+   "calidad": 3,
+   "oculto": false
+  },
+  {
+   "heroe": 10,
+   "skin": 5870,
+   "nombre": "Loong amable",
+   "calidad": 2,
+   "oculto": false
+  },
+  {
+   "heroe": 10,
+   "skin": 5928,
+   "nombre": "Electroloong",
+   "calidad": 3,
+   "oculto": false
+  },
+  {
+   "heroe": 10,
+   "skin": 5929,
+   "nombre": "Jiangshi",
+   "calidad": 4,
+   "oculto": false
+  },
+  {
+   "heroe": 11,
+   "skin": 424,
+   "nombre": "Inquisidora",
+   "calidad": 3,
+   "oculto": false
+  },
+  {
+   "heroe": 11,
+   "skin": 756,
+   "nombre": "Rosa silvestre",
+   "calidad": 3,
+   "oculto": false
+  },
+  {
+   "heroe": 11,
+   "skin": 5698,
+   "nombre": "Meca de la Interpol",
+   "calidad": 0,
+   "oculto": false
+  },
+  {
+   "heroe": 11,
+   "skin": 5699,
+   "nombre": "Pistolas blancas",
+   "calidad": 2,
+   "oculto": false
+  },
+  {
+   "heroe": 11,
+   "skin": 5700,
+   "nombre": "Pistolas deslumbrantes",
+   "calidad": 2,
+   "oculto": false
+  },
+  {
+   "heroe": 11,
+   "skin": 5872,
+   "nombre": "Policía amable",
+   "calidad": 1,
+   "oculto": false
+  },
+  {
+   "heroe": 11,
+   "skin": 5922,
+   "nombre": "Velocidad extrema",
+   "calidad": 4,
+   "oculto": false
+  },
+  {
+   "heroe": 11,
+   "skin": 6000,
+   "nombre": "Cazador de brujas",
+   "calidad": 3,
+   "oculto": false
+  },
+  {
+   "heroe": 11,
+   "skin": 6261,
+   "nombre": "Sirena azul",
+   "calidad": 3,
+   "oculto": false
+  },
+  {
+   "heroe": 12,
+   "skin": 510,
+   "nombre": "Mecamono",
+   "calidad": 0,
+   "oculto": false
+  },
+  {
+   "heroe": 12,
+   "skin": 894,
+   "nombre": "Noble índigo",
+   "calidad": 2,
+   "oculto": false
+  },
+  {
+   "heroe": 12,
+   "skin": 895,
+   "nombre": "Edad de bronce",
+   "calidad": 1,
+   "oculto": false
+  },
+  {
+   "heroe": 12,
+   "skin": 5716,
+   "nombre": "Mono espacial",
+   "calidad": 3,
+   "oculto": false
+  },
+  {
+   "heroe": 12,
+   "skin": 5848,
+   "nombre": "Pionero",
+   "calidad": 3,
+   "oculto": false
+  },
+  {
+   "heroe": 12,
+   "skin": 5849,
+   "nombre": "Chimpancé punk",
+   "calidad": 3,
+   "oculto": false
+  },
+  {
+   "heroe": 12,
+   "skin": 5879,
+   "nombre": "Mono ardiente",
+   "calidad": 2,
+   "oculto": false
+  },
+  {
+   "heroe": 12,
+   "skin": 5927,
+   "nombre": "Mono travieso",
+   "calidad": 4,
+   "oculto": false
+  },
+  {
+   "heroe": 13,
+   "skin": 559,
+   "nombre": "Oso férreo",
+   "calidad": 0,
+   "oculto": false
+  },
+  {
+   "heroe": 13,
+   "skin": 892,
+   "nombre": "Ojo sangriento",
+   "calidad": 1,
+   "oculto": false
+  },
+  {
+   "heroe": 13,
+   "skin": 893,
+   "nombre": "Panda de jade",
+   "calidad": 2,
+   "oculto": false
+  },
+  {
+   "heroe": 13,
+   "skin": 5713,
+   "nombre": "Oso punk",
+   "calidad": 3,
+   "oculto": false
+  },
+  {
+   "heroe": 13,
+   "skin": 5714,
+   "nombre": "MiK-3000",
+   "calidad": 3,
+   "oculto": false
+  },
+  {
+   "heroe": 13,
+   "skin": 5715,
+   "nombre": "Osito de peluche",
+   "calidad": 3,
+   "oculto": false
+  },
+  {
+   "heroe": 13,
+   "skin": 5873,
+   "nombre": "Oso de combate",
+   "calidad": 1,
+   "oculto": false
+  },
+  {
+   "heroe": 13,
+   "skin": 5923,
+   "nombre": "Metal pesado",
+   "calidad": 4,
+   "oculto": false
+  },
+  {
+   "heroe": 13,
+   "skin": 5934,
+   "nombre": "Zhu Bajie",
+   "calidad": 4,
+   "oculto": false
+  },
+  {
+   "heroe": 13,
+   "skin": 6010,
+   "nombre": "Oso rúnico",
+   "calidad": 4,
+   "oculto": false
+  },
+  {
+   "heroe": 13,
+   "skin": 6137,
+   "nombre": "Fiesta de salpicaduras",
+   "calidad": 3,
+   "oculto": false
+  },
+  {
+   "heroe": 13,
+   "skin": 6269,
+   "nombre": "Boxzilla",
+   "calidad": 3,
+   "oculto": false
+  },
+  {
+   "heroe": 14,
+   "skin": 643,
+   "nombre": "Mecaguerrera",
+   "calidad": 0,
+   "oculto": false
+  },
+  {
+   "heroe": 14,
+   "skin": 5717,
+   "nombre": "Traje camuflado",
+   "calidad": 1,
+   "oculto": false
+  },
+  {
+   "heroe": 14,
+   "skin": 5718,
+   "nombre": "Guardia sanguínea",
+   "calidad": 1,
+   "oculto": false
+  },
+  {
+   "heroe": 14,
+   "skin": 5850,
+   "nombre": "Policía antidisturbios",
+   "calidad": 3,
+   "oculto": false
+  },
+  {
+   "heroe": 14,
+   "skin": 5851,
+   "nombre": "Tortuga mítica",
+   "calidad": 3,
+   "oculto": false
+  },
+  {
+   "heroe": 14,
+   "skin": 5880,
+   "nombre": "Código: Origen",
+   "calidad": 2,
+   "oculto": false
+  },
+  {
+   "heroe": 14,
+   "skin": 5930,
+   "nombre": "Doncella escudera",
+   "calidad": 4,
+   "oculto": false
+  },
+  {
+   "heroe": 14,
+   "skin": 5999,
+   "nombre": "Criotia",
+   "calidad": 3,
+   "oculto": false
+  },
+  {
+   "heroe": 15,
+   "skin": 695,
+   "nombre": "Mago de explosiones",
+   "calidad": 0,
+   "oculto": false
+  },
+  {
+   "heroe": 15,
+   "skin": 5875,
+   "nombre": "Mago festivo",
+   "calidad": 1,
+   "oculto": false
+  },
+  {
+   "heroe": 15,
+   "skin": 5876,
+   "nombre": "Disfraz de payaso",
+   "calidad": 1,
+   "oculto": false
+  },
+  {
+   "heroe": 15,
+   "skin": 5877,
+   "nombre": "Mago romántico",
+   "calidad": 2,
+   "oculto": false
+  },
+  {
+   "heroe": 15,
+   "skin": 5878,
+   "nombre": "Payaso de carnaval",
+   "calidad": 3,
+   "oculto": false
+  },
+  {
+   "heroe": 15,
+   "skin": 5886,
+   "nombre": "Dr. Cuervo",
+   "calidad": 3,
+   "oculto": false
+  },
+  {
+   "heroe": 15,
+   "skin": 5924,
+   "nombre": "Sobreviviente del páramo",
+   "calidad": 3,
+   "oculto": false
+  },
+  {
+   "heroe": 15,
+   "skin": 5925,
+   "nombre": "Payaso fantasma",
+   "calidad": 4,
+   "oculto": false
+  },
+  {
+   "heroe": 15,
+   "skin": 6272,
+   "nombre": "Sombrerero esmeralda",
+   "calidad": 3,
+   "oculto": false
+  },
+  {
+   "heroe": 15,
+   "skin": 6273,
+   "nombre": "Osito rosa",
+   "calidad": 3,
+   "oculto": false
+  },
+  {
+   "heroe": 16,
+   "skin": 745,
+   "nombre": "Maestra meca",
+   "calidad": 0,
+   "oculto": false
+  },
+  {
+   "heroe": 16,
+   "skin": 5845,
+   "nombre": "Uva de fantasía",
+   "calidad": 1,
+   "oculto": false
+  },
+  {
+   "heroe": 16,
+   "skin": 5846,
+   "nombre": "Naranja dulce",
+   "calidad": 1,
+   "oculto": false
+  },
+  {
+   "heroe": 16,
+   "skin": 5847,
+   "nombre": "Fiesta electrónica",
+   "calidad": 3,
+   "oculto": false
+  },
+  {
+   "heroe": 16,
+   "skin": 5874,
+   "nombre": "Espíritu verde",
+   "calidad": 2,
+   "oculto": false
+  },
+  {
+   "heroe": 16,
+   "skin": 5885,
+   "nombre": "Astronauta",
+   "calidad": 3,
+   "oculto": false
+  },
+  {
+   "heroe": 16,
+   "skin": 5991,
+   "nombre": "Tang Sanzang",
+   "calidad": 4,
+   "oculto": false
+  },
+  {
+   "heroe": 16,
+   "skin": 6003,
+   "nombre": "Gélida",
+   "calidad": 4,
+   "oculto": false
+  },
+  {
+   "heroe": 17,
+   "skin": 5994,
+   "nombre": "Clan Sakura",
+   "calidad": 2,
+   "oculto": false
+  },
+  {
+   "heroe": 17,
+   "skin": 5995,
+   "nombre": "Sencha",
+   "calidad": 2,
+   "oculto": false
+  },
+  {
+   "heroe": 17,
+   "skin": 5996,
+   "nombre": "Bruma",
+   "calidad": 3,
+   "oculto": false
+  },
+  {
+   "heroe": 17,
+   "skin": 6070,
+   "nombre": "Chef de hierro",
+   "calidad": 3,
+   "oculto": false
+  },
+  {
+   "heroe": 18,
+   "skin": 6139,
+   "nombre": "Reina pirata",
+   "calidad": 3,
+   "oculto": false
+  },
+  {
+   "heroe": 18,
+   "skin": 6141,
+   "nombre": "Corsario cibernético",
+   "calidad": 3,
+   "oculto": false
+  },
+  {
+   "heroe": 18,
+   "skin": 6143,
+   "nombre": "legionario",
+   "calidad": 3,
+   "oculto": false
+  },
+  {
+   "heroe": 18,
+   "skin": 6144,
+   "nombre": "Protector real",
+   "calidad": 1,
+   "oculto": false
+  },
+  {
+   "heroe": 18,
+   "skin": 6145,
+   "nombre": "Guardia crepuscular",
+   "calidad": 2,
+   "oculto": false
+  },
+  {
+   "heroe": 18,
+   "skin": 6146,
+   "nombre": "Sable de kunzita",
+   "calidad": 1,
+   "oculto": false
+  },
+  {
+   "heroe": 18,
+   "skin": 6262,
+   "nombre": "Samba ardiente",
+   "calidad": 3,
+   "oculto": false
+  },
+  {
+   "heroe": 5786,
+   "skin": 6179,
+   "nombre": "Relámpago",
+   "calidad": 1,
+   "oculto": false
+  },
+  {
+   "heroe": 5786,
+   "skin": 6180,
+   "nombre": "Escaldante",
+   "calidad": 2,
+   "oculto": false
+  },
+  {
+   "heroe": 5786,
+   "skin": 6181,
+   "nombre": "Tribal",
+   "calidad": 1,
+   "oculto": false
+  },
+  {
+   "heroe": 5786,
+   "skin": 6272,
+   "nombre": "Cacique",
+   "calidad": 3,
+   "oculto": false
+  },
+  {
+   "heroe": 5938,
+   "skin": 6184,
+   "nombre": "Myochi Rohan",
+   "calidad": 3,
+   "oculto": false
+  },
+  {
+   "heroe": 5938,
+   "skin": 6257,
+   "nombre": "Héroe de Greenwood",
+   "calidad": 1,
+   "oculto": false
+  },
+  {
+   "heroe": 5938,
+   "skin": 6258,
+   "nombre": "Estilo Shuhan",
+   "calidad": 1,
+   "oculto": false
+  },
+  {
+   "heroe": 5938,
+   "skin": 6259,
+   "nombre": "Santo infinito",
+   "calidad": 2,
+   "oculto": false
+  }
+ ],
+ "marcos": [
+  {
+   "id": 1,
+   "condicion": 3,
+   "parametros": [
+    51000,
+    1
+   ],
+   "nombre": "Marco de avatar exclusivo de la beta",
+   "descripcion": "Demuestra tus hab. de pelea excepcionales en el evento de Arena IA beta."
+  },
+  {
+   "id": 2,
+   "condicion": 4,
+   "parametros": [
+    1
+   ],
+   "nombre": "Marco de avatar de bronce",
+   "descripcion": "¡Prueba de que alcanzaste la categoría bronce!"
+  },
+  {
+   "id": 3,
+   "condicion": 1,
+   "parametros": [
+    650,
+    1149
+   ],
+   "nombre": "Marco de avatar de plata",
+   "descripcion": "¡Prueba de que alcanzaste la categoría plata!"
+  },
+  {
+   "id": 4,
+   "condicion": 1,
+   "parametros": [
+    1150,
+    1899
+   ],
+   "nombre": "Marco de avatar de oro",
+   "descripcion": "¡Prueba de que alcanzaste la categoría oro!"
+  },
+  {
+   "id": 5,
+   "condicion": 1,
+   "parametros": [
+    1900,
+    3399
+   ],
+   "nombre": "Marco de avatar de platino",
+   "descripcion": "¡Prueba de que alcanzaste la categoría platino!"
+  },
+  {
+   "id": 6,
+   "condicion": 1,
+   "parametros": [
+    3400,
+    5899
+   ],
+   "nombre": "Marco de avatar de diamante",
+   "descripcion": "¡Prueba de que alcanzaste la categoría diamante!"
+  },
+  {
+   "id": 7,
+   "condicion": 1,
+   "parametros": [
+    5900,
+    8399
+   ],
+   "nombre": "Marco de avatar maestro",
+   "descripcion": "¡Prueba de que alcanzaste la categoría maestro!"
+  },
+  {
+   "id": 8,
+   "condicion": 1,
+   "parametros": [
+    8400,
+    97249
+   ],
+   "nombre": "Marco de avatar legendario",
+   "descripcion": "¡Prueba de que alcanzaste la categoría leyenda!"
+  },
+  {
+   "id": 9,
+   "condicion": 2,
+   "parametros": [
+    11,
+    40
+   ],
+   "nombre": "Marco de avatar de Xofi-IX predeterminado",
+   "descripcion": "Prueba de que puedes usar el meca de Xofi-IX"
+  },
+  {
+   "id": 10,
+   "condicion": 2,
+   "parametros": [
+    11,
+    100
+   ],
+   "nombre": "Marco de avatar de Xofi-IX intermedio",
+   "descripcion": "Prueba de que tienes habilidad para usar el meca de Xofi-IX"
+  },
+  {
+   "id": 11,
+   "condicion": 2,
+   "parametros": [
+    11,
+    200
+   ],
+   "nombre": "Marco de avatar de Xofi-IX superior",
+   "descripcion": "Prueba de que eres un maestro en el uso del meca de Xofi-IX"
+  },
+  {
+   "id": 12,
+   "condicion": 2,
+   "parametros": [
+    11,
+    350
+   ],
+   "nombre": "Marco de avatar de Xofi-IX definitivo",
+   "descripcion": "Prueba de que estás 100% en sincronía con el meca de Xofi-IX"
+  },
+  {
+   "id": 13,
+   "condicion": 2,
+   "parametros": [
+    10,
+    40
+   ],
+   "nombre": "Marco de avatar de Mike Lee predeterminado",
+   "descripcion": "Prueba de que puedes usar el meca de Mike Lee"
+  },
+  {
+   "id": 14,
+   "condicion": 2,
+   "parametros": [
+    10,
+    100
+   ],
+   "nombre": "Marco de avatar de Mike Lee intermedio",
+   "descripcion": "Prueba de que tienes habilidad para usar el meca de Mike Lee"
+  },
+  {
+   "id": 15,
+   "condicion": 2,
+   "parametros": [
+    10,
+    200
+   ],
+   "nombre": "Marco de avatar de Mike Lee superior",
+   "descripcion": "Prueba de que eres un maestro en el uso del meca de Mike Lee"
+  },
+  {
+   "id": 16,
+   "condicion": 2,
+   "parametros": [
+    10,
+    350
+   ],
+   "nombre": "Marco de avatar de Mike Lee definitivo",
+   "descripcion": "Prueba de que estás 100% en sincronía con el meca de Mike Lee"
+  },
+  {
+   "id": 17,
+   "condicion": 2,
+   "parametros": [
+    3,
+    40
+   ],
+   "nombre": "Marco de avatar de Cromaleón predeterminado",
+   "descripcion": "Prueba de que puedes usar el meca de Cromaleón"
+  },
+  {
+   "id": 18,
+   "condicion": 2,
+   "parametros": [
+    3,
+    100
+   ],
+   "nombre": "Marco de avatar de Cromaleón intermedio",
+   "descripcion": "Prueba de que tienes la habilidad para usar el meca de Cromaleón"
+  },
+  {
+   "id": 19,
+   "condicion": 2,
+   "parametros": [
+    3,
+    200
+   ],
+   "nombre": "Marco de avatar de Cromaleón superior",
+   "descripcion": "Prueba de que eres un maestro en el uso del meca de Cromaleón"
+  },
+  {
+   "id": 20,
+   "condicion": 2,
+   "parametros": [
+    3,
+    350
+   ],
+   "nombre": "Marco de avatar de Cromaleón definitivo",
+   "descripcion": "Prueba de que estás 100% en sincronía con el meca de Cromaleón"
+  },
+  {
+   "id": 21,
+   "condicion": 2,
+   "parametros": [
+    5,
+    40
+   ],
+   "nombre": "Marco de avatar de Jamal predeterminado",
+   "descripcion": "Prueba de que puedes usar el meca de Jamal Ritter"
+  },
+  {
+   "id": 22,
+   "condicion": 2,
+   "parametros": [
+    5,
+    100
+   ],
+   "nombre": "Marco de avatar de Jamal intermedio",
+   "descripcion": "Prueba de que tienes la habilidad para usar el meca de Jamal Ritter"
+  },
+  {
+   "id": 23,
+   "condicion": 2,
+   "parametros": [
+    5,
+    200
+   ],
+   "nombre": "Marco de avatar de Jamal superior",
+   "descripcion": "Prueba de que eres un maestro en el uso del meca de Jamal Ritter"
+  },
+  {
+   "id": 24,
+   "condicion": 2,
+   "parametros": [
+    5,
+    350
+   ],
+   "nombre": "Marco de avatar de Jamal definitivo",
+   "descripcion": "Prueba de que estás 100% en sincronía con el meca de Jamal Ritter"
+  },
+  {
+   "id": 25,
+   "condicion": 2,
+   "parametros": [
+    7,
+    40
+   ],
+   "nombre": "Marco de avatar de Ted Graham predeterminado",
+   "descripcion": "Prueba de que puedes usar el meca de Ted Graham"
+  },
+  {
+   "id": 26,
+   "condicion": 2,
+   "parametros": [
+    7,
+    100
+   ],
+   "nombre": "Marco de avatar de Ted Graham intermedio",
+   "descripcion": "Prueba de que tienes la habilidad para usar el meca de Ted Graham"
+  },
+  {
+   "id": 27,
+   "condicion": 2,
+   "parametros": [
+    7,
+    200
+   ],
+   "nombre": "Marco de avatar de Ted Graham superior",
+   "descripcion": "Prueba de que eres un maestro en el uso del meca de Ted Graham"
+  },
+  {
+   "id": 28,
+   "condicion": 2,
+   "parametros": [
+    7,
+    350
+   ],
+   "nombre": "Marco de avatar de Ted Graham definitivo",
+   "descripcion": "Prueba de que estás 100% en sincronía con el meca de Ted Graham"
+  },
+  {
+   "id": 29,
+   "condicion": 2,
+   "parametros": [
+    9,
+    40
+   ],
+   "nombre": "Marco de avatar de Trishula predeterminado",
+   "descripcion": "Prueba de que puedes usar el meca de Trishula"
+  },
+  {
+   "id": 30,
+   "condicion": 2,
+   "parametros": [
+    9,
+    100
+   ],
+   "nombre": "Marco de avatar de Trishula intermedio",
+   "descripcion": "Prueba de que tienes la habilidad para usar el meca de Trishula"
+  },
+  {
+   "id": 31,
+   "condicion": 2,
+   "parametros": [
+    9,
+    200
+   ],
+   "nombre": "Marco de avatar de Trishula superior",
+   "descripcion": "Prueba de que eres un maestro en el uso del meca de Trishula"
+  },
+  {
+   "id": 32,
+   "condicion": 2,
+   "parametros": [
+    9,
+    350
+   ],
+   "nombre": "Marco de avatar de Trishula definitivo",
+   "descripcion": "Prueba de que estás 100% en sincronía con el meca de Trishula"
+  },
+  {
+   "id": 33,
+   "condicion": 2,
+   "parametros": [
+    2,
+    40
+   ],
+   "nombre": "Marco de avatar de Inari predeterminado",
+   "descripcion": "Prueba de que puedes usar el meca de Inari"
+  },
+  {
+   "id": 34,
+   "condicion": 2,
+   "parametros": [
+    2,
+    100
+   ],
+   "nombre": "Marco de avatar de Inari intermedio",
+   "descripcion": "Prueba de que tienes la habilidad para usar el meca de Inari"
+  },
+  {
+   "id": 35,
+   "condicion": 2,
+   "parametros": [
+    2,
+    200
+   ],
+   "nombre": "Marco de avatar de Inari superior",
+   "descripcion": "Prueba de que eres un maestro en el uso del meca de Inari"
+  },
+  {
+   "id": 36,
+   "condicion": 2,
+   "parametros": [
+    2,
+    350
+   ],
+   "nombre": "Marco de avatar de Inari definitivo",
+   "descripcion": "Prueba de que estás 100% en sincronía con el meca de Inari"
+  },
+  {
+   "id": 37,
+   "condicion": 2,
+   "parametros": [
+    12,
+    40
+   ],
+   "nombre": "Marco de avatar de Kong predeterminado",
+   "descripcion": "Prueba de que puedes usar el meca de Kong"
+  },
+  {
+   "id": 38,
+   "condicion": 2,
+   "parametros": [
+    12,
+    100
+   ],
+   "nombre": "Marco de avatar de Kong intermedio",
+   "descripcion": "Prueba de que tienes la habilidad para usar el meca de Kong"
+  },
+  {
+   "id": 39,
+   "condicion": 2,
+   "parametros": [
+    12,
+    200
+   ],
+   "nombre": "Marco de avatar de Kong superior",
+   "descripcion": "Prueba de que eres un maestro en el uso del meca de Kong"
+  },
+  {
+   "id": 40,
+   "condicion": 2,
+   "parametros": [
+    12,
+    350
+   ],
+   "nombre": "Marco de avatar de Kong definitivo",
+   "descripcion": "Prueba de que estás 100% en sincronía con el meca de Kong"
+  },
+  {
+   "id": 41,
+   "condicion": 2,
+   "parametros": [
+    13,
+    40
+   ],
+   "nombre": "Marco de avatar de Mikhail predeterminado",
+   "descripcion": "Prueba de que puedes usar el meca de Mikhail"
+  },
+  {
+   "id": 42,
+   "condicion": 2,
+   "parametros": [
+    13,
+    100
+   ],
+   "nombre": "Marco de avatar de Mikhail intermedio",
+   "descripcion": "Prueba de que tienes la habilidad para usar el meca de Mikhail"
+  },
+  {
+   "id": 43,
+   "condicion": 2,
+   "parametros": [
+    13,
+    200
+   ],
+   "nombre": "Marco de avatar de Mikhail superior",
+   "descripcion": "Prueba de que eres un maestro en el uso del meca de Mikhail"
+  },
+  {
+   "id": 44,
+   "condicion": 2,
+   "parametros": [
+    13,
+    350
+   ],
+   "nombre": "Marco de avatar de Mikhail definitivo",
+   "descripcion": "Prueba de que estás 100% en sincronía con el meca de Mikhail"
+  },
+  {
+   "id": 45,
+   "condicion": 2,
+   "parametros": [
+    14,
+    40
+   ],
+   "nombre": "Marco de avatar de Justixia predeterminado",
+   "descripcion": "Prueba de que puedes usar el meca de Justixia"
+  },
+  {
+   "id": 46,
+   "condicion": 2,
+   "parametros": [
+    14,
+    100
+   ],
+   "nombre": "Marco de avatar de Justixia intermedio",
+   "descripcion": "Prueba de que tienes la habilidad para usar el meca de Justixia"
+  },
+  {
+   "id": 47,
+   "condicion": 2,
+   "parametros": [
+    14,
+    200
+   ],
+   "nombre": "Marco de avatar de Justixia superior",
+   "descripcion": "Prueba de que eres un maestro en el uso del meca de Justixia"
+  },
+  {
+   "id": 48,
+   "condicion": 2,
+   "parametros": [
+    14,
+    350
+   ],
+   "nombre": "Marco de avatar de Justixia definitivo",
+   "descripcion": "Prueba de que estás 100% en sincronía con el meca de Justixia"
+  },
+  {
+   "id": 49,
+   "condicion": 2,
+   "parametros": [
+    16,
+    40
+   ],
+   "nombre": "Marco de avatar de Gindy predeterminado",
+   "descripcion": "Prueba de que puedes usar el meca de Gindy"
+  },
+  {
+   "id": 50,
+   "condicion": 2,
+   "parametros": [
+    16,
+    100
+   ],
+   "nombre": "Marco de avatar de Gindy intermedio",
+   "descripcion": "Prueba de que tienes la habilidad para usar el meca de Gindy"
+  },
+  {
+   "id": 51,
+   "condicion": 2,
+   "parametros": [
+    16,
+    200
+   ],
+   "nombre": "Marco de avatar de Gindy superior",
+   "descripcion": "Prueba de que eres un maestro en el uso del meca de Gindy"
+  },
+  {
+   "id": 52,
+   "condicion": 2,
+   "parametros": [
+    16,
+    350
+   ],
+   "nombre": "Marco de avatar de Gindy definitivo",
+   "descripcion": "Prueba de que estás 100% en sincronía con el meca de Gindy"
+  },
+  {
+   "id": 53,
+   "condicion": 2,
+   "parametros": [
+    6,
+    40
+   ],
+   "nombre": "Marco de avatar de Kim Woo Ryong predeterminado",
+   "descripcion": "Prueba de que puedes usar el meca de Kim Woo Ryong"
+  },
+  {
+   "id": 54,
+   "condicion": 2,
+   "parametros": [
+    6,
+    100
+   ],
+   "nombre": "Marco de avatar de Kim Woo Ryong intermedio",
+   "descripcion": "Prueba de que tienes la habilidad para usar el meca de Kim Woo Ryong"
+  },
+  {
+   "id": 55,
+   "condicion": 2,
+   "parametros": [
+    6,
+    200
+   ],
+   "nombre": "Marco de avatar de Kim Woo Ryong superior",
+   "descripcion": "Prueba de que eres un maestro en el uso del meca de Kim Woo Ryong"
+  },
+  {
+   "id": 56,
+   "condicion": 2,
+   "parametros": [
+    6,
+    350
+   ],
+   "nombre": "Marco de avatar de Kim Woo Ryong definitivo",
+   "descripcion": "Prueba de que estás 100% en sincronía con el meca de Kim Woo Ryong"
+  },
+  {
+   "id": 57,
+   "condicion": 2,
+   "parametros": [
+    8,
+    40
+   ],
+   "nombre": "Marco de avatar de Miyamoto Ren predeterminado",
+   "descripcion": "Prueba de que puedes usar el meca de Miyamoto Ren"
+  },
+  {
+   "id": 58,
+   "condicion": 2,
+   "parametros": [
+    8,
+    100
+   ],
+   "nombre": "Marco de avatar de Miyamoto Ren intermedio",
+   "descripcion": "Prueba de que tienes la habilidad para usar el meca de Miyamoto Ren"
+  },
+  {
+   "id": 59,
+   "condicion": 2,
+   "parametros": [
+    8,
+    200
+   ],
+   "nombre": "Marco de avatar de Miyamoto Ren superior",
+   "descripcion": "Prueba de que eres un maestro en el uso del meca de Miyamoto Ren"
+  },
+  {
+   "id": 60,
+   "condicion": 2,
+   "parametros": [
+    8,
+    350
+   ],
+   "nombre": "Marco de avatar de Miyamoto Ren definitivo",
+   "descripcion": "Prueba de que estás 100% en sincronía con el meca de Miyamoto Ren"
+  },
+  {
+   "id": 61,
+   "condicion": 4,
+   "parametros": [
+    4
+   ],
+   "nombre": "Marco de avatar de baja actividad",
+   "descripcion": "Prueba de que has iniciado sesión al juego durante 4 días."
+  },
+  {
+   "id": 62,
+   "condicion": 4,
+   "parametros": [
+    8
+   ],
+   "nombre": "Marco de avatar de actividad media",
+   "descripcion": "Prueba de que has inicio sesión al juego en 8 días distintos."
+  },
+  {
+   "id": 63,
+   "condicion": 99,
+   "parametros": [],
+   "nombre": "Marco de avatar exclusivo de WeChat",
+   "descripcion": "Exclusivo para el inicio de sesión con Game Center de WeChat"
+  },
+  {
+   "id": 64,
+   "condicion": 2,
+   "parametros": [
+    15,
+    40
+   ],
+   "nombre": "Marco de avatar de Ethan predeterminado",
+   "descripcion": "Prueba de que puedes usar el meca de Ethan"
+  },
+  {
+   "id": 65,
+   "condicion": 2,
+   "parametros": [
+    15,
+    100
+   ],
+   "nombre": "Marco de avatar de Ethan intermedio",
+   "descripcion": "Prueba de que tienes la habilidad para usar el meca de Ethan"
+  },
+  {
+   "id": 66,
+   "condicion": 2,
+   "parametros": [
+    15,
+    200
+   ],
+   "nombre": "Marco de avatar de Ethan superior",
+   "descripcion": "Prueba de que eres un maestro en el uso del meca de Ethan"
+  },
+  {
+   "id": 67,
+   "condicion": 2,
+   "parametros": [
+    15,
+    350
+   ],
+   "nombre": "Marco de avatar de Ethan definitivo",
+   "descripcion": "Prueba de que estás 100% en sincronía con el meca de Ethan"
+  },
+  {
+   "id": 68,
+   "condicion": 99,
+   "parametros": [],
+   "nombre": "Marco de avatar exclusivo de QQ",
+   "descripcion": "Exclusivo para el inicio de sesión con Game Center de QQ"
+  },
+  {
+   "id": 71,
+   "condicion": 4,
+   "parametros": [
+    16
+   ],
+   "nombre": "Marco de avatar de alta actividad",
+   "descripcion": "Prueba de que has iniciado sesión al juego durante 16 días."
+  },
+  {
+   "id": 73,
+   "condicion": 3,
+   "parametros": [
+    51073,
+    1
+   ],
+   "nombre": "Marco de avatar de fisión definitiva",
+   "descripcion": "Un marco de avatar sumamente raro que se entrega únicamente a los que más lo merecen."
+  },
+  {
+   "id": 74,
+   "condicion": 3,
+   "parametros": [
+    51074,
+    1
+   ],
+   "nombre": "Heraldo metálico",
+   "descripcion": "Exclusivo de inscripción anticipada en línea"
+  },
+  {
+   "id": 75,
+   "condicion": 3,
+   "parametros": [
+    51075,
+    1
+   ],
+   "nombre": "Marco de avatar exclusivo de Bigo",
+   "descripcion": "Obtenlo de los eventos de Bigo"
+  },
+  {
+   "id": 76,
+   "condicion": 2,
+   "parametros": [
+    18,
+    40
+   ],
+   "nombre": "Marco de avatar predeterminado de Catalina Gomez",
+   "descripcion": "Prueba de que puedes usar el meca de Catalina Gomez"
+  },
+  {
+   "id": 77,
+   "condicion": 2,
+   "parametros": [
+    18,
+    100
+   ],
+   "nombre": "Marco de avatar intermedio de Catalina Gomez",
+   "descripcion": "Prueba de que eres hábil en el uso del meca de Catalina Gomez"
+  },
+  {
+   "id": 78,
+   "condicion": 2,
+   "parametros": [
+    18,
+    200
+   ],
+   "nombre": "Marco de avatar superior de Catalina Gomez",
+   "descripcion": "Prueba de que dominas el meca de Catalina Gomez"
+  },
+  {
+   "id": 79,
+   "condicion": 2,
+   "parametros": [
+    18,
+    350
+   ],
+   "nombre": "Marco de avatar definitivo de Catalina Gomez",
+   "descripcion": "Prueba de que estás 100% en sincronía con el meca de Catalina Gomez"
+  },
+  {
+   "id": 80,
+   "condicion": 3,
+   "parametros": [
+    51080,
+    1
+   ],
+   "nombre": "Marco de avatar de Carnaval navideño",
+   "descripcion": "Marco de avatar creado a partir del registro creado por el jugador que ganó la votación."
+  },
+  {
+   "id": 81,
+   "condicion": 3,
+   "parametros": [
+    51081,
+    1
+   ],
+   "nombre": "Mentor de Metal",
+   "descripcion": "Mentor do Metal Autorizado"
+  },
+  {
+   "id": 82,
+   "condicion": 2,
+   "parametros": [
+    17,
+    40
+   ],
+   "nombre": "Marco de avatar predeterminado de Umi Ito",
+   "descripcion": "Prueba de que puedes usar el meca de Umi Ito"
+  },
+  {
+   "id": 83,
+   "condicion": 2,
+   "parametros": [
+    17,
+    100
+   ],
+   "nombre": "Marco de avatar intermedio de Umi Ito",
+   "descripcion": "Prueba de que tienes habilidad para usar el meca de Umi Ito"
+  },
+  {
+   "id": 84,
+   "condicion": 2,
+   "parametros": [
+    17,
+    200
+   ],
+   "nombre": "Marco de avatar superior de Umi Ito",
+   "descripcion": "Prueba de que eres un maestro en el uso del meca de Umi Ito"
+  },
+  {
+   "id": 85,
+   "condicion": 2,
+   "parametros": [
+    17,
+    350
+   ],
+   "nombre": "Marco de avatar definitivo de Umi Ito",
+   "descripcion": "Prueba de que estás 100% en sincronía con el meca de Umi Ito"
+  },
+  {
+   "id": 86,
+   "condicion": 2,
+   "parametros": [
+    17,
+    40
+   ],
+   "nombre": "Marco de avatar Paulo Silva predeterminado",
+   "descripcion": "Prueba de que puedes usar el meca de Paulo Silva"
+  },
+  {
+   "id": 87,
+   "condicion": 2,
+   "parametros": [
+    17,
+    100
+   ],
+   "nombre": "Marco de avatar Paulo Silva intermedio",
+   "descripcion": "Prueba de que puedes usar el meca de Paulo Silva"
+  },
+  {
+   "id": 88,
+   "condicion": 2,
+   "parametros": [
+    17,
+    200
+   ],
+   "nombre": "Marco de avatar Paulo Silva superior",
+   "descripcion": "Prueba de que eres un maestro para usar el meca de Paulo Silva"
+  },
+  {
+   "id": 89,
+   "condicion": 2,
+   "parametros": [
+    17,
+    350
+   ],
+   "nombre": "Marco de avatar de Paulo Silva definitivo",
+   "descripcion": "Prueba de que estás 100% en sincronía con el meca de Paulo Silva"
+  }
+ ]
+}

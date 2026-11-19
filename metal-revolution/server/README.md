@@ -146,5 +146,19 @@ Versión anterior (solo grabaciones): `mr_server_v1_replay.py`.
 - **Marcos:** se desbloquean con las reglas del propio juego (`datos/marcos.json`, de `HeadFrameConfig`): puntos de
   clasificatoria, victorias con un personaje y nivel. Los de objeto/especiales quedan bloqueados para campeones y
   colaboradores.
+- **Colaboradores (marcos y skins de agradecimiento):** niveles en `colaboradores.json` (marcos, skins fijas, cupo de
+  skins a elección o todas las skins; cada nivel incluye los anteriores). El staff los asigna con `colaboradores.py`
+  (con el servidor encendido o apagado; el jugador los ve al volver a entrar):
+  ```
+  python colaboradores.py niveles                       # que da cada nivel
+  python colaboradores.py catalogo skins Jamal          # ids de skin (o: catalogo marcos)
+  python colaboradores.py nivel Donante 2 --nota "Ko-fi nov"
+  python colaboradores.py skin Donante 753              # usa el cupo de su nivel (--regalo: fuera del cupo)
+  python colaboradores.py marco Campeon 73              # marco suelto: campeones de torneo, eventos
+  python colaboradores.py ver Donante | lista | quitar Donante [--todo] | sacar Donante skin 753
+  ```
+  El catálogo (`datos/catalogo_cosmeticos.json`: 151 skins y 86 marcos con su nombre en español) se arma del OBB con
+  `tools/extraer_cosmeticos.py`. La skin elegida en el teléfono (`ChangeHeroSkinReq`) se guarda y se usa en el login
+  (`UseSkinId`) y en la partida rápida (`CostumeId`, que es el mismo id de skin).
 - **Me gusta** (`PraiseOtherReq`) se acumula en el perfil.
 

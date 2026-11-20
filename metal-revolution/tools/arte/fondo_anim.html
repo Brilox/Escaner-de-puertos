@@ -1,0 +1,74 @@
+<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;background:#000}canvas{display:block}</style></head><body>
+<canvas id="c" width="1920" height="1080"></canvas>
+<script>
+const Q=new URLSearchParams(location.search),T=+(Q.get('t')||0),TAU=Math.PI*2;
+const W=1920,H=1080,c=document.getElementById('c'),x=c.getContext('2d');
+let s=20251119; let R=()=>((s=(s*1664525+1013904223)>>>0)/4294967296); const rr=(a,b)=>a+(b-a)*R();
+const HOR=700; // linea del horizonte (suelo)
+// 1) cielo
+let g=x.createLinearGradient(0,0,0,HOR);
+g.addColorStop(0,'#070718');g.addColorStop(0.45,'#1b1440');g.addColorStop(0.8,'#3d1f5e');g.addColorStop(1,'#6a3478');
+x.fillStyle=g;x.fillRect(0,0,W,HOR);
+// luces grandes: azul a la izquierda, roja a la derecha (como el original)
+function glow(cx,cy,r,col,a){const q=x.createRadialGradient(cx,cy,0,cx,cy,r);q.addColorStop(0,col.replace('A',a));q.addColorStop(1,col.replace('A',0));x.fillStyle=q;x.fillRect(0,0,W,H);}
+glow(260,420,900,'rgba(40,110,255,A)',0.47+0.10*Math.sin(TAU*T)); glow(1680,420,900,'rgba(255,40,70,A)',0.43+0.10*Math.sin(TAU*T+Math.PI)); glow(960,640,700,'rgba(190,90,220,A)',0.35);
+// 2) edificios en capas (lejos -> cerca)
+function capa(base,minH,maxH,minW,maxW,col,ventanas,neon,niebla){
+  let px=-20; while(px<W+20){const w=rr(minW,maxW),h=rr(minH,maxH),y=base-h;
+    x.fillStyle=col;x.fillRect(px,y,w,h+2);
+    if(R()<0.35){x.fillRect(px+w*0.3,y-rr(20,90),w*0.12,rr(20,90));} // antenas
+    if(ventanas){for(let wy=y+10;wy<base-8;wy+=rr(9,14))for(let wx=px+5;wx<px+w-6;wx+=rr(8,13)){if(R()<ventanas){const t=R();
+      x.fillStyle=t<0.45?'rgba(120,200,255,'+rr(.25,.7)+')':t<0.8?'rgba(255,120,200,'+rr(.2,.6)+')':'rgba(255,210,120,'+rr(.25,.6)+')';x.fillRect(wx,wy,rr(2,4),rr(2,4));}}}
+    if(neon&&R()<neon){const nx=px+rr(4,w-20),ny=y+rr(20,Math.max(30,h-80)),nw=rr(8,18),nh=rr(50,160),cc=['#29e0ff','#ff2fa8','#ff3b3b','#8f6bff','#ffcc33'][Math.floor(R()*5)];
+      const ph=R(),fl=(ph<0.2)?((Math.sin(TAU*(T*4+ph*7))>0.3)?1:0.25):(0.75+0.25*Math.sin(TAU*(T+ph)));x.save();x.shadowColor=cc;x.shadowBlur=28;x.fillStyle=cc;x.globalAlpha=.9*fl;x.fillRect(nx,ny,nw,nh);x.globalAlpha=.55;x.fillRect(nx+nw+6,ny+10,nw*0.5,nh*0.6);x.restore();}
+    px+=w+rr(0,6);}
+  if(niebla){const f=x.createLinearGradient(0,base-maxH,0,base);f.addColorStop(0,'rgba(80,40,110,0)');f.addColorStop(1,niebla);x.fillStyle=f;x.fillRect(0,base-maxH,W,maxH);}
+}
+capa(HOR,180,420,40,110,'#251a48',0.0,0,'rgba(120,70,150,0.55)');
+capa(HOR,240,560,60,150,'#181233',0.04,0.3,'rgba(90,45,120,0.45)');
+capa(HOR,300,640,90,200,'#0d0a1f',0.07,0.55,'rgba(60,30,90,0.35)');
+// torres cercanas a los costados (enmarcan el centro)
+function torre(px,w,h,col,cc){x.fillStyle=col;x.fillRect(px,HOR-h,w,h);x.save();x.shadowColor=cc;x.shadowBlur=40;x.fillStyle=cc;
+  for(let k=0;k<5;k++){const ph=R();x.globalAlpha=rr(.5,.95)*(0.7+0.3*Math.sin(TAU*(T+ph)));x.fillRect(px+rr(10,w-40),HOR-h+rr(40,h-120),rr(10,26),rr(60,180));}x.restore();
+  for(let wy=HOR-h+20;wy<HOR-10;wy+=12)for(let wx=px+8;wx<px+w-8;wx+=11)if(R()<.12){x.fillStyle='rgba(150,210,255,'+rr(.15,.5)+')';x.fillRect(wx,wy,3,3);}}
+torre(-30,260,900,'#0a0818','#2c7dff'); torre(150,140,760,'#0c0a1e','#29e0ff');
+torre(1690,260,900,'#0a0818','#ff2f4f'); torre(1600,150,780,'#0c0a1e','#ff2fa8');
+// 3) suelo mojado con perspectiva y reflejos
+g=x.createLinearGradient(0,HOR,0,H);g.addColorStop(0,'#2a1740');g.addColorStop(0.3,'#140c26');g.addColorStop(1,'#06050d');x.fillStyle=g;x.fillRect(0,HOR,W,H-HOR);
+x.save();x.globalCompositeOperation='lighter';
+x.filter='blur(9px)';
+for(let k=0;k<46;k++){const rx=rr(0,W),cc=rx<W*0.45?'rgba(60,140,255,':rx>W*0.55?'rgba(255,60,90,':'rgba(200,100,255,';
+  const q=x.createLinearGradient(0,HOR,0,H);q.addColorStop(0,cc+rr(.18,.4)+')');q.addColorStop(1,cc+'0)');const ph=R();x.globalAlpha=0.75+0.25*Math.sin(TAU*(T+ph));x.fillStyle=q;x.fillRect(rx+4*Math.sin(TAU*(T+ph)),HOR,rr(10,28),rr(140,360));}x.globalAlpha=1;
+x.filter='none';x.restore();
+x.strokeStyle='rgba(140,170,255,0.18)';x.lineWidth=2;
+for(let k=-14;k<=14;k++){x.beginPath();x.moveTo(960,HOR-6);x.lineTo(960+k*170,H+40);x.stroke();}
+for(let k=0;k<9;k++){const yy=HOR+Math.pow(k/8,2.2)*(H-HOR);x.globalAlpha=.10+.12*(k/8);x.beginPath();x.moveTo(0,yy);x.lineTo(W,yy);x.stroke();}
+x.globalAlpha=1;
+// arena central: anillo hexagonal tenue (eco del logo)
+x.save();x.translate(960,880);x.scale(1,0.28);x.lineWidth=10;
+for(const [cc,a0,a1] of [['rgba(45,124,255,0.55)',Math.PI*0.5,Math.PI*1.5],['rgba(255,70,50,0.55)',-Math.PI*0.5,Math.PI*0.5]]){
+  x.strokeStyle=cc;x.shadowColor=cc;x.shadowBlur=30;x.beginPath();for(let i=0;i<=3;i++){const a=a0+(a1-a0)*i/3;const px=Math.cos(a)*520,py=Math.sin(a)*520;i?x.lineTo(px,py):x.moveTo(px,py);}x.stroke();}
+x.restore();
+// destello recorriendo el ring
+x.save();x.translate(960,880);x.scale(1,0.28);x.globalCompositeOperation='lighter';
+for(const [off,cc] of [[0,'90,160,255'],[0.5,'255,110,80']]){const a=TAU*((T+off)%1),px=Math.cos(a)*520,py=Math.sin(a)*520;
+  const q=x.createRadialGradient(px,py,0,px,py,140);q.addColorStop(0,'rgba('+cc+',0.9)');q.addColorStop(1,'rgba('+cc+',0)');x.fillStyle=q;x.fillRect(px-150,py-150,300,300);}
+x.restore();
+// 4) lluvia
+x.save();x.globalCompositeOperation='lighter';
+for(let k=0;k<1800;k++){const l=rr(12,40),vel=1+Math.floor(R()*2),rx0=rr(-100,W),ry=((rr(0,H+120)+vel*(H+120)*T)%(H+120))-60,rx=rx0+0.18*(ry);x.strokeStyle='rgba(190,200,255,'+rr(.04,.16)+')';x.lineWidth=rr(.6,1.4);x.beginPath();x.moveTo(rx,ry);x.lineTo(rx+l*0.18,ry+l);x.stroke();}
+x.restore();
+// 5) chispas y particulas
+x.save();x.globalCompositeOperation='lighter';
+for(let k=0;k<160;k++){const left=R()<.5,px=left?rr(0,800):rr(1120,W),py=1000-((rr(0,800)+800*T)%800),cc=left?'120,190,255':'255,140,90';
+  x.fillStyle='rgba('+cc+','+rr(.3,.9)+')';x.shadowColor='rgb('+cc+')';x.shadowBlur=8;x.fillRect(px,py,rr(1.5,3.5),rr(1.5,3.5));}
+x.restore();
+// 6) haces de luz desde arriba
+x.save();x.globalCompositeOperation='lighter';
+for(const [px,cc] of [[520,'60,130,255'],[1400,'255,60,90']]){const q=x.createLinearGradient(px,0,px+200,HOR);q.addColorStop(0,'rgba('+cc+','+(0.11+0.07*Math.sin(TAU*T*2))+')');q.addColorStop(1,'rgba('+cc+',0)');
+  x.fillStyle=q;x.beginPath();x.moveTo(px-30,0);x.lineTo(px+30,0);x.lineTo(px+260,HOR);x.lineTo(px-60,HOR);x.fill();}
+x.restore();
+// 7) neblina baja y viñeta
+g=x.createLinearGradient(0,HOR-160,0,HOR+120);g.addColorStop(0,'rgba(150,90,190,0)');g.addColorStop(.5,'rgba(150,90,190,0.25)');g.addColorStop(1,'rgba(150,90,190,0)');x.fillStyle=g;x.fillRect(0,HOR-160,W,280);
+const v=x.createRadialGradient(960,540,350,960,540,1150);v.addColorStop(0,'rgba(0,0,0,0)');v.addColorStop(1,'rgba(0,0,8,0.75)');x.fillStyle=v;x.fillRect(0,0,W,H);
+</script></body></html>

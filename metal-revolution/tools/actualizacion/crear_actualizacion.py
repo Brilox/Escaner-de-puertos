@@ -11,6 +11,8 @@
 --servidor: carpeta con configuraciones para los telefonos (*.json, *.csv que van a config_juego/activos) y, si esta,
             marcos.json (reglas de los marcos del servidor)
 --marcos-nuevos: el JSON de tools/marcos/construir.py; registra los marcos nuevos (id y nombre) en el catalogo del panel.
+--mod-apk: el APK del mod; agrega al paquete los bundles que el mod modifica (extraer_mod.py), para que el
+            actualizador no los reemplace por los originales del OBB. Usarlo SIEMPRE con el mod "Metal Offline V2".
 Por defecto la actualizacion es obligatoria; --opcional la deja como opcional.
 
 Con tools/marcos/construir.py la salida ya trae las dos carpetas: <salida>/AssetBundles (telefono) y <salida>/servidor:
@@ -25,8 +27,15 @@ def md5(p):
         for b in iter(lambda: f.read(1 << 20), b''): h.update(b)
     return h.hexdigest()
 
-def crear(salida, version, nombre, mensaje, telefono, servidor=None, marcos_nuevos=None, obligatoria=True):
+def crear(salida, version, nombre, mensaje, telefono, servidor=None, marcos_nuevos=None, obligatoria=True, mod_apk=None):
     archivos = []
+    if mod_apk:
+        import tempfile
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        import extraer_mod
+        tmp = tempfile.mkdtemp()
+        for r in extraer_mod.extraer(mod_apk, tmp):
+            archivos.append((r, os.path.join(tmp, *r.split('/')))); print('  del mod:', r)
     serv_abs = os.path.abspath(servidor) if servidor else None
     for raiz, dirs, fs in os.walk(telefono):
         if serv_abs and os.path.abspath(raiz).startswith(serv_abs): continue
@@ -60,6 +69,6 @@ if __name__ == '__main__':
     ap.add_argument('salida'); ap.add_argument('--version', type=int, required=True)
     ap.add_argument('--nombre', required=True); ap.add_argument('--mensaje', default='')
     ap.add_argument('--telefono', required=True); ap.add_argument('--servidor'); ap.add_argument('--marcos-nuevos')
-    ap.add_argument('--opcional', action='store_true')
+    ap.add_argument('--opcional', action='store_true'); ap.add_argument('--mod-apk')
     a = ap.parse_args()
-    crear(a.salida, a.version, a.nombre, a.mensaje, a.telefono, a.servidor, a.marcos_nuevos, not a.opcional)
+    crear(a.salida, a.version, a.nombre, a.mensaje, a.telefono, a.servidor, a.marcos_nuevos, not a.opcional, a.mod_apk)

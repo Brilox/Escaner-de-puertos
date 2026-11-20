@@ -260,3 +260,17 @@ Leído de `ConfigHashNetworkHandler` / `ConfigManager` / `TextConfig` en `libil2
 - El juego escribe mucho en el registro (`==>ufo:[ui]open ui …`, `[stateMachine] set trigger …`,
   `[game-server]send request …`): con `adb logcat` se ve exactamente en qué pantalla queda y qué falla.
 
+
+## Actualizaciones automaticas y la proteccion del mod (20/11)
+- **Actualizador de Tencent (Dolphin):** pregunta en dos etapas (programa/APK y recursos). En la de recursos descarga
+  `filelist.json` (comprobando su MD5) y un IFS completo; compara el MD5 de cada archivo con `apollo_reslist.flist`
+  y descarga por HTTP Range solo lo que cambio. Probado con un telefono real: bajo los marcos y quedo en 1.0.0.2.
+- **Formato IFS** completo y escritor en `tools/ifs/escribir_ifs.py` (rehacer el IFS del OBB sin cambios da un
+  archivo identico byte a byte).
+- **Proteccion del mod** (`libgame.so`, `observed_init_assets` + `mrresourcelive::run`): tabla `MRRES001` con 4
+  archivos (global_info.bundle, bjx.bundle, jdj.bundle y apollo_reslist.flist), cada uno con SHA-256 del original y
+  del mod. Si alguno no es ninguno de los dos: `_exit(74)` ("provision_ok=0 blocked=1"). Toda actualizacion de
+  Tencent reescribe apollo_reslist.flist, asi que el juego no volvia a abrir.
+- **Arreglo:** `tools/parchear_proteccion.py` cambia la instruccion `tbnz w23,#0` (0x4a1544) por `nop`: la revision
+  se hace pero ya no cierra el juego. Las actualizaciones llevan las versiones del mod de los 3 bundles
+  (`crear_actualizacion.py --mod-apk`, `extraer_mod.py`), asi el actualizador no las cambia por las del OBB.

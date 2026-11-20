@@ -18,6 +18,10 @@ import asyncio, os, sys
 
 import discord
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import sorteo_beta
+MARCA_INSCRIPCION = 'Inscripción para la prueba beta'
+
 ROLES = [  # nombre, color, permisos extra (de mayor a menor)
     ('Admin', 0xE53935, dict(administrator=True)),
     ('Moderador', 0xFB8C00, dict(manage_messages=True, moderate_members=True, kick_members=True, ban_members=True,
@@ -39,7 +43,7 @@ ESTRUCTURA = [
                      ('Mesa 3', 'voz', 'jugadores'), ('clasificatoria', 'texto', 'jugadores')]),
     ('🏆 TORNEOS', [('torneos-info', 'texto', 'staff'), ('inscripciones', 'texto', 'jugadores'), ('resultados', 'texto', 'staff')]),
     ('🛠️ SOPORTE', [('ayuda', 'foro', 'jugadores'), ('reportar-errores', 'foro', 'jugadores'), ('abrir-ticket', 'texto', 'bot')]),
-    ('🧪 BETA', [('instrucciones-beta', 'texto', 'staff'), ('prueba-de-red', 'texto', 'jugadores'),
+    ('🧪 BETA', [('instrucciones-beta', 'texto', 'staff'), ('postulación-beta', 'texto', 'staff'), ('prueba-de-red', 'texto', 'jugadores'),
                 ('comentarios-beta', 'texto', 'jugadores')]),
     ('🔒 STAFF', [('staff-chat', 'texto', 'staff'), ('registro-moderación', 'texto', 'bot')]),
 ]
@@ -49,7 +53,8 @@ TEXTOS = {
 'bienvenida': """👊 **Bienvenido a Metal Online**
 Servidor privado hecho por fans de Metal Revolution, sin fines de lucro. Jugar es y será gratis.
 
-🛠️ **Estamos en beta cerrada**: el servidor todavía **no está abierto al público**. Avisaremos en <#anuncios> cuando abra.
+🛠️ **Estamos en beta cerrada**: el servidor todavía **no está abierto al público**. La **fecha de apertura y el acceso al juego se anunciarán pronto** en <#anuncios>.
+🧪 ¿Quieres probarlo antes que nadie? Postula a la beta en <#postulación-beta>.
 
 1. Lee <#reglas> y reacciona con ✅ para entrar.
 2. Revisa <#cómo-jugar> (ahí avisaremos cuándo se puede descargar).
@@ -67,7 +72,7 @@ Servidor privado hecho por fans de Metal Revolution, sin fines de lucro. Jugar e
 Sanciones: advertencia → silencio o suspensión de 1 a 7 días → expulsión permanente (trampas, acoso grave o venta de cuentas).
 **Reacciona con ✅ para aceptar y entrar al servidor.**""",
 'cómo-jugar': """⚠️ **NOTA IMPORTANTE: el servidor todavía NO está online.**
-Estamos en beta cerrada haciendo pruebas y cambios casi todos los días. **La descarga se publicará aquí cuando el servidor esté online**, así no tienes que reinstalar ni actualizar nada mientras tanto. Activa las notificaciones de <#anuncios> para enterarte primero.
+Estamos en beta cerrada haciendo pruebas y cambios casi todos los días. **La fecha de apertura y el acceso al juego se anunciarán pronto.** **La descarga se publicará aquí cuando el servidor esté online**, así no tienes que reinstalar ni actualizar nada mientras tanto. Activa las notificaciones de <#anuncios> para enterarte primero.
 
 🎮 **Cómo será la instalación** (cuando abramos)
 1. Descargas **un solo archivo** `MetalOnline.xapk` desde el enlace oficial que publicaremos aquí.
@@ -113,17 +118,17 @@ Estamos en beta cerrada haciendo pruebas y cambios casi todos los días. **La de
 • Registro de cuentas con usuario y contraseña.
 • 3v3 (cerrado por ahora).
 
-🧪 **Próxima prueba con jugadores de varios países**: lee <#instrucciones-beta>.
-📅 La fecha de apertura se anunciará en <#anuncios>.""",
+🧪 **Próxima prueba con 10 jugadores de varios países**: postula en <#postulación-beta> y lee <#instrucciones-beta>.
+📅 **La fecha de apertura del servidor y el acceso al juego se anunciarán pronto** en <#anuncios>.""",
 'torneos-info': """🏆 **Torneos**
 Cuando abra el servidor organizaremos torneos oficiales. Formato: eliminación directa, 1v1, al mejor de 3 peleas. Inscripción en <#inscripciones> con tu nombre del juego.
 El campeón recibe el rol **Campeón** y un marco o skin exclusivo del torneo.""",
 }
 
-FIJAR = {'instrucciones-beta', 'prueba-de-red', 'comentarios-beta'}   # el mensaje del bot queda fijado arriba
+FIJAR = {'instrucciones-beta', 'postulación-beta', 'prueba-de-red', 'comentarios-beta'}   # el mensaje del bot queda fijado arriba
 TEXTOS_BETA = {
 'instrucciones-beta': """🧪 **Prueba beta de Metal Online: instrucciones**
-Vamos a probar el servidor con jugadores de **distintos países** para medir qué tan bien se juega a distancia (lag y rollback). La fecha y la hora se anuncian en <#anuncios>.
+Vamos a probar el servidor con **10 jugadores de distintos países**, elegidos por sorteo, para medir qué tan bien se juega a distancia (lag y rollback). **¿Cómo postular?** Reacciona con la bandera de tu país en <#postulación-beta>. La fecha y la hora de la prueba se anuncian en <#anuncios>.
 
 **ANTES de la prueba**
 1. Instala el juego siguiendo <#cómo-jugar> (el enlace se publica el día de la prueba).
@@ -142,6 +147,28 @@ Vamos a probar el servidor con jugadores de **distintos países** para medir qu�
 🔒 **Privacidad:** durante la prueba el servidor registra datos técnicos de la conexión (ping, paquetes perdidos y tu IP) solo para medir la red. No se publican ni se comparten.
 ♻️ Las cuentas de la beta **se borran** al abrir el servidor.
 ¡Gracias por ayudar a que Metal Online se juegue bien en todo Latinoamérica! 🥊""",
+'postulación-beta': """📝 **Postulación a la prueba beta: así funciona el sorteo**
+Elegiremos **10 jugadores** para la primera prueba del servidor, buscando que haya **jugadores de distintos países**.
+
+**¿Cómo participo?**
+1. Acepta las reglas en <#reglas> (si estás leyendo esto, ya lo hiciste ✅).
+2. En el **mensaje de inscripción, justo debajo**, reacciona con **la bandera de TU país**. **Solo una**. Si tu país no está, usa 🌎.
+3. ¡Listo! Todos los que reaccionen con una bandera **entran al sorteo**. No hace falta escribir nada.
+
+**¿Cómo se elige?**
+• Al azar, entre todos los inscritos, con **cupos por país**: **máximo 2 por país** y lugares asegurados para que haya variedad (por ejemplo, México).
+• Una sola inscripción por persona: si marcas varias banderas, el sorteo se queda con una al azar.
+• El staff no participa.
+• Se eligen además **5 suplentes**, por si algún elegido no puede.
+• El resultado se publica **en este canal** con una **semilla**: cualquiera puede repetir el sorteo y comprobar que sale lo mismo.
+• La **fecha del sorteo** se anunciará en <#anuncios>.
+
+**Si sales elegido**
+• Recibes el rol **Beta Tester** y, cuando abra el servidor, los **marcos exclusivos de la beta** (Founder, Bug Hunter, Beta Vanguard, Elite Patcher y Revolution Hero).
+• Necesitas un **teléfono Android** y estar disponible el día de la prueba.
+• Tu nombre en el juego será **tu nombre + la sigla de tu país** (ej: `Juan MX`). Lee <#instrucciones-beta>.
+
+👇 **Reacciona en el mensaje de abajo** 👇""",
 'prueba-de-red': """📶 **Reportes de la prueba de red**
 Un mensaje por cada serie de peleas. Copia esta plantilla y complétala:
 
@@ -185,6 +212,7 @@ def permisos(guild, roles, nombre, escribe):
     else:
         for r in ('Jugador', 'Campeón', 'Colaborador'):
             ow[roles[r]] = discord.PermissionOverwrite(view_channel=True, send_messages=(escribe == 'jugadores'),
+                                                       add_reactions=True if nombre in ('postulación-beta', 'comentarios-beta') else None,
                                                        send_messages_in_threads=(escribe == 'jugadores'),
                                                        create_public_threads=(escribe == 'jugadores'), connect=True, speak=True)
     for r in staff: ow[r] = discord.PermissionOverwrite(view_channel=True, send_messages=True, manage_messages=True)
@@ -236,20 +264,34 @@ async def armar(cliente, guild_id, actualizar=False):
             texto = texto.replace('<#%s>' % nombre_ref, ref.mention)
         assert len(texto) <= 2000, 'el texto de #%s pasa el limite de Discord (%d caracteres)' % (nombre, len(texto))
         mensajes = [m async for m in canal.history(limit=50)]
-        propio = next((m for m in mensajes if m.author == cliente.user), None)   # el ultimo mensaje del bot en el canal
+        del_bot = [m for m in mensajes if m.author == cliente.user and MARCA_INSCRIPCION not in m.content]
+        titulo = texto.split('\n', 1)[0]
+        propio = next((m for m in del_bot if m.content.split('\n', 1)[0] == titulo), None) or (del_bot[-1] if del_bot else None)
         if propio and actualizar:
             if propio.content != texto:
                 await propio.edit(content=texto); print('  texto ACTUALIZADO en #' + nombre)
             else:
                 print('  #%s ya estaba al dia' % nombre)
             continue
-        if mensajes and not actualizar: continue                          # ya tiene mensajes: no se repite
+        if del_bot and not actualizar: continue                          # ya publicado: no se repite
+        if mensajes and not del_bot and not actualizar: continue
         msg = await canal.send(texto)
         if nombre == 'reglas': await msg.add_reaction('✅')
         if nombre in FIJAR:
             try: await msg.pin()
             except discord.HTTPException: print('  (no pude fijar el mensaje en #%s: fijalo a mano)' % nombre)
         print('  texto publicado en #' + nombre + ('  (el texto viejo no era del bot: borralo a mano)' if mensajes else ''))
+    canal = canales.get('postulación-beta')
+    if isinstance(canal, discord.TextChannel):
+        ya = [m async for m in canal.history(limit=50) if m.author == cliente.user and MARCA_INSCRIPCION in m.content]
+        if ya:
+            print('  inscripcion del sorteo ya publicada (ID del mensaje: %d)' % ya[0].id)
+        else:
+            texto = sorteo_beta.TEXTO_INSCRIPCION
+            for nombre_ref, ref in canales.items(): texto = texto.replace('<#%s>' % nombre_ref, ref.mention)
+            msg = await canal.send(texto)
+            for e, _, _ in sorteo_beta.PAISES: await msg.add_reaction(e)
+            print('  inscripcion del sorteo publicada en #postulación-beta (ID del mensaje: %d)' % msg.id)
     print('\nListo. Falta: AutoMod, Carl-bot (rol Jugador con la reaccion de #reglas) y Ticket Tool (ver el documento).')
 
 

@@ -2,10 +2,11 @@
 """Sorteo de los probadores de la beta con cupos por pais (con el mismo bot de crear_servidor.py).
 
 1) Publicar la inscripcion (un mensaje con las banderas; la gente reacciona con la de su pais):
-    python sorteo_beta.py <ID-servidor> publicar [--canal anuncios]
+    python sorteo_beta.py <ID-servidor> publicar [--canal postulación-beta]
 
-2) Hacer el sorteo (lee las reacciones de ese mensaje):
-    python sorteo_beta.py <ID-servidor> sortear --mensaje <ID-del-mensaje> [--cupos 10] [--max-pais 2]
+   (crear_servidor.py ya la publica sola en #postulación-beta)
+2) Hacer el sorteo (lee las reacciones de ese mensaje; sin --mensaje la busca en #postulación-beta):
+    python sorteo_beta.py <ID-servidor> sortear [--mensaje <ID>] [--cupos 10] [--max-pais 2]
                          [--minimo MX=1] [--minimo US=1] [--suplentes 5] [--prueba]
 
 Con --prueba solo muestra el resultado en pantalla (no publica ni entrega roles): usalo primero.
@@ -31,7 +32,7 @@ POR_EMOJI = {e: (c, n) for e, c, n in PAISES}
 ROL_BETA = 'Beta Tester'
 
 TEXTO_INSCRIPCION = """🧪 **¡Inscripción para la prueba beta de Metal Online!**
-Buscamos **10 jugadores de distintos países** para probar el servidor y medir el lag entre países (lee <#instrucciones-beta>).
+Buscamos **10 jugadores de distintos países** para probar el servidor y medir el lag entre países (lee <#instrucciones-beta>). Las reglas del sorteo están en el mensaje fijado de este canal.
 
 **Para participar, reacciona con la bandera de TU país** (una sola). Si tu país no está, usa 🌎.
 El sorteo es al azar, con cupos para que haya jugadores de varios países, y se publica con su semilla para que cualquiera lo pueda comprobar.
@@ -72,10 +73,16 @@ async def publicar(cliente, guild, a):
 
 async def hacer_sorteo(cliente, guild, a):
     msg = None
-    for canal in guild.text_channels:
-        try: msg = await canal.fetch_message(a.mensaje); break
-        except (discord.NotFound, discord.Forbidden, discord.HTTPException): continue
-    if msg is None: sys.exit('no encontre el mensaje %d' % a.mensaje)
+    if a.mensaje:
+        for canal in guild.text_channels:
+            try: msg = await canal.fetch_message(a.mensaje); break
+            except (discord.NotFound, discord.Forbidden, discord.HTTPException): continue
+    else:                                                         # sin --mensaje: la inscripcion del bot en el canal
+        canal = discord.utils.get(guild.text_channels, name=a.canal)
+        if canal:
+            async for m in canal.history(limit=100):
+                if m.author == cliente.user and 'Inscripción para la prueba beta' in m.content: msg = m; break
+    if msg is None: sys.exit('no encontre el mensaje de inscripcion (usa --mensaje <ID>)')
     staff = {r.id for r in guild.roles if r.name in ('Admin', 'Moderador')}
     inscritos, miembros = {}, {}
     for reac in msg.reactions:
@@ -114,7 +121,7 @@ async def hacer_sorteo(cliente, guild, a):
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('servidor', type=int); ap.add_argument('accion', choices=('publicar', 'sortear'))
-    ap.add_argument('--canal', default='anuncios'); ap.add_argument('--mensaje', type=int)
+    ap.add_argument('--canal', default='postulación-beta'); ap.add_argument('--mensaje', type=int)
     ap.add_argument('--cupos', type=int, default=10); ap.add_argument('--max-pais', type=int, default=2)
     ap.add_argument('--minimo', action='append', default=[], help='PAIS=N, por ejemplo MX=1 (se puede repetir)')
     ap.add_argument('--suplentes', type=int, default=5); ap.add_argument('--semilla')
@@ -122,7 +129,6 @@ def main():
     a = ap.parse_args()
     token = os.environ.get('DISCORD_TOKEN')
     if not token: sys.exit('falta la variable DISCORD_TOKEN con el token del bot')
-    if a.accion == 'sortear' and not a.mensaje: sys.exit('falta --mensaje <ID del mensaje de inscripcion>')
     intents = discord.Intents.default(); intents.members = True
     cliente = discord.Client(intents=intents)
 

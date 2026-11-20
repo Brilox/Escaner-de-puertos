@@ -135,7 +135,7 @@ def clonar(entrada, salida, base, nuevo, tinte=None, cuadros=None):
                                    'asset': {'m_FileID': 0, 'm_PathID': m[ent['asset']['m_PathID']]}}))
     ab['m_PreloadTable'] += pre
     ab['m_Container'].sort(key=lambda kv: kv[0]); ab_r.save_typetree(ab)
-    open(salida, 'wb').write(env.file.save(packer='lz4'))
+    open(salida, 'wb').write(env.file.save(packer='original'))
     print('efecto', nuevo, 'agregado ->', salida, os.path.getsize(salida), 'bytes')
 
 if __name__ == '__main__':

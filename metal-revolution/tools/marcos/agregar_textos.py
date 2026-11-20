@@ -26,7 +26,7 @@ def agregar(entrada, salida, textos):
             if termino in pos: t['mTerms'][pos[termino]] = fila
             else: t['mTerms'].append(fila)
         o.save_typetree(t)
-        open(salida, 'wb').write(env.file.save(packer='lz4'))
+        open(salida, 'wb').write(env.file.save(packer='original'))
         print('%d textos -> %s (%d terminos)' % (len(textos), salida, len(t['mTerms'])))
         return
     raise SystemExit('no encontre los textos en ' + entrada)

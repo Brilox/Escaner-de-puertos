@@ -83,7 +83,7 @@ def agregar(entrada, salida, marcos, solo_cuerpo=()):
         print('agregado', clave, '%dx%d' % (w, h))
     ab['m_Container'].sort(key=lambda kv: kv[0])                   # Unity lo guarda ordenado (multimap)
     ab_r.save_typetree(ab)
-    open(salida, 'wb').write(env.file.save(packer='lz4'))
+    open(salida, 'wb').write(env.file.save(packer='original'))
     print('guardado', salida, os.path.getsize(salida), 'bytes')
 
 if __name__ == '__main__':

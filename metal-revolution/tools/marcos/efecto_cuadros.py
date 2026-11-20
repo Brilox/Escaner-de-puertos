@@ -148,7 +148,7 @@ def crear(entrada, salida, nombre, carpeta, fps, columnas=16, tamano=1.38, x=0.0
     ab['m_Container'].append((clave, {'preloadIndex': len(ab['m_PreloadTable']), 'preloadSize': len(pre), 'asset': ref('go')}))
     ab['m_PreloadTable'] += pre
     ab['m_Container'].sort(key=lambda kv: kv[0]); ab_r.save_typetree(ab)
-    open(salida, 'wb').write(env.file.save(packer='lz4'))
+    open(salida, 'wb').write(env.file.save(packer='original'))
     print('efecto %s: %d cuadros (%dx%d, hoja %dx%d) a %s fps = bucle de %.2f s, tamano %.3f -> %s'
           % (nombre, n, cols, filas, img.width, img.height, fps, n / fps, tamano, salida))
 

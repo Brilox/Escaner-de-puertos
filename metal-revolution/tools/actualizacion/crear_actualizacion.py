@@ -34,7 +34,18 @@ def crear(salida, version, nombre, mensaje, telefono, servidor=None, marcos_nuev
         sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
         import extraer_mod
         tmp = tempfile.mkdtemp()
-        for r in extraer_mod.extraer(mod_apk, tmp):
+        hechos = extraer_mod.extraer(mod_apk, tmp)
+        gi = 'AssetBundles/Android/config/global_info.bundle'
+        if marcos_nuevos and gi in hechos:
+            # los marcos nuevos tienen que estar anotados en las tablas de iconos y efectos de global_info.bundle
+            sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'marcos'))
+            import registrar_iconos
+            ruta_gi = os.path.join(tmp, *gi.split('/')); spec = json.load(open(marcos_nuevos, encoding='utf-8'))
+            n = registrar_iconos.registrar(ruta_gi, spec, ruta_gi + '.nuevo'); os.replace(ruta_gi + '.nuevo', ruta_gi)
+            registrar_iconos.comprobar(ruta_gi, spec); print('  global_info.bundle: %d entradas nuevas en las tablas de iconos y efectos' % len(n))
+        elif marcos_nuevos:
+            print('  OJO: hay marcos nuevos pero no se pudo anotarlos en global_info.bundle (usa --mod-apk)')
+        for r in hechos:
             archivos.append((r, os.path.join(tmp, *r.split('/')))); print('  del mod:', r)
     serv_abs = os.path.abspath(servidor) if servidor else None
     for raiz, dirs, fs in os.walk(telefono):

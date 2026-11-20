@@ -42,6 +42,12 @@ TIPOS_DE_PELEA = 11                                             # MatchType.COUN
 GAMEHALL = 5                                                    # MatchType de las mesas del hall
 PUNTOS_INICIALES, PUNTOS_GANAR, PUNTOS_PERDER = 1000, 25, 20
 MAX_REVANCHAS = 2                                               # revanchas seguidas con el mismo rival (fuera de la sala)
+# Interruptores de funciones que el telefono pide al entrar (QueryFuncCtrlConfigReq). Los dos primeros son los de la
+# respuesta grabada del mod; enableHeadFrameEffect hace que se vea el efecto (brillo) del marco equipado en el menu y el
+# perfil. Otros nombres que el juego conoce (enableMall, enableBag, enableTask, enableDaySign, enableActivityCenter...)
+# abren menus que el servidor todavia no atiende: se prueban de a uno en funciones_juego.json.
+FUNCIONES_JUEGO = {'disableFirstPay': 1, 'enableHeadFrame': 1, 'enableHeadFrameEffect': 1}
+
 # Tutoriales que se dan por hechos en todas las cuentas. e3482f25 es la guia de entrenamiento que el juego lanza despues
 # de la primera derrota: se metia encima de la pantalla de resultados del que pierde.
 TUTORIALES_HECHOS = ('e3482f25-a92e-4215-b1b4-946e22c12c39',)
@@ -302,7 +308,7 @@ class Partida:
 
 # ----------------------------------------------------------------- juego
 class Juego:
-    PUBLICOS = {'LoginRequest', 'PlayerClientPing', 'QueryServerTimeReq', 'AnalyticsBeforeLoginReq'}
+    PUBLICOS = {'LoginRequest', 'PlayerClientPing', 'QueryServerTimeReq', 'AnalyticsBeforeLoginReq', 'QueryFuncCtrlConfigReq'}
 
     def __init__(self, host, puerto, puerto_relay, plantilla_login, nombre_automatico=False):
         self.host = host; self.puerto = puerto; self.puerto_relay = puerto_relay; self.plantilla = plantilla_login
@@ -552,6 +558,20 @@ class Juego:
         j.cuenta = self.cuentas.get(j.uid); log.info('uid=%d ahora se llama %r', j.uid, j.nombre)
         j.notificar('NotifyBasePlayerInfoChange', self.info_detallada(j.cuenta)); self.mensaje_sistema(j, 'Ahora te llamas ' + j.nombre)
         return None
+    # ---- interruptores de funciones del juego (SvrFlagNetworkHandler en el telefono)
+    def funciones(self):
+        """Lo que el telefono recibe en QueryFuncCtrlConfigRsp.ConfigJson. Antes iba la respuesta grabada del mod, que solo
+        traia disableFirstPay y enableHeadFrame: sin enableHeadFrameEffect el juego NUNCA dibuja el efecto del marco
+        equipado (HeadFrameMono.Fresh lo revisa; la lista de la pantalla de marcos no, por eso ahi si se veia).
+        server/funciones_juego.json (opcional) agrega o cambia valores: {"enableHeadFrameEffect": 1, ...}."""
+        f = dict(FUNCIONES_JUEGO)
+        ruta = os.path.join(HERE, 'funciones_juego.json')
+        if os.path.isfile(ruta):
+            try: f.update(json.load(open(ruta, encoding='utf-8-sig')))
+            except (OSError, ValueError) as e: log.error('funciones_juego.json no se pudo leer (%s): uso los valores por defecto', e)
+        return {k: v for k, v in f.items() if not k.startswith('_')}
+    def on_QueryFuncCtrlConfigReq(self, sesion, d):
+        return 'QueryFuncCtrlConfigRsp', dict(ConfigJson=json.dumps(self.funciones(), separators=(',', ':')))
     # ---- configuraciones que el servidor reemplaza (ver config_juego.py)
     def on_QueryAllConfigHashReq(self, sesion, d):
         return 'QueryAllConfigHashRsp', dict(HashPairs=self.config.pares())

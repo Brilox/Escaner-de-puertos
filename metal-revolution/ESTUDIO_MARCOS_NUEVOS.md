@@ -153,3 +153,33 @@ El marco 105 lo confirma en el teléfono: su imagen tiene un **borde azul** y su
 - Si coincide otro número, en `marcos_nuevos.json` se pone `"calibracion": {"tamano": 1.38 × número / 100}`.
 - Si la cruz roja no cae sobre la azul, se ajustan `x` e `y`.
 Después se vuelve a construir.
+
+## 7. Dónde se dibuja un marco y por qué a veces no se veía el brillo (prueba v6, verificado en el código)
+
+El juego dibuja un marco con tres componentes distintos, y no todos muestran el efecto en las mismas condiciones:
+
+| Lugar | Componente | Imagen | Efecto (brillo) |
+|---|---|---|---|
+| Cuadrícula de la pantalla de marcos | `HeadFrameItem` dentro de la lista con scroll | `ItemIconSet.ApplyItemIcon` | siempre; `ScrollItemVisibleMono` lo apaga cuando la fila sale de la vista |
+| Vista previa de la derecha (misma pantalla) | `HeadFrameItem` fuera de la lista | igual | **nunca** (error del juego original, ver abajo) |
+| Marco equipado: menú principal, perfil | `HeadFrameMono` | igual | solo si el servidor activa `enableHeadFrameEffect` |
+| Chat, comentarios, listas de amigos | `SocialNetworkHandler.ApplyProfileIcon` y parecidos | igual | nunca: estas pantallas solo ponen la imagen |
+
+1. **Marco equipado sin brillo (todos los marcos, también los originales).** `HeadFrameMono.Fresh` revisa
+   `SvrFlagNetworkHandler.enableHeadFrameEffect` antes de crear el efecto. Los interruptores llegan en
+   `QueryFuncCtrlConfigRsp.ConfigJson`, y el servidor mandaba la respuesta grabada del mod:
+   `{"disableFirstPay":1,"enableHeadFrame":1}`. Arreglado en el servidor (`FUNCIONES_JUEGO` en `juego.py`, ajustable con
+   `server/funciones_juego.json`); no hace falta tocar el teléfono, solo volver a entrar al juego.
+2. **Vista previa sin brillo.** `HeadFrameItem.Fresh` registra el efecto con `ScrollItemVisibleMono.AddObj(padre, ...,
+   0.1, 0.9)`. En la vista previa el padre es el contenedor `Right` (alto 917.8, centro y = -458.5) y la cuenta de
+   visibilidad da 1276.8 > alto de la pantalla: el efecto queda siempre apagado. `tools/marcos/arreglar_vista_previa.py`
+   cambia el alto y el pivote de `Right` sin mover nada en pantalla (paquete v7).
+3. **El borde rosado delgado** del recuadro del menú es el anillo de la división (rango), que `HeadFrameMono` dibuja
+   aparte porque `disableHeadFrameTier` no está activado. No es el marco.
+4. **Marcos animados en pantallas sin efecto** (chat, comentarios): la imagen fija de los marcos con animación exacta
+   guarda solo el cuerpo sólido (para no duplicar el resplandor), así que ahí se ven sin brillo. Si se prefiere, se
+   puede guardar también un resplandor suave en la imagen fija.
+
+Otras cosas verificadas: `ApplyItemIcon` carga la imagen de forma sincrónica (sin espera) desde `ItemIconSet`;
+`GetCurrHeadFrame` solo devuelve 0 para los marcos de WeChat y QQ en otra plataforma; `NotifyBasePlayerInfoChange`
+lleva un `PlayerDetailInfo` completo y el servidor lo manda bien después de `ChangeHeadFrameReq`.

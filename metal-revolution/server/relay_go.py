@@ -67,7 +67,10 @@ class RelayGo:
             elif e.get('t') == 'red':
                 try: self._anotar_red(e)
                 except Exception: log.exception('registro de red')
-        if self.activo: log.error('relay Go: el proceso termino (codigo %s)', self.proc.poll())
+        if self.activo:
+            codigo = self.proc.poll()
+            if codigo:  log.error('relay Go: el proceso termino con error (codigo %s)', codigo)
+            else:       log.info('relay Go: el proceso se cerro (al apagar el servidor es normal)')
 
     def _anotar_red(self, e):
         info = self.info_partida(int(e['id'])) or {}

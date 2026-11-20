@@ -117,6 +117,13 @@ Al acabar, los teléfonos suben el resultado (`UploadBattleResult`) y el servido
   El servidor le manda al teléfono una `OpenSystemConfig.json` sin fechas ni horario (ver `config_juego/README.md`).
   La primera vez hay que cerrar y abrir el juego. El nivel es el real de la cuenta (sube 1 cada 100 de experiencia):
   forzarlo a 10 rompía la pantalla de resultados del que pierde.
+- **Efecto (brillo) del marco equipado:** el teléfono pide al entrar los interruptores de funciones
+  (`QueryFuncCtrlConfigReq`). Antes iba la respuesta grabada del mod (`disableFirstPay` y `enableHeadFrame`) y, sin
+  `enableHeadFrameEffect`, el juego nunca dibujaba el efecto del marco equipado en el menú ni en el perfil (con ningún
+  marco). Ahora el servidor responde por su cuenta con los tres. Para cambiar o agregar interruptores sin tocar el
+  código: `server/funciones_juego.json`, por ejemplo `{"enableHeadFrameEffect": 1}`. Otros nombres que el juego conoce
+  (`enableMall`, `enableBag`, `enableTask`, `enableDaySign`, `enableActivityCenter`...) abren menús que el servidor
+  todavía no atiende: probarlos de a uno.
 - **Teléfono pegado al terminar:** si a un jugador le llega el resultado pero su pantalla de resultados no se abre
   (no pide nada más), en la sala la revancha o "volver a elegir" del rival lo mandan también a elegir personaje
   (`NotifyGameHallMatchCreated`). Si un teléfono vuelve a cargar una pelea ya terminada, se le cancela.

@@ -10,6 +10,11 @@ Antes: crea el servidor en Discord, activa "Comunidad" (Ajustes del servidor -> 
 https://discord.com/developers/applications (Bot -> Reset Token para copiar el token) e invitalo con el permiso
 "Administrator" (OAuth2 -> URL Generator -> bot + Administrator). Cuando termine, puedes quitarle el permiso o expulsarlo.
 
+Acceso de los nuevos:
+    --abierto   cualquiera que entre ve y usa los canales de jugadores, sin depender de Carl-bot (los de staff siguen
+                ocultos). Rehace los permisos de los canales que ya existen.
+    --cerrado   vuelve al modo normal: los nuevos solo ven bienvenida y reglas hasta que Carl-bot les da el rol Jugador.
+
 Se puede volver a ejecutar: lo que ya existe (mismo nombre) no se duplica. Los textos solo se publican si el canal
 esta vacio. Para CAMBIAR los textos ya publicados (editando el mensaje del bot, sin duplicar):
     python crear_servidor.py <ID-del-servidor> --actualizar
@@ -56,7 +61,7 @@ Servidor privado hecho por fans de Metal Revolution, sin fines de lucro. Jugar e
 🛠️ **Estamos en beta cerrada**: el servidor todavía **no está abierto al público**. La **fecha de apertura y el acceso al juego se anunciarán pronto** en <#anuncios>.
 🧪 ¿Quieres probarlo antes que nadie? Postula a la beta en <#postulación-beta>.
 
-1. Lee <#reglas> y reacciona con ✅ para entrar.
+1. Lee <#reglas> y reacciona con ✅ para aceptarlas.
 2. Revisa <#cómo-jugar> (ahí avisaremos cuándo se puede descargar).
 3. Mientras tanto: conversa en <#general>, deja ideas en <#sugerencias> y sigue el avance en <#estado-del-servidor>.""",
 'reglas': """📜 **Reglas de Metal Online**
@@ -70,7 +75,7 @@ Servidor privado hecho por fans de Metal Revolution, sin fines de lucro. Jugar e
 8. **Reporta los errores** en <#reportar-errores> en vez de aprovecharlos.
 9. **No compartas el juego por tu cuenta**: la descarga oficial se publica solo aquí.
 Sanciones: advertencia → silencio o suspensión de 1 a 7 días → expulsión permanente (trampas, acoso grave o venta de cuentas).
-**Reacciona con ✅ para aceptar y entrar al servidor.**""",
+**Reacciona con ✅ para aceptar las reglas.**""",
 'cómo-jugar': """⚠️ **NOTA IMPORTANTE: el servidor todavía NO está online.**
 Estamos en beta cerrada haciendo pruebas y cambios casi todos los días. **La fecha de apertura y el acceso al juego se anunciarán pronto.** **La descarga se publicará aquí cuando el servidor esté online**, así no tienes que reinstalar ni actualizar nada mientras tanto. Activa las notificaciones de <#anuncios> para enterarte primero.
 
@@ -152,7 +157,7 @@ Vamos a probar el servidor con **10 jugadores de distintos países**, elegidos p
 Elegiremos **10 jugadores** para la primera prueba del servidor, buscando que haya **jugadores de distintos países**.
 
 **¿Cómo participo?**
-1. Acepta las reglas en <#reglas> (si estás leyendo esto, ya lo hiciste ✅).
+1. Lee y acepta las reglas en <#reglas> (reacciona con ✅).
 2. En el **mensaje de inscripción, justo debajo**, reacciona con **la bandera de TU país**. **Solo una**. Si tu país no está, usa 🌎.
 3. ¡Listo! Todos los que reaccionen con una bandera **entran al sorteo**. No hace falta escribir nada.
 
@@ -201,26 +206,33 @@ Los errores puntuales van mejor en <#reportar-errores>, con captura y hora. ¡Gr
 TEXTOS.update(TEXTOS_BETA)
 
 
-def permisos(guild, roles, nombre, escribe):
-    """Overwrites de un canal: @everyone no ve nada (salvo bienvenida y reglas), Jugador ve y escribe donde toca."""
+REACCIONAN = ('reglas', 'postulación-beta', 'comentarios-beta')    # canales donde los jugadores reaccionan
+
+
+def permisos(guild, roles, nombre, escribe, abierto=False):
+    """Overwrites de un canal. Normal: @everyone solo ve bienvenida y reglas, y el rol Jugador (que da Carl-bot con la
+    reaccion de #reglas) ve y escribe donde toca. abierto=True: cualquiera que entre al servidor ve y escribe como un
+    Jugador, sin depender de ningun bot. Los canales de staff quedan ocultos siempre."""
     staff = [roles['Admin'], roles['Moderador']]
-    ver_todos = nombre in VISIBLES_SIN_REGLAS
-    ow = {guild.default_role: discord.PermissionOverwrite(view_channel=ver_todos, send_messages=False if ver_todos else None,
-                                                          add_reactions=True if nombre == 'reglas' else None)}
+    def jugador():
+        return discord.PermissionOverwrite(view_channel=True, send_messages=(escribe == 'jugadores'),
+                                           add_reactions=True if nombre in REACCIONAN else None,
+                                           send_messages_in_threads=(escribe == 'jugadores'),
+                                           create_public_threads=(escribe == 'jugadores'), connect=True, speak=True)
     if nombre in ('staff-chat', 'registro-moderación'):
-        ow[guild.default_role] = discord.PermissionOverwrite(view_channel=False)
+        ow = {guild.default_role: discord.PermissionOverwrite(view_channel=False)}
         for r in ('Jugador', 'Campeón', 'Colaborador'): ow[roles[r]] = discord.PermissionOverwrite(view_channel=False)
     else:
-        for r in ('Jugador', 'Campeón', 'Colaborador'):
-            ow[roles[r]] = discord.PermissionOverwrite(view_channel=True, send_messages=(escribe == 'jugadores'),
-                                                       add_reactions=True if nombre in ('postulación-beta', 'comentarios-beta') else None,
-                                                       send_messages_in_threads=(escribe == 'jugadores'),
-                                                       create_public_threads=(escribe == 'jugadores'), connect=True, speak=True)
+        ver_todos = nombre in VISIBLES_SIN_REGLAS
+        if abierto: ow = {guild.default_role: jugador()}
+        else: ow = {guild.default_role: discord.PermissionOverwrite(view_channel=ver_todos, send_messages=False if ver_todos else None,
+                                                                    add_reactions=True if nombre == 'reglas' else None)}
+        for r in ('Jugador', 'Campeón', 'Colaborador'): ow[roles[r]] = jugador()
     for r in staff: ow[r] = discord.PermissionOverwrite(view_channel=True, send_messages=True, manage_messages=True)
     return ow
 
 
-async def armar(cliente, guild_id, actualizar=False):
+async def armar(cliente, guild_id, actualizar=False, abierto=None):
     guild = cliente.get_guild(guild_id) or await cliente.fetch_guild(guild_id)
     if guild is None: sys.exit('No encuentro ese servidor: revisa el ID y que el bot este invitado')
     print('Servidor:', guild.name)
@@ -245,8 +257,12 @@ async def armar(cliente, guild_id, actualizar=False):
                 try: await cat.edit(position=sop.position + 1)
                 except discord.HTTPException: pass
         for nombre, tipo, escribe in lista:
-            if nombre in canales: continue
-            ow = permisos(guild, roles, nombre, escribe)
+            if nombre in canales:
+                if abierto is not None:                       # --abierto / --cerrado: rehace los permisos del canal existente
+                    await canales[nombre].edit(overwrites=permisos(guild, roles, nombre, escribe, abierto))
+                    print('  permisos al dia: #%s' % nombre)
+                continue
+            ow = permisos(guild, roles, nombre, escribe, bool(abierto))
             if tipo == 'voz':
                 canales[nombre] = await guild.create_voice_channel(nombre, category=cat, overwrites=ow)
             elif tipo == 'foro':
@@ -293,7 +309,12 @@ async def armar(cliente, guild_id, actualizar=False):
             msg = await canal.send(texto)
             for e, _, _ in sorteo_beta.PAISES: await msg.add_reaction(e)
             print('  inscripcion del sorteo publicada en #postulación-beta (ID del mensaje: %d)' % msg.id)
-    print('\nListo. Falta: AutoMod, Carl-bot (rol Jugador con la reaccion de #reglas) y Ticket Tool (ver el documento).')
+    if abierto:
+        print('\nListo. Servidor ABIERTO: cualquiera que entre ve y usa los canales de jugadores (staff sigue oculto).')
+        print('Recomendado: Ajustes del servidor -> Seguridad -> nivel de verificacion Medio, y AutoMod.')
+    else:
+        print('\nListo. Recuerda: AutoMod, Carl-bot (da el rol Jugador con la reaccion de #reglas; sin el, los nuevos solo ven')
+        print('bienvenida y reglas: si no lo usas, ejecuta con --abierto) y Ticket Tool (ver el documento).')
 
 
 def main():
@@ -313,11 +334,12 @@ def main():
     if not args:
         print(__doc__); return 2
     guild_id = int(args[0]); actualizar = '--actualizar' in sys.argv
+    abierto = True if '--abierto' in sys.argv else (False if '--cerrado' in sys.argv else None)
     cliente = discord.Client(intents=discord.Intents.default())
 
     @cliente.event
     async def on_ready():
-        try: await armar(cliente, guild_id, actualizar)
+        try: await armar(cliente, guild_id, actualizar, abierto)
         finally: await cliente.close()
 
     cliente.run(token)

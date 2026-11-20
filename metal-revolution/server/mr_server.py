@@ -265,14 +265,22 @@ async def main():
     ap.add_argument('--puerto-admin', type=int, default=8090, help='API del panel de administracion (0 = apagada)')
     ap.add_argument('--admin-escucha', default='127.0.0.1', help='por defecto solo este PC; en un VPS usa un tunel SSH')
     ap.add_argument('--obb', help='OBB del juego (main.1300...obb) para armar las actualizaciones; si no, se busca un .obb en la carpeta server')
+    ap.add_argument('--relay', choices=('auto', 'go', 'python'), default='auto', help='relay de las peleas: go (rapido, server/bin/relay_go) o python; auto = go si esta')
     ap.add_argument('--puerto-http', type=int, default=8081, help='descargas de actualizaciones para los telefonos (0 = apagado; abrir en el firewall)')
     a = ap.parse_args()
     logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s',
                         handlers=[logging.StreamHandler(), logging.handlers.RotatingFileHandler(a.log, maxBytes=20 * 1024 * 1024, backupCount=3, encoding='utf-8')])
     srv = Server(a)
     loop = asyncio.get_running_loop()
-    relay = Relay(a.listen, srv.juego.puerto_relay, esperados=srv.juego.jugadores_en_relay, puestos=srv.juego.puestos_relay,
-                  al_empezar=lambda mid: loop.call_soon_threadsafe(srv.juego.pelea_iniciada, mid))
+    import relay_go
+    if a.relay == 'go' or (a.relay == 'auto' and relay_go.ejecutable()):
+        if not relay_go.ejecutable(): raise SystemExit('no encuentro server/bin/relay_go(.exe): compila relay_go/ o usa --relay python')
+        relay = relay_go.RelayGo(a.listen, srv.juego.puerto_relay, al_empezar=lambda mid: loop.call_soon_threadsafe(srv.juego.pelea_iniciada, mid),
+                                 info_partida=lambda mid: srv.juego.info_red.get(mid))
+        srv.juego.relay_externo = relay
+    else:
+        relay = Relay(a.listen, srv.juego.puerto_relay, esperados=srv.juego.jugadores_en_relay, puestos=srv.juego.puestos_relay,
+                      al_empezar=lambda mid: loop.call_soon_threadsafe(srv.juego.pelea_iniciada, mid))
     relay.start(); srv.relay = relay
     server = await asyncio.start_server(srv.handle, a.listen, a.port)
     log.info('fase 3: juego en TCP %d; pelea en UDP %d y %d (abre los dos en el firewall); escuchando en %s; los telefonos usaran %s; %d handlers',

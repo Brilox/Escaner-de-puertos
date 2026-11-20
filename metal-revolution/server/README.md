@@ -195,3 +195,12 @@ siempre con el mismo formato (descrito en `server/actualizaciones.py`). Se arma 
   cambiados; el teléfono solo descarga lo que cambió. El panel muestra "Paquete: listo" cuando se puede probar.
 - El teléfono pregunta en dos etapas: programa/APK (siempre "sin actualización") y recursos (aquí se ofrece la
   actualización como versión de recursos 1.0.0.(1 + N)).
+
+## Relay de las peleas en Go (`relay_go/`, `server/bin/`)
+El relay (pasa los botones entre los telefonos, 60 veces por segundo por jugador) es lo unico del servidor que trabaja
+pesado. Esta escrito tambien en Go, con el mismo protocolo: `mr_server.py` usa `server/bin/relay_go.exe` (Windows) o
+`server/bin/relay_go` (Linux) si esta, y si no el de Python (`--relay python` lo fuerza).
+Prueba de carga en el mismo PC (relay_go/cmd/carga): con 200 peleas a la vez el relay en Python satura un nucleo
+(retraso tipico 64 ms, peor 1 % 245 ms); el de Go usa ~26 % y mantiene 3 ms tipico y 9 ms el peor 1 %.
+Ademas anota la red de cada pelea (ping que informa cada telefono, paquetes y reenvios) en `server/red_partidas.csv`
+(tiene IPs: no se comparte). Recompilar: en relay_go/, `GOOS=windows GOARCH=amd64 go build -o ../server/bin/relay_go.exe ./cmd/relay`.

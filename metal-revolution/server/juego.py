@@ -312,6 +312,7 @@ class Juego:
         self.conectados = {}                                         # uid -> Jugador
         self.mesas = {i: Mesa(i) for i in range(1, NUM_MESAS + 1)}
         self.partidas = {}; self._sig_partida = 1
+        self.relay_externo = None; self.info_red = {}                    # relay en Go (relay_go.py) y datos para el registro de red
         self.colas = {m: [] for m in MODOS}                          # modo -> [lista de grupos (listas de Jugador)]
         self.chat_hall = []                                          # ultimos mensajes del hall
         self.en_hall = []                                            # jugadores en el hall, en orden de llegada (Index)
@@ -915,6 +916,10 @@ class Juego:
     def crear_partida(self, match_type, izq, der, slots=1, mesa=None, modo_mm=None):
         p = Partida(self._sig_partida, match_type, izq, der, slots, mesa, modo_mm); self._sig_partida += 1
         p.relay = self.info_relay(p); self.partidas[p.id] = p
+        self.info_red[p.id] = dict(tipo=('mesa' if mesa else 'tipo %s' % match_type),
+                                   nombres={(lado, i): j.nombre for lado, js in p.lados.items() for i, j in enumerate(js)})
+        if len(self.info_red) > 500: self.info_red.pop(next(iter(self.info_red)))
+        if self.relay_externo: self.relay_externo.esperados(p.id, len(p.jugadores()))
         if mesa: mesa.partida = p
         return p
     def cerrar_partida(self, p):
@@ -923,6 +928,7 @@ class Juego:
             if j.partida is p: j.partida = None; j.lado = None; j.slots = []
         if p.mesa and p.mesa.partida is p: p.mesa.partida = None
         self.partidas.pop(p.id, None)
+        if self.relay_externo: self.relay_externo.fin(p.id)
     def puestos_relay(self, match_id, lado, pos):
         """Todos los puestos que maneja el telefono que entro al relay con (lado, pos): en el 3v3 en solitario, sus 3."""
         # Probado con telefonos: marcar los inputs con los puestos 1 y 2 hace que el juego lance NullReferenceException en

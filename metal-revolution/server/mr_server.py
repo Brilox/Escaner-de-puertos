@@ -204,7 +204,7 @@ class Server:
         plantilla = cat['mroffline_assets_kGameLoginMikeKimSkinsRsp843']['msg']['Data']
         self.juego = Juego(a.host, a.port, a.puerto_relay or a.port, plantilla, a.nombre_automatico); self.conns = 0
         # actualizaciones del juego (marcos, skins...): responden al actualizador de Tencent y sirven las descargas
-        self.act = Actualizaciones(self.juego, a.host, a.puerto_http, self.blobs.raw['mroffline_assets_kVersionUpdateNoUpdateRsp171'], tgcp_set_extra_len)
+        self.act = Actualizaciones(self.juego, a.host, a.puerto_http, self.blobs.raw['mroffline_assets_kVersionUpdateNoUpdateRsp171'], tgcp_set_extra_len, a.obb)
         self.juego.actualizaciones = self.act
     async def handle(self, reader, writer):
         self.conns += 1; cid = self.conns; peer = writer.get_extra_info('peername'); ses = None
@@ -264,6 +264,7 @@ async def main():
     ap.add_argument('--nombre-automatico', action='store_true', help='asigna JugadorNNN sin pedir nombre')
     ap.add_argument('--puerto-admin', type=int, default=8090, help='API del panel de administracion (0 = apagada)')
     ap.add_argument('--admin-escucha', default='127.0.0.1', help='por defecto solo este PC; en un VPS usa un tunel SSH')
+    ap.add_argument('--obb', help='OBB del juego (main.1300...obb) para armar las actualizaciones; si no, se busca un .obb en la carpeta server')
     ap.add_argument('--puerto-http', type=int, default=8081, help='descargas de actualizaciones para los telefonos (0 = apagado; abrir en el firewall)')
     a = ap.parse_args()
     logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s',

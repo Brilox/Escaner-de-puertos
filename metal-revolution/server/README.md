@@ -190,3 +190,8 @@ siempre con el mismo formato (descrito en `server/actualizaciones.py`). Se arma 
 - La pestaña muestra cada consulta de versión y cada descarga de los teléfonos. Para la primera prueba con un teléfono
   real, seguir eso junto con `adb logcat`: lo que pide el actualizador después de la versión se está descubriendo.
 - Si algo falla, "Retirar" vuelve a responder "sin actualización" como antes, y desmarcar "Obligatoria" deja entrar a todos.
+- **El OBB del juego tiene que estar en el servidor** (`main.1300.com.gtarcade.next.mrglo.obb` en la carpeta `server`, o
+  `--obb <ruta>`). Al publicar, el servidor arma un paquete completo del juego (unos 870 MB, ~30 s) con los archivos
+  cambiados; el teléfono solo descarga lo que cambió. El panel muestra "Paquete: listo" cuando se puede probar.
+- El teléfono pregunta en dos etapas: programa/APK (siempre "sin actualización") y recursos (aquí se ofrece la
+  actualización como versión de recursos 1.0.0.(1 + N)).

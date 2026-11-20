@@ -123,6 +123,8 @@ class Panel(tk.Tk):
             v = e.get('vigente')
             self.lbl_act.config(text=('Publicada: versión %s — %s  (%s)' % (v['version'], v.get('nombre', ''), 'OBLIGATORIA' if e['obligatoria'] else 'opcional')
                                       if v else 'No hay ninguna actualización publicada: los teléfonos reciben "sin actualización".') +
+                                     ('\nPaquete para los teléfonos: %s' % (e.get('preparacion', {}).get(str(v['version']), {}).get('texto', '—')) if v else '') +
+                                     '\nOBB del juego: %s' % (e.get('obb') or 'NO ENCONTRADO: copia el .obb en la carpeta server') +
                                      '\nDescargas para los teléfonos: %s   (abre ese puerto TCP en el firewall)' % e['url_descargas'])
             self.act_obligatoria.set(e['obligatoria'])
             self.t_vers.delete(*self.t_vers.get_children())

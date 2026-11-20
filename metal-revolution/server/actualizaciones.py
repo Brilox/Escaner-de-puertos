@@ -27,8 +27,13 @@ Estructura Thrift (reconstruida de libgcloud.so, funciones write de version_serv
                         6: string custom_str}
     La version es de 4 numeros de 16 bits: 1.0.21.1116 = 0x0001_0000_0015_045C (la del juego). La actualizacion N
     publica la version de recursos 1.0.0.(1 + N) (el telefono reporta res 1.0.0.1).
-Lo que el actualizador descarga despues desde http_url todavia se esta descubriendo: el servidor HTTP anota cada
-peticion (ruta, cabeceras) y el panel las muestra, para seguirlo junto con `adb logcat` del telefono.
+El actualizador pregunta dos veces: etapa 1 (programa/APK, siempre "sin actualizacion") y etapa 2 (recursos).
+En la etapa 2 se responde: name = "filelist.json", http_url = .../filelist.json y md5sum = MD5 de esa lista
+(el telefono la descarga y comprueba el MD5). La lista (formato leido de libgcloud.so, listfile_parser):
+    {"filelist": [{"url": ..., "bkurl": ..., "md5": ..., "filename": ..., "filesize": N, "ver": "1.0.0.2"}]}
+apunta a un IFS COMPLETO (el first_source.png del OBB con los archivos cambiados, tools/ifs/escribir_ifs.py).
+El telefono compara el MD5 de cada archivo con los que ya tiene y descarga por rangos (HTTP Range) solo lo que
+cambio. El IFS se arma en el servidor al publicar, a partir del OBB (--obb, o un .obb en la carpeta del servidor).
 
 BLOQUEO DE ENTRADA: con "obligatoria" activado en el panel, quien no tenga la ultima version no entra al juego
 (LoginRequest -> Error con el mensaje). Se considera actualizado al telefono (por IP) que pidio la version y
@@ -109,13 +114,74 @@ def leer_peticion(extra):
 
 # ---------------------------------------------------------------------------------------------- gestor
 class Actualizaciones:
-    def __init__(self, juego, host, puerto_http, blob_sin_actualizacion, tgcp_set_extra_len):
-        self.juego = juego; self.host = host; self.puerto_http = puerto_http
+    def __init__(self, juego, host, puerto_http, blob_sin_actualizacion, tgcp_set_extra_len, obb=None):
+        self.juego = juego; self.host = host; self.puerto_http = puerto_http; self.obb = obb
+        self.preparacion = {}                                     # version -> dict(estado, texto)
         self.plantilla = blob_sin_actualizacion; self.set_extra = tgcp_set_extra_len
         self.clientes = {}                                        # ip -> estado del telefono
         self.registro = deque(maxlen=400)                          # peticiones HTTP y de version, para el panel
         os.makedirs(CARPETA, exist_ok=True)
         self.reaplicar()
+        v = self.ajuste('vigente', 0)
+        if v: self.preparar(int(v))
+
+    # ---- IFS completo para el actualizador de Tencent (etapa de recursos)
+    def buscar_obb(self):
+        if self.obb: return self.obb if os.path.isfile(self.obb) else None
+        for d in (HERE, os.path.join(HERE, '..'), os.path.join(HERE, '..', '..')):
+            try: cands = sorted(f for f in os.listdir(d) if f.lower().endswith('.obb'))
+            except OSError: continue
+            if cands: return os.path.abspath(os.path.join(d, cands[0]))
+        return None
+
+    def archivos_recursos(self, v):
+        d = os.path.join(CARPETA, str(v), 'recursos')
+        return d, os.path.join(d, 'metalonline_res_%d.ifs' % v), os.path.join(d, 'filelist.json')
+
+    def preparar(self, v):
+        """Arma (en segundo plano) el IFS completo y la lista para la version v, si no estan ya."""
+        d, ifs, lista = self.archivos_recursos(v)
+        if os.path.isfile(lista) and os.path.isfile(ifs):
+            self.preparacion[v] = dict(estado='listo', texto='paquete listo (%.0f MB)' % (os.path.getsize(ifs) / 1e6)); return
+        if self.preparacion.get(v, {}).get('estado') == 'construyendo': return
+        import threading
+        self.preparacion[v] = dict(estado='construyendo', texto='armando el paquete del juego...')
+        threading.Thread(target=self._construir, args=(v,), daemon=True).start()
+
+    def _construir(self, v):
+        d, ifs, lista = self.archivos_recursos(v)
+        try:
+            obb = self.buscar_obb()
+            if not obb: raise RuntimeError('no encuentro el OBB del juego: copia main.1300.com.gtarcade.next.mrglo.obb en la carpeta server '
+                                           '(o arranca con --obb <ruta>) y vuelve a publicar')
+            m = json.load(open(os.path.join(CARPETA, str(v), 'manifest.json'), encoding='utf-8'))
+            sys_path = os.path.join(HERE, '..', 'tools', 'ifs')
+            import sys
+            if sys_path not in sys.path: sys.path.insert(0, sys_path)
+            from extraer import abrir
+            from ifs import IFS
+            import escribir_ifs
+            reemplazos = {}
+            for f in m.get('telefono', []):
+                reemplazos[f['ruta']] = open(os.path.join(CARPETA, str(v), 'telefono', *f['ruta'].split('/')), 'rb').read()
+            os.makedirs(d, exist_ok=True)
+            fh, base = abrir(obb)
+            try:
+                original = IFS(fh, base)
+                t0 = time.time(); log.info('actualizacion %d: armando el paquete completo desde %s', v, obb)
+                r = escribir_ifs.rehacer(original, reemplazos, ifs + '.tmp')
+            finally:
+                fh.close()
+            os.replace(ifs + '.tmp', ifs)
+            url = 'http://%s:%d/mo/actualizacion/%d/%s' % (self.host, self.puerto_http, v, os.path.basename(ifs))
+            item = dict(url=url, bkurl=url, md5=r['md5'], filename=os.path.basename(ifs), filesize=r['tamano'],
+                        ver=version_txt(version_i64(v)))
+            open(lista + '.tmp', 'w', encoding='utf-8').write(json.dumps(dict(filelist=[item]), ensure_ascii=False))
+            os.replace(lista + '.tmp', lista)
+            self.preparacion[v] = dict(estado='listo', texto='paquete listo (%.0f MB, %.0f s)' % (r['tamano'] / 1e6, time.time() - t0))
+            log.info('actualizacion %d: paquete listo %s (%d bytes, md5 %s)', v, ifs, r['tamano'], r['md5'])
+        except Exception as e:
+            self.preparacion[v] = dict(estado='error', texto=str(e)); log.error('actualizacion %d: no pude armar el paquete: %s', v, e)
 
     def reaplicar(self):
         """Al arrancar vuelve a poner la parte del servidor de las versiones ya instaladas (HeadFrameConfig.json en
@@ -170,6 +236,7 @@ class Actualizaciones:
         self.poner('vigente', v)
         if 'obligatoria' in m and self.ajuste('obligatoria') is None: self.poner('obligatoria', bool(m['obligatoria']))
         log.info('actualizacion %d publicada (version de recursos %s)', v, version_txt(version_i64(v)))
+        self.preparar(v)
 
     def aplicar_servidor(self, v, silencioso=False):
         """Solo la parte del servidor de la version v (configuraciones, reglas de marcos, catalogo). "Retirar" no la deshace."""
@@ -203,9 +270,7 @@ class Actualizaciones:
         if not m: return True
         c = self.clientes.get(ip)
         if not c: return False
-        if c['version'] is not None and c['version'] >= version_i64(int(m['version'])): return True
-        rutas = {f['ruta'] for f in m.get('telefono', [])}
-        return bool(rutas) and rutas <= c['descargados']
+        return c['version'] is not None and c['version'] >= version_i64(int(m['version']))
 
     def bloquear_login(self, ip):
         """Mensaje de error si el telefono debe actualizar antes de entrar, o None."""
@@ -235,11 +300,16 @@ class Actualizaciones:
         if isinstance(version_cliente, int) and version_cliente: c['version'] = version_cliente
         if not m or self.al_dia(ip):
             return self.plantilla
-        v = version_i64(int(m['version']))
-        url = 'http://%s:%d/mo/actualizacion/%d/' % (self.host, self.puerto_http, int(m['version']))
-        paquete = (t_campo(T.I64, 1, v) + t_campo(T.STRING, 2, m.get('nombre', 'Metal Online')) +
+        n = int(m['version']); v = version_i64(n)
+        prep = self.preparacion.get(n, {})
+        if prep.get('estado') != 'listo':
+            self.anotar('version', ip, 'actualizacion %d todavia no esta lista (%s): respondo sin actualizacion' % (n, prep.get('texto', '?')))
+            return self.plantilla
+        _, _, lista = self.archivos_recursos(n)
+        url = 'http://%s:%d/mo/actualizacion/%d/filelist.json' % (self.host, self.puerto_http, n)
+        paquete = (t_campo(T.I64, 1, v) + t_campo(T.STRING, 2, 'filelist.json') +
                    t_campo(T.STRING, 3, m.get('mensaje', '')) + t_campo(T.STRING, 4, url) +
-                   t_campo(T.STRING, 5, m.get('md5_lista', '')) + t_campo(T.STRING, 6, json.dumps(dict(version=int(m['version'])))))
+                   t_campo(T.STRING, 5, md5(lista)) + t_campo(T.STRING, 6, ''))
         info = t_campo(T.STRUCT, 1, paquete) + t_campo(T.I32, 2, 2 if self.ajuste('obligatoria', False) else 1)
         res = t_campo(T.I32, 1, 0) + t_campo(T.STRUCT, 3, info)
         cuerpo = t_campo(T.STRUCT, 0, res) + b'\x00'                # VersionUpdate_ReqUpdateVersion_result {0: success}
@@ -259,13 +329,27 @@ class Actualizaciones:
             h = {k.strip().lower(): v.strip() for k, v in (l.split(':', 1) for l in lineas[1:] if ':' in l)}
             self.anotar('http', ip, '%s %s range=%s ua=%s' % (metodo, ruta, h.get('range', ''), h.get('user-agent', '')[:80]))
             codigo, tipo, datos = self.servir(ip, unquote(urlsplit(ruta).path), h)
-            parcial = ''
+            archivo = datos if isinstance(datos, str) else None          # ruta de un archivo grande: se manda por partes
+            total = os.path.getsize(archivo) if archivo else len(datos); a, b = 0, total - 1; parcial = ''
             if codigo == 200 and h.get('range', '').startswith('bytes='):
-                a, _, b = h['range'][6:].partition('-'); total = len(datos)
-                a = int(a or 0); b = int(b) if b else total - 1
-                datos = datos[a:b + 1]; codigo = 206; parcial = 'Content-Range: bytes %d-%d/%d\r\n' % (a, a + len(datos) - 1, total)
+                ra, _, rb = h['range'][6:].split(',')[0].strip().partition('-')
+                if ra == '': a, b = max(0, total - int(rb)), total - 1                 # "bytes=-N": los ultimos N
+                else: a = int(ra); b = min(int(rb), total - 1) if rb else total - 1
+                codigo = 206; parcial = 'Content-Range: bytes %d-%d/%d\r\n' % (a, b, total)
+            largo = max(0, b - a + 1)
             writer.write(('HTTP/1.1 %d %s\r\nContent-Type: %s\r\nContent-Length: %d\r\nAccept-Ranges: bytes\r\n%sConnection: close\r\n\r\n'
-                          % (codigo, 'OK' if codigo < 300 else 'Not Found', tipo, len(datos), parcial)).encode() + (datos if metodo != 'HEAD' else b''))
+                          % (codigo, {200: 'OK', 206: 'Partial Content'}.get(codigo, 'Not Found'), tipo, largo, parcial)).encode())
+            if metodo != 'HEAD':
+                if archivo:
+                    with open(archivo, 'rb') as fa:
+                        fa.seek(a); falta = largo
+                        while falta > 0:
+                            trozo = fa.read(min(1 << 20, falta))
+                            if not trozo: break
+                            writer.write(trozo); falta -= len(trozo); await writer.drain()
+                    self.cliente(ip)['descargados'].add('%s [%d-%d]' % (os.path.basename(archivo), a, b))
+                else:
+                    writer.write(datos[a:b + 1])
             await writer.drain()
         except Exception as e:
             log.info('http %s: %s', ip, e)
@@ -279,6 +363,12 @@ class Actualizaciones:
             base = os.path.join(CARPETA, partes[2]); resto = partes[3:]
             if not resto or resto == ['manifest.json']:
                 return 200, 'application/json', open(os.path.join(base, 'manifest.json'), 'rb').read()
+            if len(resto) == 1 and partes[2].isdigit():
+                _, ifs, lista = self.archivos_recursos(int(partes[2]))
+                if resto[0] == 'filelist.json' and os.path.isfile(lista):
+                    return 200, 'application/json', open(lista, 'rb').read()
+                if resto[0] == os.path.basename(ifs) and os.path.isfile(ifs):
+                    return 200, 'application/octet-stream', ifs
             if resto[0] == 'telefono' and '..' not in resto:
                 p = os.path.join(base, *resto)
                 if os.path.isfile(p):
@@ -290,6 +380,7 @@ class Actualizaciones:
     def estado(self):
         m = self.publicada()
         return dict(vigente=m, obligatoria=bool(self.ajuste('obligatoria', False)), instaladas=self.instaladas(),
+                    preparacion={str(k): x for k, x in self.preparacion.items()}, obb=self.buscar_obb(),
                     url_descargas='http://%s:%d/mo/actualizacion/' % (self.host, self.puerto_http),
                     clientes=[dict(c, descargados=sorted(c['descargados']), al_dia=self.al_dia(c['ip']),
                                    version=version_txt(c['version']) if isinstance(c['version'], int) else None)

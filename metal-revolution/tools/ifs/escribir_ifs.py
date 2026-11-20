@@ -148,6 +148,70 @@ def crear(archivos, salida=None):
     return bytes(out)
 
 
+def rehacer(original, reemplazos, salida, progreso=None):
+    """Copia el IFS `original` (lector IFS de ifs.py) a `salida` cambiando el contenido de algunos archivos.
+
+    reemplazos: {ruta: bytes}. Los archivos que no cambian se copian tal cual (sin descomprimir), en el mismo orden y
+    con las mismas entradas, asi el telefono ve que solo cambiaron esos archivos y baja solo esos trozos.
+    Devuelve dict(tamano, md5) del archivo creado. No carga todo en memoria."""
+    from mpq import hash_str as _hs
+    nombres = [n for n in original.read_listfile() if n.strip()]
+    por_hash = {e['hash2']: e for e in original.files}
+    nuevos = {}
+    for ruta, datos in reemplazos.items():
+        r = ruta.replace('/', '\\').strip('\\'); e = por_hash.get(hash64(r) & ((1 << 56) - 1))
+        if e is None or e['flags'] != F_ARCHIVO: raise ValueError('no esta en el IFS original (todavia no se pueden agregar archivos nuevos): ' + r)
+        nuevos[e['i']] = datos
+    sig, ver, ds = struct.unpack('<4sII', original.rd(original.bet_pos, 12))
+    from mpq import decrypt
+    bet = decrypt(original.rd(original.bet_pos + 12, ds), _hs('(block table)', 3))
+    ent = bet[84:84 + (304 * original.count + 7) // 8]
+    from ifs import bits as _bits
+    with open(salida, 'w+b') as f:
+        f.write(b'\0' * 0xAC); pos = 0xAC; entradas = []
+        orden = sorted(original.files, key=lambda e: (e['size'] == 0, e['pos']))     # datos en el mismo orden que el original
+        for k, e in enumerate(orden):
+            x = dict(flags=e['flags'], dirhash=e['dirhash'], hash=e['hash2'], i=e['i'],
+                     md5=_bits(ent, e['i'] * 304 + 112, 128).to_bytes(16, 'little'))
+            if e['size'] == 0:
+                x.update(pos=0, size=0, csize=0, md5=None)
+            elif e['i'] in nuevos:
+                d = nuevos[e['i']]; g = guardar_datos(d)
+                x.update(pos=pos, size=len(d), csize=len(g), md5=hashlib.md5(d).digest())
+                f.write(g + md5_trozos(g)); pos += len(g) + len(md5_trozos(g))
+            else:
+                n = e['csize'] + 16 * ((e['csize'] + TROZO - 1) // TROZO)            # datos + MD5 de sus trozos
+                bloque = original.rd(e['pos'], n)
+                x.update(pos=pos, size=e['size'], csize=e['csize']); f.write(bloque); pos += n
+            entradas.append(x)
+            if progreso and k % 500 == 0: progreso(k, len(orden))
+        entradas.sort(key=lambda x: x['i'])                                     # mismo indice BET que el original
+        het = tabla_het(_hashes_completos(original, nombres), original.het_entries)
+        bet_n = tabla_bet(entradas)
+        het_c = b'HET\x1a' + struct.pack('<II', 1, len(het)) + encrypt(het, hash_str('(hash table)', 3))
+        bet_c = b'BET\x1a' + struct.pack('<II', 1, len(bet_n)) + encrypt(bet_n, hash_str('(block table)', 3))
+        het_pos = pos; f.write(het_c + md5_trozos(het_c)); pos += len(het_c) + len(md5_trozos(het_c))
+        bet_pos = pos; f.write(bet_c + md5_trozos(bet_c)); pos += len(bet_c) + len(md5_trozos(bet_c))
+        relleno = -pos % TROZO; f.write(b'\0' * relleno); tam = pos + relleno; npz = tam // TROZO
+        md5_pos = tam; md5_size = 16 * (npz + 1); bm_pos = md5_pos + md5_size
+        cab = struct.pack('<4sIHHQQQQQQQQQII', b'nifs', 0xAC, 0, original.sector_shift, tam, bet_pos, het_pos, md5_pos, bm_pos,
+                          len(het_c), len(bet_c), md5_size, npz, TROZO, TROZO) + b'\0' * 32
+        cab += hashlib.md5(bet_c).digest() + hashlib.md5(het_c).digest(); cab += hashlib.md5(cab).digest()
+        f.seek(0); f.write(cab); f.seek(0)
+        tabla = bytearray(); total = hashlib.md5()
+        for k in range(npz):
+            b = f.read(TROZO); tabla += hashlib.md5(b).digest(); total.update(b)
+        f.seek(tam); cola = bytes(tabla) + hashlib.md5(tabla).digest() + b'\x01' * npz
+        f.write(cola); total.update(cola)
+    return dict(tamano=tam + len(cola), md5=total.hexdigest())
+
+
+def _hashes_completos(original, nombres):
+    """hash64 completo de cada entrada del original, en orden BET (la BET solo guarda 56 bits)."""
+    m = {hash64(n) & ((1 << 56) - 1): hash64(n) for n in nombres + ['', '(listfile)']}
+    return [m[e['hash2']] for e in original.files]
+
+
 def main():
     if len(sys.argv) != 3: print(__doc__); return 2
     salida, carpeta = sys.argv[1:]

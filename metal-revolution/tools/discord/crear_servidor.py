@@ -39,6 +39,8 @@ ESTRUCTURA = [
                      ('Mesa 3', 'voz', 'jugadores'), ('clasificatoria', 'texto', 'jugadores')]),
     ('🏆 TORNEOS', [('torneos-info', 'texto', 'staff'), ('inscripciones', 'texto', 'jugadores'), ('resultados', 'texto', 'staff')]),
     ('🛠️ SOPORTE', [('ayuda', 'foro', 'jugadores'), ('reportar-errores', 'foro', 'jugadores'), ('abrir-ticket', 'texto', 'bot')]),
+    ('🧪 BETA', [('instrucciones-beta', 'texto', 'staff'), ('prueba-de-red', 'texto', 'jugadores'),
+                ('comentarios-beta', 'texto', 'jugadores')]),
     ('🔒 STAFF', [('staff-chat', 'texto', 'staff'), ('registro-moderación', 'texto', 'bot')]),
 ]
 VISIBLES_SIN_REGLAS = {'bienvenida', 'reglas'}       # lo unico que ve quien todavia no acepto las reglas
@@ -111,11 +113,65 @@ Estamos en beta cerrada haciendo pruebas y cambios casi todos los días. **La de
 • Registro de cuentas con usuario y contraseña.
 • 3v3 (cerrado por ahora).
 
+🧪 **Próxima prueba con jugadores de varios países**: lee <#instrucciones-beta>.
 📅 La fecha de apertura se anunciará en <#anuncios>.""",
 'torneos-info': """🏆 **Torneos**
 Cuando abra el servidor organizaremos torneos oficiales. Formato: eliminación directa, 1v1, al mejor de 3 peleas. Inscripción en <#inscripciones> con tu nombre del juego.
 El campeón recibe el rol **Campeón** y un marco o skin exclusivo del torneo.""",
 }
+
+FIJAR = {'instrucciones-beta', 'prueba-de-red', 'comentarios-beta'}   # el mensaje del bot queda fijado arriba
+TEXTOS_BETA = {
+'instrucciones-beta': """🧪 **Prueba beta de Metal Online: instrucciones**
+Vamos a probar el servidor con jugadores de **distintos países** para medir qué tan bien se juega a distancia (lag y rollback). La fecha y la hora se anuncian en <#anuncios>.
+
+**ANTES de la prueba**
+1. Instala el juego siguiendo <#cómo-jugar> (el enlace se publica el día de la prueba).
+2. **Tu nombre en el juego: tu nombre + la sigla de tu país.** Ejemplos: `Brilox CL`, `Juan MX`, `Ana AR`, `Leo PE`, `Sam US`.
+3. Juega con **WiFi estable** (o datos con buena señal) y cierra descargas y videos en segundo plano.
+
+**DURANTE la prueba**
+4. **Pelea contra todos**, sobre todo contra jugadores de **otros países**: unas **3 peleas por rival** (partida rápida, clasificatoria o salón).
+5. Después de cada serie, deja un reporte corto en <#prueba-de-red> con la plantilla fijada.
+6. Si puedes, **graba la pantalla** de alguna pelea contra un rival lejano y súbela al reporte.
+7. ¿Error, pantalla trabada o el juego se cerró? Repórtalo en <#reportar-errores> con captura y la hora.
+
+**DESPUÉS de la prueba**
+8. Cuéntanos tu experiencia en <#comentarios-beta>: lo que te gustó, lo que no y tus ideas.
+
+🔒 **Privacidad:** durante la prueba el servidor registra datos técnicos de la conexión (ping, paquetes perdidos y tu IP) solo para medir la red. No se publican ni se comparten.
+♻️ Las cuentas de la beta **se borran** al abrir el servidor.
+¡Gracias por ayudar a que Metal Online se juegue bien en todo Latinoamérica! 🥊""",
+'prueba-de-red': """📶 **Reportes de la prueba de red**
+Un mensaje por cada serie de peleas. Copia esta plantilla y complétala:
+
+```
+Rival: Juan MX
+Modo: rápida / clasificatoria / salón
+Peleas jugadas: 3
+Jugabilidad (1 a 5): 4
+Noté: nada / tirones / teletransportes / golpes que no salen / congelones / desconexión
+Mi conexión: WiFi o datos, y mi país
+Hora aproximada: 21:40
+```
+**Escala de jugabilidad**
+5 = como jugar en el mismo lugar · 4 = lag leve, no molesta · 3 = jugable, pero se nota · 2 = difícil de jugar · 1 = injugable
+
+Con estos reportes cruzamos lo que **sienten** ustedes con lo que **mide** el servidor. ¡Cada reporte cuenta! 🙌""",
+'comentarios-beta': """💬 **Comentarios sobre la beta**
+Queremos saber qué te pareció Metal Online. Escribe **una idea por mensaje** y reacciona con 👍 a las que compartas, así vemos qué es lo más pedido.
+
+Puedes comentar sobre:
+• **Peleas:** lag, personajes, equilibrio, modos de juego.
+• **Menús y pantallas:** pantalla de inicio, perfil, marcos, salón.
+• **Lo que más te gustó** y **lo que menos**.
+• **Ideas:** modos, torneos, eventos, recompensas, marcos o skins que te gustaría ver.
+• **Problemas de instalación** o de entrada al juego.
+
+Los errores puntuales van mejor en <#reportar-errores>, con captura y hora. ¡Gracias por jugar! 🥊""",
+}
+TEXTOS.update(TEXTOS_BETA)
+
 
 def permisos(guild, roles, nombre, escribe):
     """Overwrites de un canal: @everyone no ve nada (salvo bienvenida y reglas), Jugador ve y escribe donde toca."""
@@ -152,7 +208,13 @@ async def armar(cliente, guild_id, actualizar=False):
     categorias = {c.name: c for c in guild.categories}
     canales = {c.name: c for c in guild.channels}
     for cat_nombre, lista in ESTRUCTURA:
-        cat = categorias.get(cat_nombre) or await guild.create_category(cat_nombre)
+        cat = categorias.get(cat_nombre)
+        if cat is None:
+            cat = await guild.create_category(cat_nombre); categorias[cat_nombre] = cat
+            sop = categorias.get('🛠️ SOPORTE')
+            if cat_nombre == '🧪 BETA' and sop is not None:
+                try: await cat.edit(position=sop.position + 1)
+                except discord.HTTPException: pass
         for nombre, tipo, escribe in lista:
             if nombre in canales: continue
             ow = permisos(guild, roles, nombre, escribe)
@@ -184,6 +246,9 @@ async def armar(cliente, guild_id, actualizar=False):
         if mensajes and not actualizar: continue                          # ya tiene mensajes: no se repite
         msg = await canal.send(texto)
         if nombre == 'reglas': await msg.add_reaction('✅')
+        if nombre in FIJAR:
+            try: await msg.pin()
+            except discord.HTTPException: print('  (no pude fijar el mensaje en #%s: fijalo a mano)' % nombre)
         print('  texto publicado en #' + nombre + ('  (el texto viejo no era del bot: borralo a mano)' if mensajes else ''))
     print('\nListo. Falta: AutoMod, Carl-bot (rol Jugador con la reaccion de #reglas) y Ticket Tool (ver el documento).')
 

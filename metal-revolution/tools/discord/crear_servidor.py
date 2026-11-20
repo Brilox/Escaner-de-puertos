@@ -107,11 +107,12 @@ Estamos en beta cerrada haciendo pruebas y cambios casi todos los días. **La fe
 • **Salón** con mesas, espectadores y revancha.
 • Perfil con estadísticas reales, temporada, avatar, marcos y "me gusta".
 • **Actualizaciones automáticas** del juego desde nuestro servidor.
+• **Marcos nuevos de la beta**, con efectos animados (también en el perfil y el menú).
+• Nueva pantalla de inicio **Metal Online** con fondo animado.
 • Panel de administración (moderación, chat, suspensiones).
 
 🧪 **En pruebas**
-• Marcos nuevos de la beta, con efectos animados.
-• Nueva pantalla de inicio **Metal Online** con fondo animado.
+• Peleas entre países: lag y rollback (por eso la prueba beta con jugadores de varios países).
 
 🛠️ **En desarrollo**
 • Tienda, monedas, pase de batalla y misiones.

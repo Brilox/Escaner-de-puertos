@@ -138,6 +138,9 @@ def crear(entrada, salida, nombre, carpeta, fps, columnas=16, tamano=1.38, x=0.0
     hr = rt_src.read_typetree(); hr['m_GameObject'] = ref('hgo'); hr['m_Father'] = ref('tr'); hr['m_Children'] = []
     hr['m_LocalRotation'] = {'x': 0.0, 'y': 0.0, 'z': 0.0, 'w': 1.0}
     hr['m_LocalPosition'] = {'x': float(x), 'y': float(y), 'z': -2.0}; hr['m_LocalScale'] = {'x': 1.0, 'y': 1.0, 'z': 1.0}
+    # En un RectTransform Unity ubica el objeto con m_AnchoredPosition (no con m_LocalPosition). La plantilla (star_side de
+    # tq_high) esta en el borde de arriba (y = 0.491): sin esto el efecto salia media altura de marco mas arriba.
+    if 'm_AnchoredPosition' in hr: hr['m_AnchoredPosition'] = {'x': float(x), 'y': float(y)}
     agregar(rt_src, ids['hrt'], hr)
     rg = copy.deepcopy(rgt); rg['m_Name'] = nombre; rg['m_Component'] = [{'component': ref('tr')}]
     agregar(raiz_go, ids['go'], rg)

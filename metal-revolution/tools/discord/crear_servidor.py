@@ -298,9 +298,21 @@ async def armar(cliente, guild_id, actualizar=False):
 
 def main():
     token = os.environ.get('DISCORD_TOKEN')
-    if len(sys.argv) < 2 or not token:
+    args = [a for a in sys.argv[1:] if not a.startswith('--')]
+    if args and not args[0].isdigit():
+        print('ERROR: "%s..." no es el ID del servidor.' % args[0][:6])
+        if '.' in args[0] and len(args[0]) > 50:
+            print('Parece el TOKEN del bot. El token NO va aqui: va en la linea  set DISCORD_TOKEN=...')
+            print('Como quedo a la vista, cambialo YA: discord.com/developers/applications -> tu bot -> Bot -> Reset Token.')
+        print('El ID del servidor es un numero largo: clic derecho en el icono del servidor -> Copiar ID del servidor')
+        print('(si no aparece: Ajustes de usuario -> Avanzado -> Modo desarrollador).')
+        return 2
+    if not token:
+        print('ERROR: falta el token. Escribe antes:  set DISCORD_TOKEN=el-token-de-tu-bot   (en PowerShell: $env:DISCORD_TOKEN="...")')
+        return 2
+    if not args:
         print(__doc__); return 2
-    guild_id = int(sys.argv[1]); actualizar = '--actualizar' in sys.argv
+    guild_id = int(args[0]); actualizar = '--actualizar' in sys.argv
     cliente = discord.Client(intents=discord.Intents.default())
 
     @cliente.event

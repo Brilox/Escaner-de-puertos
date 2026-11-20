@@ -119,6 +119,11 @@ async def hacer_sorteo(cliente, guild, a):
 
 
 def main():
+    if len(sys.argv) > 1 and not sys.argv[1].isdigit() and not sys.argv[1].startswith('-'):
+        print('ERROR: el primer dato tiene que ser el ID del servidor (un numero largo: clic derecho en el servidor -> Copiar ID).')
+        if '.' in sys.argv[1] and len(sys.argv[1]) > 50:
+            print('Pusiste el TOKEN del bot: va en  set DISCORD_TOKEN=...  y como quedo a la vista, cambialo con Reset Token.')
+        sys.exit(2)
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('servidor', type=int); ap.add_argument('accion', choices=('publicar', 'sortear'))
     ap.add_argument('--canal', default='postulación-beta'); ap.add_argument('--mensaje', type=int)

@@ -323,6 +323,7 @@ class Juego:
         self.chat_hall = []                                          # ultimos mensajes del hall
         self.en_hall = []                                            # jugadores en el hall, en orden de llegada (Index)
         self.config = ConfigJuego()                                  # archivos de config que se reemplazan en los telefonos
+        log.info('interruptores del juego que se mandan a los telefonos: %s', json.dumps(self.funciones(), separators=(',', ':')))
         self.handlers = {n[3:]: getattr(self, n) for n in dir(self) if n.startswith('on_')}
 
     # ================================================================= utilidades

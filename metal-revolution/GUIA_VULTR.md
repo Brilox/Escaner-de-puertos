@@ -34,16 +34,27 @@ ssh root@TU.IP
 - Pega la contraseña con **clic derecho** (no se ve mientras la escribes) y Enter.
 - Quedas dentro cuando el cursor dice `root@metal-online:~#`.
 
-## 4. Instalar Metal Online (un solo comando, unos 2 minutos)
-Dentro del servidor:
-```
-curl -fsSLO https://raw.githubusercontent.com/Brilox/Escaner-de-puertos/claude/metal-revolution-multiplayer-server-kode3a/metal-revolution/server/instalar_vps.sh
-sudo bash instalar_vps.sh
-```
-Hace todo solo: instala Python y git, crea 2 GB de memoria de respaldo, descarga solo lo del servidor (unos 10 MB),
-abre los puertos (TCP 8080 y 8081, UDP 8079 y 8080; el panel no queda abierto a internet), pone la hora de Chile y deja
-el servidor como servicio: arranca solo al encender y se reinicia si se cae.
-Al final muestra **LISTO**, la **clave del panel** (guárdala) y si falta el OBB.
+## 4. Instalar Metal Online (el repositorio es privado)
+1. Desde **otra** ventana de PowerShell en tu PC, copia el instalador al servidor (está en la carpeta del ZIP de la rama):
+   ```
+   scp "C:\Users\BriloxSaw\Desktop\...\metal-revolution\server\instalar_vps.sh" root@TU.IP:/root/
+   ```
+2. En la ventana del servidor:
+   ```
+   sudo bash instalar_vps.sh
+   ```
+3. La primera vez se detiene en **"FALTA UN PASO"** y muestra una línea que empieza con `ssh-ed25519`. Es la llave de
+   **solo lectura** del servidor:
+   - En GitHub: repositorio **Escaner-de-puertos** → **Settings** → **Deploy keys** → **Add deploy key**.
+   - Title: `vultr-metal-online`. Key: pega la línea completa. **No** marques "Allow write access". → Add key.
+4. Vuelve a ejecutar `sudo bash instalar_vps.sh`. Ahora sigue solo (unos 2 minutos): instala Python y git, crea 2 GB de
+   memoria de respaldo, descarga solo lo del servidor (unos 10 MB), abre los puertos (TCP 8080 y 8081, UDP 8079 y
+   8080; el panel no queda abierto a internet), pone la hora de Chile y deja el servidor como servicio: arranca solo al
+   encender y se reinicia si se cae.
+5. Al final muestra **LISTO**, la **clave del panel** (guárdala) y si falta el OBB.
+
+Esa llave solo permite **leer** el repositorio y solo desde este servidor: si algún día se borra el servidor, se borra
+también la llave en Deploy keys.
 
 ## 5. Subir el OBB (para las actualizaciones automáticas)
 Desde **otra** ventana de PowerShell en tu PC (no dentro del servidor), con la ruta de tu OBB:
@@ -84,7 +95,7 @@ tail -n 200 /home/mo/mr-servidor/metal-revolution/server/mr_server.log
 | Reiniciar | `systemctl restart metal-online` |
 | Parar | `systemctl stop metal-online` |
 | Estado | `systemctl status metal-online` |
-| Actualizar a la última versión de la rama | `sudo bash /home/mo/mr-servidor/metal-revolution/server/instalar_vps.sh` |
+| Actualizar a la última versión de la rama | `sudo bash /root/instalar_vps.sh` |
 | Respaldar cuentas a tu PC (en PowerShell del PC) | `scp root@TU.IP:/home/mo/mr-servidor/metal-revolution/server/cuentas.db .` |
 
 Actualizar nunca borra `cuentas.db`, `clave_admin.txt`, la carpeta `actualizaciones/` ni el OBB.

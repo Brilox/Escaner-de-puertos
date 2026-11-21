@@ -1,16 +1,21 @@
 #!/usr/bin/env bash
 # Instala (o actualiza) el servidor de Metal Online en un VPS con Ubuntu (Vultr; probado para Ubuntu 24.04 LTS).
 #
-#   curl -fsSLO https://raw.githubusercontent.com/Brilox/Escaner-de-puertos/claude/metal-revolution-multiplayer-server-kode3a/metal-revolution/server/instalar_vps.sh
+#   (copia este archivo al servidor con scp desde tu PC: el repositorio es privado)
 #   sudo bash instalar_vps.sh                 # detecta la IP publica sola
 #   sudo bash instalar_vps.sh 123.45.67.89    # o se la dices tu
+#
+# Repositorio PRIVADO: el codigo se descarga con una llave de solo lectura del propio servidor ("deploy key").
+# La primera vez el script crea la llave, la muestra y se detiene: la agregas en GitHub (repositorio -> Settings ->
+# Deploy keys -> Add deploy key, SIN marcar "Allow write access") y vuelves a ejecutar el mismo comando.
+# Para un repositorio publico sin llave:  sudo MR_REPO=https://github.com/Brilox/Escaner-de-puertos.git bash instalar_vps.sh
 #
 # Volver a ejecutarlo actualiza el codigo a la ultima version de la rama y reinicia el servidor.
 # No toca lo que es tuyo: cuentas.db, clave_admin.txt, la carpeta actualizaciones/, el .obb ni los registros.
 # Guia paso a paso: GUIA_VULTR.md
 set -euo pipefail
 
-REPO="${MR_REPO:-https://github.com/Brilox/Escaner-de-puertos.git}"
+REPO="${MR_REPO:-git@github.com:Brilox/Escaner-de-puertos.git}"
 RAMA="${MR_RAMA:-claude/metal-revolution-multiplayer-server-kode3a}"
 PUERTO="${MR_PUERTO:-8080}"                  # TCP del juego y UDP de la pelea
 PUERTO_PING=$((PUERTO - 1))                  # el juego hace el ping previo a la pelea a este puerto (UDP)
@@ -35,7 +40,7 @@ SERVER_DIR="$DESTINO/metal-revolution/server"
 echo "== 1/6 Paquetes (git, python3) y hora ($ZONA)"
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -qq
-apt-get install -y -qq git python3 curl >/dev/null
+apt-get install -y -qq git python3 curl openssh-client >/dev/null
 python3 -c 'import sys; assert sys.version_info >= (3, 8), sys.version' || { echo "Hace falta Python 3.8 o mas nuevo"; exit 1; }
 timedatectl set-timezone "$ZONA" 2>/dev/null || true
 
@@ -46,6 +51,27 @@ if ! swapon --show | grep -q .; then
   echo "   swap creada"
 else
   echo "   ya habia swap"
+fi
+
+if [[ "$REPO" == git@* ]]; then
+  LLAVE="$CASA/.ssh/id_ed25519"
+  if [ ! -f "$LLAVE" ]; then
+    sudo -u "$USUARIO" mkdir -p "$CASA/.ssh"; chmod 700 "$CASA/.ssh"
+    sudo -u "$USUARIO" ssh-keygen -q -t ed25519 -N "" -C "metal-online-vps" -f "$LLAVE"
+  fi
+  sudo -u "$USUARIO" touch "$CASA/.ssh/known_hosts"
+  grep -q '^github.com ' "$CASA/.ssh/known_hosts" || { ssh-keyscan -t ed25519 github.com 2>/dev/null | sudo -u "$USUARIO" tee -a "$CASA/.ssh/known_hosts" >/dev/null; } || true
+  if ! sudo -u "$USUARIO" git ls-remote -q "$REPO" "$RAMA" >/dev/null 2>&1; then
+    echo
+    echo "FALTA UN PASO: este servidor todavia no tiene permiso para leer el repositorio."
+    echo "En GitHub: repositorio Escaner-de-puertos -> Settings -> Deploy keys -> Add deploy key"
+    echo "  Title: vultr-metal-online     Key: copia la linea de abajo completa     NO marques 'Allow write access'"
+    echo
+    cat "$LLAVE.pub"
+    echo
+    echo "Despues vuelve a ejecutar:  sudo bash $0 ${1:-}"
+    exit 2
+  fi
 fi
 
 echo "== 3/6 Codigo del servidor (solo server, datos y tools/ifs de la rama $RAMA)"
@@ -124,3 +150,4 @@ echo "      $(cat "$SERVER_DIR/clave_admin.txt" 2>/dev/null || echo '(se crea al
 echo "  Ver el log en vivo:  tail -f $SERVER_DIR/mr_server.log"
 echo "  Reiniciar / parar:   systemctl restart $SERVICIO   /   systemctl stop $SERVICIO"
 echo "  Actualizar:          sudo bash $SERVER_DIR/instalar_vps.sh $IP"
+cp -f "$SERVER_DIR/instalar_vps.sh" /root/instalar_vps.sh 2>/dev/null || true

@@ -87,7 +87,7 @@ else
   printf '/metal-revolution/server/\n/metal-revolution/datos/\n/metal-revolution/tools/ifs/\n' | sudo -u "$USUARIO" tee "$DESTINO/.git/info/sparse-checkout" >/dev/null
   sudo -u "$USUARIO" git -C "$DESTINO" checkout -q "$RAMA"
 fi
-chmod +x "$SERVER_DIR/bin/relay_go" 2>/dev/null || true
+chmod +x "$SERVER_DIR"/bin/relay_go* 2>/dev/null || true
 echo "   version: $(git -C "$DESTINO" log -1 --format='%h %s' | cut -c1-90)"
 
 echo "== 4/6 IP publica"
@@ -101,13 +101,30 @@ fi
 echo "   los telefonos se conectaran a $IP:$PUERTO"
 
 echo "== 5/6 Cortafuegos: SSH, TCP $PUERTO y $PUERTO_HTTP, UDP $PUERTO_PING-$PUERTO (el panel NO se abre: va por tunel SSH)"
-if ! command -v ufw >/dev/null 2>&1; then apt-get install -y -qq ufw >/dev/null; fi
-ufw allow 22/tcp >/dev/null
-ufw allow "$PUERTO/tcp" >/dev/null
-ufw allow "$PUERTO_HTTP/tcp" >/dev/null
-ufw allow "$PUERTO_PING:$PUERTO/udp" >/dev/null
-ufw --force enable >/dev/null
-ufw status | sed 's/^/   /'
+if curl -fsS --max-time 3 -H "Authorization: Bearer Oracle" http://169.254.169.254/opc/v2/instance/ >/dev/null 2>&1; then
+  # Oracle Cloud: sus imagenes traen reglas iptables propias y Oracle recomienda NO usar ufw. Se agregan reglas antes
+  # del REJECT final y se guardan. Ademas hay que abrir los mismos puertos en la Security List de la VCN (ver la guia).
+  echo "   Oracle Cloud detectado: reglas iptables (sin ufw)"
+  apt-get install -y -qq iptables-persistent >/dev/null 2>&1 || true
+  abrir() {   # la regla va justo antes del primer REJECT de INPUT (o al principio si no hay)
+    iptables -C INPUT -p "$1" -m state --state NEW --dport "$2" -j ACCEPT 2>/dev/null && return 0
+    local pos; pos=$(iptables -L INPUT --line-numbers -n | awk '$2=="REJECT"{print $1; exit}')
+    iptables -I INPUT "${pos:-1}" -p "$1" -m state --state NEW --dport "$2" -j ACCEPT
+  }
+  abrir tcp "$PUERTO"; abrir tcp "$PUERTO_HTTP"; abrir udp "$PUERTO_PING"; abrir udp "$PUERTO"
+  if command -v netfilter-persistent >/dev/null 2>&1; then netfilter-persistent save >/dev/null 2>&1 || true
+  else mkdir -p /etc/iptables && iptables-save > /etc/iptables/rules.v4; fi
+  ES_ORACLE=1
+else
+  if ! command -v ufw >/dev/null 2>&1; then apt-get install -y -qq ufw >/dev/null; fi
+  ufw allow 22/tcp >/dev/null
+  ufw allow "$PUERTO/tcp" >/dev/null
+  ufw allow "$PUERTO_HTTP/tcp" >/dev/null
+  ufw allow "$PUERTO_PING:$PUERTO/udp" >/dev/null
+  ufw --force enable >/dev/null
+  ufw status | sed 's/^/   /'
+  ES_ORACLE=0
+fi
 
 echo "== 6/6 Servicio $SERVICIO (arranca solo al encender la maquina y se reinicia si se cae)"
 systemctl disable --now metal-revolution 2>/dev/null || true      # nombre del instalador viejo
@@ -150,4 +167,7 @@ echo "      $(cat "$SERVER_DIR/clave_admin.txt" 2>/dev/null || echo '(se crea al
 echo "  Ver el log en vivo:  tail -f $SERVER_DIR/mr_server.log"
 echo "  Reiniciar / parar:   systemctl restart $SERVICIO   /   systemctl stop $SERVICIO"
 echo "  Actualizar:          sudo bash $SERVER_DIR/instalar_vps.sh $IP"
+if [ "${ES_ORACLE:-0}" = 1 ]; then
+  echo "  ORACLE: abre tambien TCP $PUERTO,$PUERTO_HTTP y UDP $PUERTO_PING-$PUERTO en la Security List de la VCN (GUIA_ORACLE.md)."
+fi
 cp -f "$SERVER_DIR/instalar_vps.sh" /root/instalar_vps.sh 2>/dev/null || true

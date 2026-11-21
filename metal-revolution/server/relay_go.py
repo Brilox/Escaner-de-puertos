@@ -15,7 +15,10 @@ COLUMNAS = ['fecha', 'pelea', 'tipo', 'lado', 'pos', 'jugador', 'ip', 'ping_prom
 
 
 def ejecutable():
-    nombre = 'relay_go.exe' if os.name == 'nt' else 'relay_go'
+    import platform
+    if os.name == 'nt': nombre = 'relay_go.exe'
+    elif platform.machine().lower() in ('aarch64', 'arm64'): nombre = 'relay_go_arm64'   # Oracle Ampere (ARM) y similares
+    else: nombre = 'relay_go'
     p = os.path.join(HERE, 'bin', nombre)
     return p if os.path.isfile(p) else None
 

@@ -89,8 +89,8 @@ Si quieres revisar una red que ya tenías: en la VCN, pestaña **Subnets** debe 
 
 ## Paso 4: abrir los puertos del juego en Oracle
 
-Oracle bloquea todo lo que entra salvo SSH. Hay que abrir: **TCP 8080** (el juego), **UDP 8079** (el ping antes de
-la pelea) y **UDP 8080** (la pelea).
+Oracle bloquea todo lo que entra salvo SSH. Hay que abrir: **TCP 8080** (el juego), **TCP 8081** (las
+actualizaciones automáticas), **UDP 8079** (el ping antes de la pelea) y **UDP 8080** (la pelea).
 
 1. En tu VCN (`red-metal`), pestaña **Security** (consola antigua: *Security Lists* en *Resources*).
 2. Abre **Default Security List for red-metal**.
@@ -100,8 +100,8 @@ la pelea) y **UDP 8080** (la pelea).
    - *Source CIDR*: `0.0.0.0/0`
    - *IP Protocol*: **TCP**
    - *Source Port Range*: vacío
-   - *Destination Port Range*: `8080`
-   - *Description*: `Metal Revolution juego`
+   - *Destination Port Range*: `8080-8081`
+   - *Description*: `Metal Online juego y actualizaciones`
 4. Pulsa **+ Another Ingress Rule** y crea la segunda:
    - *Source CIDR*: `0.0.0.0/0`
    - *IP Protocol*: **UDP**
@@ -166,22 +166,30 @@ No es necesario para la prueba.
 
 ---
 
-## Paso 7: instalar el servidor (un solo comando)
+## Paso 7: instalar el servidor
 
-Dentro de la máquina (la ventana que dice `ubuntu@servidor-metal`), copia y pega estas dos líneas:
+El repositorio es privado: el servidor descarga el código con una llave de **solo lectura** propia.
 
-```bash
-curl -fsSLO https://raw.githubusercontent.com/Brilox/Escaner-de-puertos/claude/metal-revolution-multiplayer-server-kode3a/metal-revolution/server/instalar_oracle.sh
-sudo bash instalar_oracle.sh
-```
+1. En PowerShell **de tu PC** (no dentro de la máquina), copia el instalador a la máquina (está en la carpeta del ZIP
+   de la rama):
+   ```powershell
+   scp -i C:\mr\oracle.key "C:\...\metal-revolution\server\instalar_vps.sh" ubuntu@TU.IP.PUBLICA:~/
+   ```
+2. Dentro de la máquina (la ventana que dice `ubuntu@servidor-metal`):
+   ```bash
+   sudo bash instalar_vps.sh
+   ```
+3. La primera vez se detiene en **"FALTA UN PASO"** y muestra una línea que empieza con `ssh-ed25519`:
+   - En GitHub: repositorio **Escaner-de-puertos** → **Settings** → **Deploy keys** → **Add deploy key**.
+   - Title: `oracle-metal-online`. Key: pega la línea completa. **No** marques "Allow write access". → Add key.
+4. Vuelve a ejecutar `sudo bash instalar_vps.sh`. Ahora sigue solo: instala lo necesario, descarga el servidor,
+   averigua la IP pública, abre los puertos en el cortafuegos interno de la máquina (Oracle tiene **dos**
+   cortafuegos: el del paso 4 y este; en Oracle no se usa `ufw`) y deja el servidor como **servicio**: arranca solo
+   al encender la máquina y se reinicia si se cae. Funciona en las dos máquinas gratis (AMD y Ampere/ARM).
+5. Al final dice **LISTO**, muestra la **clave del panel** (guárdala) y avisa si falta el OBB.
 
-El script hace todo solo: instala lo necesario, descarga el servidor desde tu GitHub, averigua la IP pública, abre los
-puertos en el cortafuegos interno de la máquina (Oracle tiene **dos** cortafuegos: el del paso 4 y este) y deja el
-servidor como **servicio**: arranca solo al encender la máquina y se reinicia si se cae. Al final debe decir:
-
-```
-LISTO: el servidor esta funcionando en TU.IP.PUBLICA (TCP 8080, UDP 8079 y 8080).
-```
+El OBB se sube igual que en `GUIA_VULTR.md` (paso 5), con `scp -i C:\mr\oracle.key ... ubuntu@TU.IP:/home/ubuntu/mr-servidor/metal-revolution/server/`,
+y después `sudo systemctl restart metal-online`. Para el panel: `ssh -i C:\mr\oracle.key -N -L 8090:127.0.0.1:8090 ubuntu@TU.IP`.
 
 Ya puedes cerrar PowerShell: el servidor sigue funcionando en Oracle.
 
@@ -224,10 +232,10 @@ Siempre conectándote primero con `ssh -i C:\mr\oracle.key ubuntu@TU.IP.PUBLICA`
 | Para… | Comando |
 |---|---|
 | Ver el log en vivo (Ctrl+C para salir) | `tail -f ~/mr-servidor/metal-revolution/server/mr_server.log` |
-| Ver si está corriendo | `sudo systemctl status metal-revolution` |
-| Reiniciarlo | `sudo systemctl restart metal-revolution` |
-| Apagarlo / encenderlo | `sudo systemctl stop metal-revolution` / `sudo systemctl start metal-revolution` |
-| **Actualizarlo** a la última versión que yo suba | `sudo bash ~/mr-servidor/metal-revolution/server/instalar_oracle.sh` |
+| Ver si está corriendo | `sudo systemctl status metal-online` |
+| Reiniciarlo | `sudo systemctl restart metal-online` |
+| Apagarlo / encenderlo | `sudo systemctl stop metal-online` / `sudo systemctl start metal-online` |
+| **Actualizarlo** a la última versión que yo suba | `sudo bash /root/instalar_vps.sh` |
 
 Las cuentas y estadísticas están en `~/mr-servidor/metal-revolution/server/cuentas.db`; actualizar **no** las borra.
 
@@ -249,7 +257,7 @@ Queda en `C:\mr\mr_server.log`.
 - **`ssh` se queda pensando y da *timeout***: la instancia no tiene IP pública, o la subred no tiene *Internet Gateway*
   (paso 3), o falta la regla del puerto 22 en la *Security List*.
 - **El comprobador dice FALLA en UDP pero OK en TCP**: falta la regla UDP `8079-8080` del paso 4.
-- **Todo FALLA**: mira si el servicio corre (`sudo systemctl status metal-revolution`); si no, vuelve a ejecutar el
+- **Todo FALLA**: mira si el servicio corre (`sudo systemctl status metal-online`); si no, vuelve a ejecutar el
   instalador y mándame lo que muestre.
 - **Un día la máquina aparece detenida (Stopped)**: Oracle puede detener las máquinas gratuitas que pasan muchos días
   casi sin uso. Instancia → **Start**. La IP se mantiene y el servidor arranca solo.

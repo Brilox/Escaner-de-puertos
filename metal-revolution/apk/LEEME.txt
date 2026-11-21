@@ -1,0 +1,12 @@
+APK "Metal Online" v2 apuntando al servidor en 192.168.100.78:8080 (prueba local).
+Cambios respecto a v1: solo queda el login como invitado (Facebook, Google y Twitter ocultos).
+
+Para unir las partes en Windows (cmd, dentro de esta carpeta):
+    copy /b metal_online.apk.part00 + metal_online.apk.part01 metal_online.apk
+
+Comprobacion opcional:
+    certutil -hashfile metal_online.apk SHA256
+y comparar con metal_online.apk.sha256.
+
+Firmado con tools/mr.keystore (clave: metalrevolution), la misma llave que la v1:
+se instala encima de la version anterior sin desinstalar y sin tocar el OBB.

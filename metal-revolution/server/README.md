@@ -1,0 +1,213 @@
+# Servidor privado de Metal Revolution (fase 3)
+
+Reproduce las respuestas grabadas del servidor original, igual que el servidor local del mod "Metal Offline V2",
+pero en una máquina con IP pública para que varios teléfonos conecten al mismo sitio. Es el primer escalón:
+con esto el juego arranca, hace login y llega al menú contra **nuestro** servidor. Las cuentas, estadísticas,
+salas reales y el relay de combate vienen en las fases siguientes sobre esta misma base.
+
+## Qué necesitas
+
+- Un VPS Linux con IP pública (cualquier plan básico sirve) con el puerto TCP 8080 abierto y los puertos
+  **UDP 8079 y 8080** (8080 para la pelea; 8079 para el ping previo, que el juego manda al puerto de la pelea menos uno).
+- Python 3.10 o superior en el VPS. No hace falta ninguna librería extra.
+- En tu PC: Python 3, `pip install UnityPy`, y las herramientas `zipalign` y `apksigner`
+  (en Debian/Ubuntu: `sudo apt install zipalign apksigner`; en Windows vienen con Android Studio, en build-tools).
+
+## 1. Arrancar el servidor en el VPS
+
+```
+git clone <este repositorio>
+cd Escaner-de-puertos/metal-revolution/server
+python3 mr_server.py --host IP_PUBLICA_DEL_VPS --port 8080
+```
+
+`--host` es la dirección que el servidor le dirá a los clientes para la fase de juego (puede ser un dominio).
+El log muestra cada conexión y cada comando recibido con su nombre.
+
+## 2. Crear el APK que apunta al VPS
+
+Con el APK del mod (el archivo `metal offline.zip` reconstruido, que en realidad es un APK):
+
+```
+python3 ../tools/parchear_cliente.py "metal offline.apk" IP_PUBLICA_DEL_VPS metal_online.apk
+```
+
+El script cambia las tres cadenas `127.0.0.1` del objeto `GCloudConfig` por tu dirección, reconstruye el APK,
+lo alinea y lo firma con un keystore nuevo (`mr.keystore`, clave `metalrevolution`). Guarda ese keystore:
+todas las versiones futuras deben firmarse con el mismo para poder actualizar sin desinstalar.
+
+## 3. Instalar y probar
+
+- Desinstala el "Metal Offline" anterior (la firma es distinta, Android no deja actualizar encima).
+- Instala `metal_online.apk`. Los OBB son los mismos que ya usas.
+- Abre el juego con el VPS corriendo y mira el log: deberían aparecer la conexión TGCP (ACK, AUTHRSP, BINGO,
+  las tres consultas del directorio) y luego la conexión del juego con `LoginRequest`, `QueryServerTimeReq`, etc.
+
+Si el juego se queda cargando, el log dice en qué comando se quedó: es la información que necesitamos
+para la siguiente iteración.
+
+## Cómo funciona por dentro
+
+- `blobs/`: 75 mensajes grabados del servidor original, extraídos de `libgame.so` del mod.
+- Conexión TGCP (primer byte `0xAA`): paquete = `aa` + largo + TLV; el campo 9 de la cabecera dice cuántos
+  bytes de datos Pebble/Thrift siguen. Se responde SYN→ACK63, AUTH→AUTHRSP54+BINGO55, y las peticiones del
+  directorio por el nombre del método que contienen.
+- Conexión del juego (primer byte `0x00`): `u16 tipo | u32 largo | tag2 seq | tag6 cmd | tag5 flag | tag4 payload`.
+  El payload es FlatBuffers (`GameSvrReq` / `GameSvrRsp`, ver `protocolo.json`). Se responde con el blob grabado
+  del mismo cmd copiando el seq; sin blob, un `EmptyRsp` (tipo de unión 2).
+
+## Fase 2 (actual): cuentas, mesas, búsqueda de rival y clasificatoria
+
+`mr_server.py` decodifica cada petición con el esquema FlatBuffers (`esquema_fb.json`, extraído del cliente) y la
+despacha a `juego.py`. No hace falta instalar nada: la librería `flatbuffers` va incluida en `server/flatbuffers/`.
+
+- **Cuentas** en `cuentas.db` (SQLite), una por teléfono (OpenId del login de invitado). La primera vez el servidor
+  devuelve el nombre vacío y el juego abre su propia pantalla de crear jugador (`CreateRoleReq`). Nombres únicos.
+  Con `--nombre-automatico` se asigna `JugadorNNNNN` sin preguntar. En el chat del hall o de la mesa,
+  `/nombre NuevoNombre` cambia el nombre en cualquier momento.
+- **Hall** "Sala Principal" con 8 mesas: entrar, sentarse en el lado izquierdo o derecho, observar, salir, clave y
+  título de mesa (`SetRoomPasswordReq`), chat del hall (con historial) y de la mesa, mensajes privados.
+- **Búsqueda de rival** (`StartSearchMatchReq`, cancelar con `ExitMatchReq`), una cola por modo:
+  clasificatoria 1v1, normal 1v1, clasificatoria 2v2, clasificatoria 3v3 y normal 3v3.
+- **Equipos 2v2**: invitar (`InvitePlayerToRoomReq`), aceptar, salir del equipo; el líder busca por los dos.
+  Si faltan compañeros, la cola completa el equipo con jugadores sueltos.
+- **Partida**: selección de personaje (uno o tres por jugador), escenario, carga, resultado, revancha, volver a
+  elegir personaje y abandono (derrota si ya empezó la pelea; si aún se elegía personaje, se cancela sin puntos).
+  El servidor solo reenvía cada acción al rival (`NotifyOtherSelectChar`, `NotifyOtherConfirmSelectChar`,
+  `NotifyOtherConfirmSelectStage`, `NotifyOtherSyncLoadingProgress`...): el cambio de pantalla lo decide cada
+  teléfono. `NotifyMatchState` no se usa en el flujo normal porque en el cliente es el camino de reconexión.
+- **Mesas con sala de espera**: el primero que se sienta queda esperando; cuando se sienta el segundo, los dos
+  reciben `NotifyGameHallMatchCreated` y pasan a la vez a elegir personaje. Detalle en `Mesa.detalle()`.
+- **Estadísticas y ranking**: victorias, derrotas, empates, experiencia y nivel por cuenta; puntos de
+  clasificatoria por modo (empiezan en 1000, +25 al ganar, −20 al perder); tabla de posiciones
+  (`QueryTopRankReq`, `QueryPlayerRankReq`); historial de partidas en la tabla `partidas`.
+- Anuncio de bienvenida (`QueryServerAnnounceReq`), editable en `ANUNCIO` dentro de `juego.py`.
+- Lo que no tiene handler se contesta con la grabación del mod si existe, y si no con `EmptyRsp`. Ningún error de
+  un handler corta la conexión.
+
+## Fase 3 (actual): la pelea en tiempo real (`relay.py`)
+
+Cada pelea lleva un `RelayServerInfo` que apunta a este mismo servidor (mismo número de puerto, pero UDP). Al
+terminar de cargar, cada teléfono manda un ping UDP, abre un canal KCP y pide entrar a la sala de su pelea; cuando
+están todos, el relay da la salida y a partir de ahí reenvía los botones de cada jugador a los demás (netcode
+rollback del propio juego). El formato exacto de cada mensaje está en la cabecera de `relay.py` y en `ANALISIS.md`.
+Al acabar, los teléfonos suben el resultado (`UploadBattleResult`) y el servidor contesta a todos con `BattleResult`.
+
+- El relay corre en un hilo aparte con sockets UDP normales y un KCP propio escrito en Python puro.
+- El ping previo va a `RelayServerInfo.Port - 1` (leído en `InitRelayServerPingRetriever`); por eso el relay escucha
+  también en ese puerto. `--puerto-relay N` cambia el puerto de la pelea (el ping pasa a ser N-1).
+- 3v3 y 2v2 tienen una fase de **ordenar personajes** entre la selección y el escenario: cada `ChangeCharOrderReq`
+  llena el puesto `OrderingIndex` y se contesta con el siguiente; el rival recibe `NotifyOtherRequestChangeCharOrder`
+  y, cuando los dos lados terminaron (o pasan 33 s), todos reciben `NotifyFinishReorderChar`.
+- En el log, las líneas `relay:` cuentan quién entra, cuándo empieza la pelea y cuántos inputs se reenviaron.
+- **Resultado:** cada teléfono sube su `UploadBattleResult` y el servidor le contesta con `BattleResult` solo después
+  de recibir el suyo. Si se lo manda antes, el teléfono lo descarta y se queda en "esperando resultado". A quien no lo
+  sube en 10 s se le manda igual.
+- El `BattleLog` del resultado debe traer `LeftRoundResults`/`RightRoundResults` con `TotalRounds` elementos: la
+  pantalla de resultados los recorre ronda a ronda y, si faltan, falla y el juego se queda en la imagen del ganador.
+- **Partida rápida (tipo 2):** el juego no muestra selección de personaje; usa el favorito elegido antes de buscar
+  (`ChangeFavCharReq`). El servidor manda ya el personaje de cada uno y un escenario, y la pelea pasa directo a la carga.
+- **Clasificatoria:** el botón del menú abre el modo "3v3 en solitario" (`MatchMakingType` 3): 3 personajes por
+  jugador, fase de ordenarlos y pelea por relevos. Al reordenar, el rival recibe `NotifyOtherRequestChangeCharOrder`
+  con `TargetUid = 0`; con otro valor su teléfono lo ignora y la pelea se desincroniza.
+- **Sala:** al terminar la pelea no se manda `NotifyRoomDetailInfoUpdate` a los de la mesa. Si llega justo antes del
+  resultado, el teléfono se queda en la imagen del ganador sin revancha ni salir.
+- **Modos de batalla abiertos:** el juego decide qué botones habilita con su `OpenSystemConfig.json` (la 2v2 venía
+  con fechas de 2021 y la clasificatoria 1v1 solo de 9:00 a 20:30) y con `RankMatchConfig` (nivel 8 y 5 personajes).
+  El servidor le manda al teléfono una `OpenSystemConfig.json` sin fechas ni horario (ver `config_juego/README.md`).
+  La primera vez hay que cerrar y abrir el juego. El nivel es el real de la cuenta (sube 1 cada 100 de experiencia):
+  forzarlo a 10 rompía la pantalla de resultados del que pierde.
+- **Efecto (brillo) del marco equipado:** el teléfono pide al entrar los interruptores de funciones
+  (`QueryFuncCtrlConfigReq`). Antes iba la respuesta grabada del mod (`disableFirstPay` y `enableHeadFrame`) y, sin
+  `enableHeadFrameEffect`, el juego nunca dibujaba el efecto del marco equipado en el menú ni en el perfil (con ningún
+  marco). Ahora el servidor responde por su cuenta con los tres. Para cambiar o agregar interruptores sin tocar el
+  código: `server/funciones_juego.json`, por ejemplo `{"enableHeadFrameEffect": 1}`. Otros nombres que el juego conoce
+  (`enableMall`, `enableBag`, `enableTask`, `enableDaySign`, `enableActivityCenter`...) abren menús que el servidor
+  todavía no atiende: probarlos de a uno.
+- **Teléfono pegado al terminar:** si a un jugador le llega el resultado pero su pantalla de resultados no se abre
+  (no pide nada más), en la sala la revancha o "volver a elegir" del rival lo mandan también a elegir personaje
+  (`NotifyGameHallMatchCreated`). Si un teléfono vuelve a cargar una pelea ya terminada, se le cancela.
+- **Tutoriales:** se guardan los que termina cada cuenta (`QueryTrainingDataReq`); la guía que salía tras la primera
+  derrota viene marcada como hecha.
+- No implementado todavía: el netcode FrameSync (el servidor anuncia rollback), espectadores de una pelea en curso
+  y reconexión a mitad de combate.
+
+## Probar sin teléfonos
+
+```
+python mr_server.py --host 127.0.0.1 --port 18080 --nombre-automatico
+python ../tools/prueba_pelea.py 127.0.0.1 18080
+```
+
+`tools/prueba_pelea.py` simula dos teléfonos de punta a punta: sala de espera, selección, carga, ping, KCP con
+paquetes perdidos, resultado, revancha, abandono, clasificatoria 3v3, 2v2 y el envío de configuraciones. `tools/cliente_prueba.py` es el cliente base.
+Versión anterior (solo grabaciones): `mr_server_v1_replay.py`.
+
+## Perfil del jugador
+- **Estadísticas:** cada pelea se guarda por jugador y personaje (tabla `registros` de `cuentas.db`) con las estadísticas
+  que sube su teléfono (daño, combos, golpes, bloqueos…). De ahí salen `CommonBattleStats` (por tipo de pelea),
+  `HeroBattleDatas` (por personaje) y la temporada (`QuerySeasonInfoReq`): porcentaje de victorias y los seis puntajes
+  de 0 a 20 del radar (daño por segundo, movimiento, combo, ataque, técnica, defensa), con el total sobre 100.
+- **Avatar:** los 18 avatares de personaje (`PlayerHeadReq`/`PlayerHeadChangeReq`). Una foto propia no se puede: el
+  juego la subía a una nube de Tencent que ya no existe.
+- **Marcos:** se desbloquean con las reglas del propio juego (`datos/marcos.json`, de `HeadFrameConfig`): puntos de
+  clasificatoria, victorias con un personaje y nivel. Los de objeto/especiales quedan bloqueados para campeones y
+  colaboradores.
+- **Colaboradores (marcos y skins de agradecimiento):** niveles en `colaboradores.json` (marcos, skins fijas, cupo de
+  skins a elección o todas las skins; cada nivel incluye los anteriores). El staff los asigna con `colaboradores.py`
+  (con el servidor encendido o apagado; el jugador los ve al volver a entrar):
+  ```
+  python colaboradores.py niveles                       # que da cada nivel
+  python colaboradores.py catalogo skins Jamal          # ids de skin (o: catalogo marcos)
+  python colaboradores.py nivel Donante 2 --nota "Ko-fi nov"
+  python colaboradores.py skin Donante 753              # usa el cupo de su nivel (--regalo: fuera del cupo)
+  python colaboradores.py marco Campeon 73              # marco suelto: campeones de torneo, eventos
+  python colaboradores.py ver Donante | lista | quitar Donante [--todo] | sacar Donante skin 753
+  ```
+  El catálogo (`datos/catalogo_cosmeticos.json`: 151 skins y 86 marcos con su nombre en español) se arma del OBB con
+  `tools/extraer_cosmeticos.py`. La skin elegida en el teléfono (`ChangeHeroSkinReq`) se guarda y se usa en el login
+  (`UseSkinId`) y en la partida rápida (`CostumeId`, que es el mismo id de skin).
+- **Me gusta** (`PraiseOtherReq`) se acumula en el perfil.
+
+## Panel de administración (`tools/admin/panel_admin.py`)
+Programa con ventanas (Python con Tkinter, sin instalar nada más). En Windows: doble clic en `tools/admin/abrir_panel.bat`.
+- **Conexión:** el servidor abre la API de administración en `127.0.0.1:8090` (`--puerto-admin`, `0` la apaga). La clave
+  se crea sola en `server/clave_admin.txt` la primera vez (no se sube a GitHub). En un VPS: `ssh -L 8090:127.0.0.1:8090 usuario@IP`
+  y el panel se conecta a `http://127.0.0.1:8090`.
+- **Estado:** conectados, cuentas, peleas en curso, mesas y anuncios a todos.
+- **Jugadores:** lista con en línea/offline, ficha (estadísticas, chat, desbloqueos propios), mensaje, silenciar,
+  suspender (con horas y motivo), expulsar, renombrar y roles (`colaborador`, `campeon`).
+- **Chat:** todo el chat queda guardado (salón, mesas, privados, peleas); búsqueda por jugador o texto y exportación.
+- **Héroes y skins / Marcos:** bloquear para todos, marcar como exclusivo de un rol, agregar skins y marcos nuevos.
+  Lo que se cambia les llega al momento a los jugadores conectados.
+- **Configuración del juego:** editar, activar o desactivar e importar los archivos que se mandan a los teléfonos.
+- **Economía:** precios y monedas guardados en el servidor, listos para la tienda y el pase de batalla.
+
+
+## Actualizaciones del juego (un solo archivo .mrupd)
+Todo cambio del cliente (marcos, skins, imágenes, efectos, textos, configuraciones) va en **un archivo `.mrupd`**,
+siempre con el mismo formato (descrito en `server/actualizaciones.py`). Se arma con
+`tools/actualizacion/crear_actualizacion.py` y se sube en el panel, pestaña **Actualizaciones**.
+
+- El juego trae el actualizador de Tencent (Dolphin) y el mod lo apunta a este servidor. Al abrir el juego pregunta
+  la versión (`VersionUpdate:ReqUpdateVersion`). Si hay una actualización publicada, el servidor responde con la versión
+  de recursos nueva (1.0.0.(1 + N)), solo en la etapa de recursos (la etapa del programa/APK siempre responde "sin actualizacion"), `update_type` 2 (obligatoria) o 1 (opcional) y la dirección de descarga.
+- Descargas: `http://<host>:8081/mo/actualizacion/<N>/` (`--puerto-http`, por defecto 8081). **Abrir ese puerto TCP en el firewall.**
+- Con "Obligatoria" marcada, quien no actualizó no puede entrar (el login responde con el mensaje de la actualización).
+- La pestaña muestra cada consulta de versión y cada descarga de los teléfonos. Para la primera prueba con un teléfono
+  real, seguir eso junto con `adb logcat`: lo que pide el actualizador después de la versión se está descubriendo.
+- Si algo falla, "Retirar" vuelve a responder "sin actualización" como antes, y desmarcar "Obligatoria" deja entrar a todos.
+- **El OBB del juego tiene que estar en el servidor** (`main.1300.com.gtarcade.next.mrglo.obb` en la carpeta `server`, o
+  `--obb <ruta>`). Al publicar, el servidor arma un paquete completo del juego (unos 870 MB, ~30 s) con los archivos
+  cambiados; el teléfono solo descarga lo que cambió. El panel muestra "Paquete: listo" cuando se puede probar.
+- El teléfono pregunta en dos etapas: programa/APK (siempre "sin actualización") y recursos (aquí se ofrece la
+  actualización como versión de recursos 1.0.0.(1 + N)).
+
+## Relay de las peleas en Go (`relay_go/`, `server/bin/`)
+El relay (pasa los botones entre los telefonos, 60 veces por segundo por jugador) es lo unico del servidor que trabaja
+pesado. Esta escrito tambien en Go, con el mismo protocolo: `mr_server.py` usa `server/bin/relay_go.exe` (Windows) o
+`server/bin/relay_go` (Linux) si esta, y si no el de Python (`--relay python` lo fuerza).
+Prueba de carga en el mismo PC (relay_go/cmd/carga): con 200 peleas a la vez el relay en Python satura un nucleo
+(retraso tipico 64 ms, peor 1 % 245 ms); el de Go usa ~26 % y mantiene 3 ms tipico y 9 ms el peor 1 %.
+Ademas anota la red de cada pelea (ping que informa cada telefono, paquetes y reenvios) en `server/red_partidas.csv`
+(tiene IPs: no se comparte). Recompilar: en relay_go/, `GOOS=windows GOARCH=amd64 go build -o ../server/bin/relay_go.exe ./cmd/relay`.

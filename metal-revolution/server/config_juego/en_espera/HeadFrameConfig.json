@@ -1,0 +1,1127 @@
+{
+ "headFrames": [
+  {
+   "id": 1,
+   "headName": "item/name/51000",
+   "conditionType": 3,
+   "conditionParams": [
+    51000,
+    1
+   ],
+   "desc": "item/desc/51000",
+   "lockDesc": "item/lockdesc/51000",
+   "icon": "common/HeadFrame/ClosetestHeadframe",
+   "effect": "Level_ef_BeatProducers"
+  },
+  {
+   "id": 2,
+   "headName": "item/name/51001",
+   "conditionType": 4,
+   "conditionParams": [
+    1
+   ],
+   "desc": "item/desc/51001",
+   "lockDesc": "item/lockdesc/51001",
+   "icon": "common/头像框-01"
+  },
+  {
+   "id": 3,
+   "headName": "item/name/51002",
+   "conditionType": 1,
+   "conditionParams": [
+    650,
+    1149
+   ],
+   "desc": "item/desc/51002",
+   "lockDesc": "item/lockdesc/51002",
+   "icon": "common/头像框-02"
+  },
+  {
+   "id": 4,
+   "headName": "item/name/51003",
+   "conditionType": 1,
+   "conditionParams": [
+    1150,
+    1899
+   ],
+   "desc": "item/desc/51003",
+   "lockDesc": "item/lockdesc/51003",
+   "icon": "common/头像框-03",
+   "effect": "Level_ef_03"
+  },
+  {
+   "id": 5,
+   "headName": "item/name/51004",
+   "conditionType": 1,
+   "conditionParams": [
+    1900,
+    3399
+   ],
+   "desc": "item/desc/51004",
+   "lockDesc": "item/lockdesc/51004",
+   "icon": "common/头像框-04",
+   "effect": "Level_ef_04"
+  },
+  {
+   "id": 6,
+   "headName": "item/name/51005",
+   "conditionType": 1,
+   "conditionParams": [
+    3400,
+    5899
+   ],
+   "desc": "item/desc/51005",
+   "lockDesc": "item/lockdesc/51005",
+   "icon": "common/头像框-05",
+   "effect": "Level_ef_05"
+  },
+  {
+   "id": 7,
+   "headName": "item/name/51006",
+   "conditionType": 1,
+   "conditionParams": [
+    5900,
+    8399
+   ],
+   "desc": "item/desc/51006",
+   "lockDesc": "item/lockdesc/51006",
+   "icon": "common/头像框-06",
+   "effect": "Level_ef_06"
+  },
+  {
+   "id": 8,
+   "headName": "item/name/51007",
+   "conditionType": 1,
+   "conditionParams": [
+    8400,
+    97249
+   ],
+   "desc": "item/desc/51007",
+   "lockDesc": "item/lockdesc/51007",
+   "icon": "common/头像框-07",
+   "effect": "Level_ef_07"
+  },
+  {
+   "id": 9,
+   "headName": "item/name/51010",
+   "conditionType": 2,
+   "conditionParams": [
+    11,
+    40
+   ],
+   "desc": "item/desc/51010",
+   "lockDesc": "item/lockdesc/51010",
+   "icon": "common/HeadFrame/修女初级头像框"
+  },
+  {
+   "id": 10,
+   "headName": "item/name/51011",
+   "conditionType": 2,
+   "conditionParams": [
+    11,
+    100
+   ],
+   "desc": "item/desc/51011",
+   "lockDesc": "item/lockdesc/51011",
+   "icon": "common/HeadFrame/修女中级头像框"
+  },
+  {
+   "id": 11,
+   "headName": "item/name/51012",
+   "conditionType": 2,
+   "conditionParams": [
+    11,
+    200
+   ],
+   "desc": "item/desc/51012",
+   "lockDesc": "item/lockdesc/51012",
+   "icon": "common/HeadFrame/修女高级头像框",
+   "effect": "sqst_high"
+  },
+  {
+   "id": 12,
+   "headName": "item/name/51013",
+   "conditionType": 2,
+   "conditionParams": [
+    11,
+    350
+   ],
+   "desc": "item/desc/51013",
+   "lockDesc": "item/lockdesc/51013",
+   "icon": "common/HeadFrame/修女终极头像框",
+   "effect": "sqst_max"
+  },
+  {
+   "id": 13,
+   "headName": "item/name/51014",
+   "conditionType": 2,
+   "conditionParams": [
+    10,
+    40
+   ],
+   "desc": "item/desc/51014",
+   "lockDesc": "item/lockdesc/51014",
+   "icon": "common/HeadFrame/双节棍初级头像框"
+  },
+  {
+   "id": 14,
+   "headName": "item/name/51015",
+   "conditionType": 2,
+   "conditionParams": [
+    10,
+    100
+   ],
+   "desc": "item/desc/51015",
+   "lockDesc": "item/lockdesc/51015",
+   "icon": "common/HeadFrame/双节棍中级头像框"
+  },
+  {
+   "id": 15,
+   "headName": "item/name/51016",
+   "conditionType": 2,
+   "conditionParams": [
+    10,
+    200
+   ],
+   "desc": "item/desc/51016",
+   "lockDesc": "item/lockdesc/51016",
+   "icon": "common/HeadFrame/双节棍高级头像框",
+   "effect": "sjl_high"
+  },
+  {
+   "id": 16,
+   "headName": "item/name/51017",
+   "conditionType": 2,
+   "conditionParams": [
+    10,
+    350
+   ],
+   "desc": "item/desc/51017",
+   "lockDesc": "item/lockdesc/51017",
+   "icon": "common/HeadFrame/双节棍终极头像框",
+   "effect": "sjl_max"
+  },
+  {
+   "id": 17,
+   "headName": "item/name/51018",
+   "conditionType": 2,
+   "conditionParams": [
+    3,
+    40
+   ],
+   "desc": "item/desc/51018",
+   "lockDesc": "item/lockdesc/51018",
+   "icon": "common/HeadFrame/变色龙初级头像框"
+  },
+  {
+   "id": 18,
+   "headName": "item/name/51019",
+   "conditionType": 2,
+   "conditionParams": [
+    3,
+    100
+   ],
+   "desc": "item/desc/51019",
+   "lockDesc": "item/lockdesc/51019",
+   "icon": "common/HeadFrame/变色龙中级头像框"
+  },
+  {
+   "id": 19,
+   "headName": "item/name/51020",
+   "conditionType": 2,
+   "conditionParams": [
+    3,
+    200
+   ],
+   "desc": "item/desc/51020",
+   "lockDesc": "item/lockdesc/51020",
+   "icon": "common/HeadFrame/变色龙高级头像框",
+   "effect": "bsl_high"
+  },
+  {
+   "id": 20,
+   "headName": "item/name/51021",
+   "conditionType": 2,
+   "conditionParams": [
+    3,
+    350
+   ],
+   "desc": "item/desc/51021",
+   "lockDesc": "item/lockdesc/51021",
+   "icon": "common/HeadFrame/变色龙终极头像框",
+   "effect": "bsl_max"
+  },
+  {
+   "id": 21,
+   "headName": "item/name/51022",
+   "conditionType": 2,
+   "conditionParams": [
+    5,
+    40
+   ],
+   "desc": "item/desc/51022",
+   "lockDesc": "item/lockdesc/51022",
+   "icon": "common/HeadFrame/拳王初级头像框"
+  },
+  {
+   "id": 22,
+   "headName": "item/name/51023",
+   "conditionType": 2,
+   "conditionParams": [
+    5,
+    100
+   ],
+   "desc": "item/desc/51023",
+   "lockDesc": "item/lockdesc/51023",
+   "icon": "common/HeadFrame/拳王中级头像框"
+  },
+  {
+   "id": 23,
+   "headName": "item/name/51024",
+   "conditionType": 2,
+   "conditionParams": [
+    5,
+    200
+   ],
+   "desc": "item/desc/51024",
+   "lockDesc": "item/lockdesc/51024",
+   "icon": "common/HeadFrame/拳王高级头像框",
+   "effect": "qw_high"
+  },
+  {
+   "id": 24,
+   "headName": "item/name/51025",
+   "conditionType": 2,
+   "conditionParams": [
+    5,
+    350
+   ],
+   "desc": "item/desc/51025",
+   "lockDesc": "item/lockdesc/51025",
+   "icon": "common/HeadFrame/拳王终极头像框",
+   "effect": "qw_max"
+  },
+  {
+   "id": 25,
+   "headName": "item/name/51026",
+   "conditionType": 2,
+   "conditionParams": [
+    7,
+    40
+   ],
+   "desc": "item/desc/51026",
+   "lockDesc": "item/lockdesc/51026",
+   "icon": "common/HeadFrame/橄榄球初级头像框"
+  },
+  {
+   "id": 26,
+   "headName": "item/name/51027",
+   "conditionType": 2,
+   "conditionParams": [
+    7,
+    100
+   ],
+   "desc": "item/desc/51027",
+   "lockDesc": "item/lockdesc/51027",
+   "icon": "common/HeadFrame/橄榄球中级头像框"
+  },
+  {
+   "id": 27,
+   "headName": "item/name/51028",
+   "conditionType": 2,
+   "conditionParams": [
+    7,
+    200
+   ],
+   "desc": "item/desc/51028",
+   "lockDesc": "item/lockdesc/51028",
+   "icon": "common/HeadFrame/橄榄球高级头像框",
+   "effect": "glq_high"
+  },
+  {
+   "id": 28,
+   "headName": "item/name/51029",
+   "conditionType": 2,
+   "conditionParams": [
+    7,
+    350
+   ],
+   "desc": "item/desc/51029",
+   "lockDesc": "item/lockdesc/51029",
+   "icon": "common/HeadFrame/橄榄球终极头像框",
+   "effect": "glq_max"
+  },
+  {
+   "id": 29,
+   "headName": "item/name/51030",
+   "conditionType": 2,
+   "conditionParams": [
+    9,
+    40
+   ],
+   "desc": "item/desc/51030",
+   "lockDesc": "item/lockdesc/51030",
+   "icon": "common/HeadFrame/泰拳初级头像框"
+  },
+  {
+   "id": 30,
+   "headName": "item/name/51031",
+   "conditionType": 2,
+   "conditionParams": [
+    9,
+    100
+   ],
+   "desc": "item/desc/51031",
+   "lockDesc": "item/lockdesc/51031",
+   "icon": "common/HeadFrame/泰拳中级头像框"
+  },
+  {
+   "id": 31,
+   "headName": "item/name/51032",
+   "conditionType": 2,
+   "conditionParams": [
+    9,
+    200
+   ],
+   "desc": "item/desc/51032",
+   "lockDesc": "item/lockdesc/51032",
+   "icon": "common/HeadFrame/泰拳高级头像框",
+   "effect": "tq_high"
+  },
+  {
+   "id": 32,
+   "headName": "item/name/51033",
+   "conditionType": 2,
+   "conditionParams": [
+    9,
+    350
+   ],
+   "desc": "item/desc/51033",
+   "lockDesc": "item/lockdesc/51033",
+   "icon": "common/HeadFrame/泰拳终极头像框",
+   "effect": "tq_max"
+  },
+  {
+   "id": 33,
+   "headName": "item/name/51034",
+   "conditionType": 2,
+   "conditionParams": [
+    2,
+    40
+   ],
+   "desc": "item/desc/51034",
+   "lockDesc": "item/lockdesc/51034",
+   "icon": "common/HeadFrame/猫女初级头像框"
+  },
+  {
+   "id": 34,
+   "headName": "item/name/51035",
+   "conditionType": 2,
+   "conditionParams": [
+    2,
+    100
+   ],
+   "desc": "item/desc/51035",
+   "lockDesc": "item/lockdesc/51035",
+   "icon": "common/HeadFrame/猫女中级头像框"
+  },
+  {
+   "id": 35,
+   "headName": "item/name/51036",
+   "conditionType": 2,
+   "conditionParams": [
+    2,
+    200
+   ],
+   "desc": "item/desc/51036",
+   "lockDesc": "item/lockdesc/51036",
+   "icon": "common/HeadFrame/猫女高级头像框",
+   "effect": "jdj_high"
+  },
+  {
+   "id": 36,
+   "headName": "item/name/51037",
+   "conditionType": 2,
+   "conditionParams": [
+    2,
+    350
+   ],
+   "desc": "item/desc/51037",
+   "lockDesc": "item/lockdesc/51037",
+   "icon": "common/HeadFrame/猫女终极头像框",
+   "effect": "jdj_max"
+  },
+  {
+   "id": 37,
+   "headName": "item/name/51038",
+   "conditionType": 2,
+   "conditionParams": [
+    12,
+    40
+   ],
+   "desc": "item/desc/51038",
+   "lockDesc": "item/lockdesc/51038",
+   "icon": "common/HeadFrame/猴子初级头像框"
+  },
+  {
+   "id": 38,
+   "headName": "item/name/51039",
+   "conditionType": 2,
+   "conditionParams": [
+    12,
+    100
+   ],
+   "desc": "item/desc/51039",
+   "lockDesc": "item/lockdesc/51039",
+   "icon": "common/HeadFrame/猴子中级头像框"
+  },
+  {
+   "id": 39,
+   "headName": "item/name/51040",
+   "conditionType": 2,
+   "conditionParams": [
+    12,
+    200
+   ],
+   "desc": "item/desc/51040",
+   "lockDesc": "item/lockdesc/51040",
+   "icon": "common/HeadFrame/猴子高级头像框",
+   "effect": "mhw_high"
+  },
+  {
+   "id": 40,
+   "headName": "item/name/51041",
+   "conditionType": 2,
+   "conditionParams": [
+    12,
+    350
+   ],
+   "desc": "item/desc/51041",
+   "lockDesc": "item/lockdesc/51041",
+   "icon": "common/HeadFrame/猴子终极头像框",
+   "effect": "mhw_max"
+  },
+  {
+   "id": 41,
+   "headName": "item/name/51042",
+   "conditionType": 2,
+   "conditionParams": [
+    13,
+    40
+   ],
+   "desc": "item/desc/51042",
+   "lockDesc": "item/lockdesc/51042",
+   "icon": "common/HeadFrame/白熊初级头像框"
+  },
+  {
+   "id": 42,
+   "headName": "item/name/51043",
+   "conditionType": 2,
+   "conditionParams": [
+    13,
+    100
+   ],
+   "desc": "item/desc/51043",
+   "lockDesc": "item/lockdesc/51043",
+   "icon": "common/HeadFrame/白熊中级头像框"
+  },
+  {
+   "id": 43,
+   "headName": "item/name/51044",
+   "conditionType": 2,
+   "conditionParams": [
+    13,
+    200
+   ],
+   "desc": "item/desc/51044",
+   "lockDesc": "item/lockdesc/51044",
+   "icon": "common/HeadFrame/白熊高级头像框",
+   "effect": "bjx_high"
+  },
+  {
+   "id": 44,
+   "headName": "item/name/51045",
+   "conditionType": 2,
+   "conditionParams": [
+    13,
+    350
+   ],
+   "desc": "item/desc/51045",
+   "lockDesc": "item/lockdesc/51045",
+   "icon": "common/HeadFrame/白熊终极头像框",
+   "effect": "bjx_max"
+  },
+  {
+   "id": 45,
+   "headName": "item/name/51046",
+   "conditionType": 2,
+   "conditionParams": [
+    14,
+    40
+   ],
+   "desc": "item/desc/51046",
+   "lockDesc": "item/lockdesc/51046",
+   "icon": "common/HeadFrame/罗马女初级头像框"
+  },
+  {
+   "id": 46,
+   "headName": "item/name/51047",
+   "conditionType": 2,
+   "conditionParams": [
+    14,
+    100
+   ],
+   "desc": "item/desc/51047",
+   "lockDesc": "item/lockdesc/51047",
+   "icon": "common/HeadFrame/罗马女中级头像框"
+  },
+  {
+   "id": 47,
+   "headName": "item/name/51048",
+   "conditionType": 2,
+   "conditionParams": [
+    14,
+    200
+   ],
+   "desc": "item/desc/51048",
+   "lockDesc": "item/lockdesc/51048",
+   "icon": "common/HeadFrame/罗马女高级头像框",
+   "effect": "lmn_high"
+  },
+  {
+   "id": 48,
+   "headName": "item/name/51049",
+   "conditionType": 2,
+   "conditionParams": [
+    14,
+    350
+   ],
+   "desc": "item/desc/51049",
+   "lockDesc": "item/lockdesc/51049",
+   "icon": "common/HeadFrame/罗马女终极头像框",
+   "effect": "lmn_max"
+  },
+  {
+   "id": 49,
+   "headName": "item/name/51050",
+   "conditionType": 2,
+   "conditionParams": [
+    16,
+    40
+   ],
+   "desc": "item/desc/51050",
+   "lockDesc": "item/lockdesc/51050",
+   "icon": "common/HeadFrame/萝莉初级头像框"
+  },
+  {
+   "id": 50,
+   "headName": "item/name/51051",
+   "conditionType": 2,
+   "conditionParams": [
+    16,
+    100
+   ],
+   "desc": "item/desc/51051",
+   "lockDesc": "item/lockdesc/51051",
+   "icon": "common/HeadFrame/萝莉中级头像框"
+  },
+  {
+   "id": 51,
+   "headName": "item/name/51052",
+   "conditionType": 2,
+   "conditionParams": [
+    16,
+    200
+   ],
+   "desc": "item/desc/51052",
+   "lockDesc": "item/lockdesc/51052",
+   "icon": "common/HeadFrame/萝莉高级头像框",
+   "effect": "xll_high"
+  },
+  {
+   "id": 52,
+   "headName": "item/name/51053",
+   "conditionType": 2,
+   "conditionParams": [
+    16,
+    350
+   ],
+   "desc": "item/desc/51053",
+   "lockDesc": "item/lockdesc/51053",
+   "icon": "common/HeadFrame/萝莉终极头像框",
+   "effect": "xll_max"
+  },
+  {
+   "id": 53,
+   "headName": "item/name/51054",
+   "conditionType": 2,
+   "conditionParams": [
+    6,
+    40
+   ],
+   "desc": "item/desc/51054",
+   "lockDesc": "item/lockdesc/51054",
+   "icon": "common/HeadFrame/跆拳道初级头像框"
+  },
+  {
+   "id": 54,
+   "headName": "item/name/51055",
+   "conditionType": 2,
+   "conditionParams": [
+    6,
+    100
+   ],
+   "desc": "item/desc/51055",
+   "lockDesc": "item/lockdesc/51055",
+   "icon": "common/HeadFrame/跆拳道中级头像框"
+  },
+  {
+   "id": 55,
+   "headName": "item/name/51056",
+   "conditionType": 2,
+   "conditionParams": [
+    6,
+    200
+   ],
+   "desc": "item/desc/51056",
+   "lockDesc": "item/lockdesc/51056",
+   "icon": "common/HeadFrame/跆拳道高级头像框",
+   "effect": "tqd_high"
+  },
+  {
+   "id": 56,
+   "headName": "item/name/51057",
+   "conditionType": 2,
+   "conditionParams": [
+    6,
+    350
+   ],
+   "desc": "item/desc/51057",
+   "lockDesc": "item/lockdesc/51057",
+   "icon": "common/HeadFrame/跆拳道终极头像框",
+   "effect": "tqd_max"
+  },
+  {
+   "id": 57,
+   "headName": "item/name/51058",
+   "conditionType": 2,
+   "conditionParams": [
+    8,
+    40
+   ],
+   "desc": "item/desc/51058",
+   "lockDesc": "item/lockdesc/51058",
+   "icon": "common/HeadFrame/黑道初级头像框"
+  },
+  {
+   "id": 58,
+   "headName": "item/name/51059",
+   "conditionType": 2,
+   "conditionParams": [
+    8,
+    100
+   ],
+   "desc": "item/desc/51059",
+   "lockDesc": "item/lockdesc/51059",
+   "icon": "common/HeadFrame/黑道中级头像框"
+  },
+  {
+   "id": 59,
+   "headName": "item/name/51060",
+   "conditionType": 2,
+   "conditionParams": [
+    8,
+    200
+   ],
+   "desc": "item/desc/51060",
+   "lockDesc": "item/lockdesc/51060",
+   "icon": "common/HeadFrame/黑道高级头像框",
+   "effect": "hdds_high"
+  },
+  {
+   "id": 60,
+   "headName": "item/name/51061",
+   "conditionType": 2,
+   "conditionParams": [
+    8,
+    350
+   ],
+   "desc": "item/desc/51061",
+   "lockDesc": "item/lockdesc/51061",
+   "icon": "common/HeadFrame/黑道终极头像框",
+   "effect": "hdds_max"
+  },
+  {
+   "id": 61,
+   "headName": "item/name/51008",
+   "conditionType": 4,
+   "conditionParams": [
+    4
+   ],
+   "desc": "item/desc/51008",
+   "lockDesc": "item/lockdesc/51008",
+   "icon": "common/HeadFrame/低级活跃度"
+  },
+  {
+   "id": 62,
+   "headName": "item/name/51009",
+   "conditionType": 4,
+   "conditionParams": [
+    8
+   ],
+   "desc": "item/desc/51009",
+   "lockDesc": "item/lockdesc/51009",
+   "icon": "common/HeadFrame/中级活跃度"
+  },
+  {
+   "id": 63,
+   "headName": "item/name/51062",
+   "conditionType": 99,
+   "conditionParams": [],
+   "desc": "item/desc/51062",
+   "lockDesc": "item/lockdesc/51062",
+   "icon": "common/HeadFrame/微信头像框"
+  },
+  {
+   "id": 64,
+   "headName": "item/name/51063",
+   "conditionType": 2,
+   "conditionParams": [
+    15,
+    40
+   ],
+   "desc": "item/desc/51063",
+   "lockDesc": "item/lockdesc/51063",
+   "icon": "common/HeadFrame/小丑初级头像框"
+  },
+  {
+   "id": 65,
+   "headName": "item/name/51064",
+   "conditionType": 2,
+   "conditionParams": [
+    15,
+    100
+   ],
+   "desc": "item/desc/51064",
+   "lockDesc": "item/lockdesc/51064",
+   "icon": "common/HeadFrame/小丑中级头像框"
+  },
+  {
+   "id": 66,
+   "headName": "item/name/51065",
+   "conditionType": 2,
+   "conditionParams": [
+    15,
+    200
+   ],
+   "desc": "item/desc/51065",
+   "lockDesc": "item/lockdesc/51065",
+   "icon": "common/HeadFrame/小丑高级头像框",
+   "effect": "xc_high"
+  },
+  {
+   "id": 67,
+   "headName": "item/name/51066",
+   "conditionType": 2,
+   "conditionParams": [
+    15,
+    350
+   ],
+   "desc": "item/desc/51066",
+   "lockDesc": "item/lockdesc/51066",
+   "icon": "common/HeadFrame/小丑终级头像框",
+   "effect": "xc_max"
+  },
+  {
+   "id": 68,
+   "headName": "item/name/51067",
+   "conditionType": 99,
+   "conditionParams": [],
+   "desc": "item/desc/51067",
+   "lockDesc": "item/lockdesc/51067",
+   "icon": "common/HeadFrame/QQ头像框"
+  },
+  {
+   "id": 71,
+   "headName": "item/name/51071",
+   "conditionType": 4,
+   "conditionParams": [
+    16
+   ],
+   "desc": "item/desc/51071",
+   "lockDesc": "item/lockdesc/51071",
+   "icon": "common/HeadFrame/高级活跃度",
+   "effect": "gjhyd_max"
+  },
+  {
+   "id": 73,
+   "headName": "item/name/51073",
+   "conditionType": 3,
+   "conditionParams": [
+    51073,
+    1
+   ],
+   "desc": "item/desc/51073",
+   "lockDesc": "item/lockdesc/51073",
+   "icon": "common/HeadFrame/bp_headframe",
+   "effect": "bp_max"
+  },
+  {
+   "id": 74,
+   "headName": "item/name/51074",
+   "conditionType": 3,
+   "conditionParams": [
+    51074,
+    1
+   ],
+   "desc": "item/desc/51074",
+   "lockDesc": "item/lockdesc/51074",
+   "icon": "common/HeadFrame/MetalHerald"
+  },
+  {
+   "id": 75,
+   "headName": "item/name/51075",
+   "conditionType": 3,
+   "conditionParams": [
+    51075,
+    1
+   ],
+   "desc": "item/desc/51075",
+   "lockDesc": "item/lockdesc/51075",
+   "icon": "common/HeadFrame/bigo_headframe"
+  },
+  {
+   "id": 76,
+   "headName": "item/name/51076",
+   "conditionType": 2,
+   "conditionParams": [
+    18,
+    40
+   ],
+   "desc": "item/desc/51076",
+   "lockDesc": "item/lockdesc/51076",
+   "icon": "common/HeadFrame/斗牛初级"
+  },
+  {
+   "id": 77,
+   "headName": "item/name/51077",
+   "conditionType": 2,
+   "conditionParams": [
+    18,
+    100
+   ],
+   "desc": "item/desc/51077",
+   "lockDesc": "item/lockdesc/51077",
+   "icon": "common/HeadFrame/斗牛中级"
+  },
+  {
+   "id": 78,
+   "headName": "item/name/51078",
+   "conditionType": 2,
+   "conditionParams": [
+    18,
+    200
+   ],
+   "desc": "item/desc/51078",
+   "lockDesc": "item/lockdesc/51078",
+   "icon": "common/HeadFrame/斗牛高级",
+   "effect": "nhd_001_high"
+  },
+  {
+   "id": 79,
+   "headName": "item/name/51079",
+   "conditionType": 2,
+   "conditionParams": [
+    18,
+    350
+   ],
+   "desc": "item/desc/51079",
+   "lockDesc": "item/lockdesc/51079",
+   "icon": "common/HeadFrame/斗牛终极",
+   "effect": "nhd_001_max"
+  },
+  {
+   "id": 80,
+   "headName": "item/name/51080",
+   "conditionType": 3,
+   "conditionParams": [
+    51080,
+    1
+   ],
+   "desc": "item/desc/51080",
+   "lockDesc": "item/lockdesc/51080",
+   "icon": "common/HeadFrame/Christmas",
+   "effect": "Christmas_001"
+  },
+  {
+   "id": 81,
+   "headName": "item/name/51081",
+   "conditionType": 3,
+   "conditionParams": [
+    51081,
+    1
+   ],
+   "desc": "item/desc/51081",
+   "lockDesc": "item/lockdesc/51081",
+   "icon": "common/HeadFrame/Metal_Mentor"
+  },
+  {
+   "id": 82,
+   "headName": "item/name/51082",
+   "conditionType": 2,
+   "conditionParams": [
+    17,
+    40
+   ],
+   "desc": "item/desc/51082",
+   "lockDesc": "item/lockdesc/51082",
+   "icon": "common/HeadFrame/忍者初级"
+  },
+  {
+   "id": 83,
+   "headName": "item/name/51083",
+   "conditionType": 2,
+   "conditionParams": [
+    17,
+    100
+   ],
+   "desc": "item/desc/51083",
+   "lockDesc": "item/lockdesc/51083",
+   "icon": "common/HeadFrame/忍者中级"
+  },
+  {
+   "id": 84,
+   "headName": "item/name/51084",
+   "conditionType": 2,
+   "conditionParams": [
+    17,
+    200
+   ],
+   "desc": "item/desc/51084",
+   "lockDesc": "item/lockdesc/51084",
+   "icon": "common/HeadFrame/忍者高级",
+   "effect": "nck_001_high"
+  },
+  {
+   "id": 85,
+   "headName": "item/name/51085",
+   "conditionType": 2,
+   "conditionParams": [
+    17,
+    350
+   ],
+   "desc": "item/desc/51085",
+   "lockDesc": "item/lockdesc/51085",
+   "icon": "common/HeadFrame/忍者终极",
+   "effect": "nck_001_max"
+  },
+  {
+   "id": 86,
+   "headName": "item/name/51086",
+   "conditionType": 2,
+   "conditionParams": [
+    17,
+    40
+   ],
+   "desc": "item/desc/51086",
+   "lockDesc": "item/lockdesc/51086",
+   "icon": "common/HeadFrame/溜溜球大师初级头像框"
+  },
+  {
+   "id": 87,
+   "headName": "item/name/51087",
+   "conditionType": 2,
+   "conditionParams": [
+    17,
+    100
+   ],
+   "desc": "item/desc/51086",
+   "lockDesc": "item/lockdesc/51087",
+   "icon": "common/HeadFrame/溜溜球大师中级头像框"
+  },
+  {
+   "id": 88,
+   "headName": "item/name/51088",
+   "conditionType": 2,
+   "conditionParams": [
+    17,
+    200
+   ],
+   "desc": "item/desc/51088",
+   "lockDesc": "item/lockdesc/51088",
+   "icon": "common/HeadFrame/溜溜球大师高级头像框"
+  },
+  {
+   "id": 89,
+   "headName": "item/name/51089",
+   "conditionType": 2,
+   "conditionParams": [
+    17,
+    350
+   ],
+   "desc": "item/desc/51089",
+   "lockDesc": "item/lockdesc/51089",
+   "icon": "common/HeadFrame/溜溜球大师终级头像框"
+  },
+  {
+   "id": 100,
+   "headName": "item/name/52000",
+   "conditionType": 99,
+   "conditionParams": [],
+   "desc": "item/desc/52000",
+   "lockDesc": "item/lockdesc/52000",
+   "icon": "common/HeadFrame/beta_founder",
+   "effect": "beta_founder_fx"
+  },
+  {
+   "id": 101,
+   "headName": "item/name/52001",
+   "conditionType": 99,
+   "conditionParams": [],
+   "desc": "item/desc/52001",
+   "lockDesc": "item/lockdesc/52001",
+   "icon": "common/HeadFrame/beta_bughunter",
+   "effect": "beta_bughunter_fx"
+  },
+  {
+   "id": 102,
+   "headName": "item/name/52002",
+   "conditionType": 99,
+   "conditionParams": [],
+   "desc": "item/desc/52002",
+   "lockDesc": "item/lockdesc/52002",
+   "icon": "common/HeadFrame/beta_vanguard",
+   "effect": "beta_vanguard_fx"
+  },
+  {
+   "id": 103,
+   "headName": "item/name/52003",
+   "conditionType": 99,
+   "conditionParams": [],
+   "desc": "item/desc/52003",
+   "lockDesc": "item/lockdesc/52003",
+   "icon": "common/HeadFrame/beta_patcher",
+   "effect": "beta_patcher_fx"
+  },
+  {
+   "id": 104,
+   "headName": "item/name/52004",
+   "conditionType": 99,
+   "conditionParams": [],
+   "desc": "item/desc/52004",
+   "lockDesc": "item/lockdesc/52004",
+   "icon": "common/HeadFrame/beta_hero",
+   "effect": "beta_hero_fx"
+  },
+  {
+   "id": 105,
+   "headName": "item/name/52005",
+   "conditionType": 99,
+   "conditionParams": [],
+   "desc": "item/desc/52005",
+   "lockDesc": "item/lockdesc/52005",
+   "icon": "common/HeadFrame/beta_calibracion",
+   "effect": "beta_calibracion_fx"
+  }
+ ]
+}

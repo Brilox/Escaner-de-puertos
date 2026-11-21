@@ -1,0 +1,61 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+@font-face{font-family:BlackOps;src:url(fuentes/BlackOpsOne_400.woff2)}
+@font-face{font-family:Oxanium;src:url(fuentes/Oxanium_800.woff2)}
+@font-face{font-family:Raj;font-weight:700;src:url(fuentes/Rajdhani_700.woff2)}
+html,body{margin:0;width:1080px;height:1350px;overflow:hidden;background:#05070f;color:#eef2fb;font-family:Raj,sans-serif}
+.fondo{position:absolute;inset:0;background:url(../../datos/arte/fondo_1920x1080.png) center/cover no-repeat;filter:saturate(1.15)}
+.velo{position:absolute;inset:0;background:linear-gradient(180deg,rgba(5,7,15,.55) 0%,rgba(5,7,15,.15) 30%,rgba(5,7,15,.55) 55%,rgba(5,7,15,.95) 80%,#05070f 100%)}
+.cont{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;padding:56px 60px 44px;box-sizing:border-box}
+.chip{font-family:Oxanium;font-size:30px;letter-spacing:6px;padding:10px 26px;border:2px solid #ff5a2a;color:#ffd9cc;background:rgba(122,16,16,.45);border-radius:6px;box-shadow:0 0 24px rgba(255,90,42,.45)}
+.logo{width:820px;margin-top:20px;filter:drop-shadow(0 0 30px rgba(45,124,255,.35))}
+h1{font-family:BlackOps;font-weight:400;font-size:84px;margin:14px 0 0;letter-spacing:2px;text-align:center;line-height:1;
+   background:linear-gradient(90deg,#5aa0ff,#ffffff 50%,#ff7a4a);-webkit-background-clip:text;color:transparent;filter:drop-shadow(0 4px 10px rgba(0,0,0,.8))}
+.sub{font-size:38px;text-align:center;margin-top:16px;line-height:1.2;color:#dfe6f5;text-shadow:0 2px 8px #000}
+.lista{margin-top:auto;width:100%;display:grid;grid-template-columns:1fr 1fr;gap:12px 28px;font-size:35px;padding:0 30px;box-sizing:border-box}
+.lista div{display:flex;align-items:center;gap:12px;text-shadow:0 2px 6px #000}
+.lista b{color:#7fb2ff;font-weight:700}
+.ok{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#2d7cff,#ff5a2a);display:inline-flex;align-items:center;justify-content:center;font-size:20px;color:#fff;flex:none}
+.cols{margin-top:auto;width:100%;display:grid;grid-template-columns:1fr 1fr;gap:22px}
+.col{border-radius:14px;padding:16px 20px 14px;background:rgba(8,12,30,.62);font-size:31px;display:flex;flex-direction:column;gap:9px}
+.col div{display:flex;align-items:center;gap:12px;text-shadow:0 2px 6px #000}
+.col .tit{font-family:Oxanium;font-size:25px;letter-spacing:5px;margin-bottom:4px}
+.ya{border:2px solid rgba(45,124,255,.75);box-shadow:0 0 22px rgba(45,124,255,.3)} .ya .tit{color:#7fb2ff} .ya b{color:#7fb2ff}
+.pronto{border:2px solid rgba(255,90,42,.75);box-shadow:0 0 22px rgba(255,90,42,.3)} .pronto .tit{color:#ff9a72} .pronto b{color:#ffb08f}
+.pronto .ok{background:linear-gradient(135deg,#ff5a2a,#c41f1f);font-size:17px}
+.marcos{display:flex;gap:16px;margin-top:22px;align-items:center}
+.marcos img{width:132px;height:132px;filter:drop-shadow(0 0 14px rgba(120,170,255,.45))}
+.cap{font-family:Oxanium;font-size:24px;letter-spacing:4px;color:#aebbd6;margin-top:6px}
+.cta{margin-top:22px;font-family:Oxanium;font-size:46px;letter-spacing:3px;padding:20px 54px;border-radius:14px;color:#fff;
+     background:linear-gradient(90deg,#2d5cff,#5865f2 50%,#c41f1f);box-shadow:0 0 36px rgba(88,101,242,.6),inset 0 0 0 2px rgba(255,255,255,.25)}
+.pie{margin-top:20px;font-size:22px;color:#8592ad;text-align:center}
+</style></head><body>
+<div class="fondo"></div><div class="velo"></div>
+<div class="cont">
+  <div class="chip">BETA CERRADA</div>
+  <img class="logo" src="../../datos/arte/logo_v2_4x.png">
+  <h1>¡VUELVE AL RING!</h1>
+  <div class="sub">El servidor privado y gratis de <b>Metal Revolution</b>,<br>hecho por la comunidad</div>
+  <div class="cols">
+    <div class="col ya"><div class="tit">YA DISPONIBLE</div>
+      <div><span class="ok">✓</span><span><b>Clasificatoria</b> 1v1</span></div>
+      <div><span class="ok">✓</span><span><b>Partida rápida</b> 1v1</span></div>
+      <div><span class="ok">✓</span><span><b>Salón</b> con mesas</span></div>
+      <div><span class="ok">✓</span><span>Revanchas y <b>espectadores</b></span></div>
+    </div>
+    <div class="col pronto"><div class="tit">PRÓXIMAMENTE</div>
+      <div><span class="ok">★</span><span><b>Tienda</b> y monedas</span></div>
+      <div><span class="ok">★</span><span><b>Pase de batalla</b></span></div>
+      <div><span class="ok">★</span><span><b>Misiones</b> diarias</span></div>
+      <div><span class="ok">★</span><span><b>Torneos</b> oficiales</span></div>
+    </div>
+  </div>
+  <div class="marcos">
+    <img src="../../datos/marcos_beta/juego/founder_256.png"><img src="../../datos/marcos_beta/juego/bughunter_256.png">
+    <img src="../../datos/marcos_beta/juego/vanguard_256.png"><img src="../../datos/marcos_beta/juego/patcher_256.png">
+    <img src="../../datos/marcos_beta/juego/hero_256.png">
+  </div>
+  <div class="cap">MARCOS EXCLUSIVOS DE LA BETA</div>
+  <div class="cta">ÚNETE AL DISCORD</div>
+  <div class="pie">Proyecto de fans sin fines de lucro · No afiliado a los creadores originales del juego</div>
+</div>
+</body></html>

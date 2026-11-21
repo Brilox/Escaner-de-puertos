@@ -1,0 +1,501 @@
+{
+	"tierDefine_Comment": "bigTierId 大段id，需要连续",
+	"tierDefine": [
+		{
+			"name": "Ranked/BronzeV",
+			"pointRange": [
+				400,
+				449
+			],
+			"icon": 560,
+			"rankingID": 1,
+			"bigTierId": 1
+		},
+		{
+			"name": "Ranked/BronzeIV",
+			"pointRange": [
+				450,
+				499
+			],
+			"icon": 560,
+			"rankingID": 2,
+			"bigTierId": 1
+		},
+		{
+			"name": "Ranked/BronzeIII",
+			"pointRange": [
+				500,
+				549
+			],
+			"icon": 560,
+			"rankingID": 3,
+			"bigTierId": 1
+		},
+		{
+			"name": "Ranked/BronzeII",
+			"pointRange": [
+				550,
+				599
+			],
+			"icon": 560,
+			"rankingID": 4,
+			"bigTierId": 1
+		},
+		{
+			"name": "Ranked/BronzeI",
+			"pointRange": [
+				600,
+				649
+			],
+			"icon": 560,
+			"rankingID": 5,
+			"bigTierId": 1
+		},
+		{
+			"name": "Ranked/SilverV",
+			"pointRange": [
+				650,
+				749
+			],
+			"icon": 561,
+			"rankingID": 6,
+			"bigTierId": 2
+		},
+		{
+			"name": "Ranked/SilverIV",
+			"pointRange": [
+				750,
+				849
+			],
+			"icon": 561,
+			"rankingID": 7,
+			"bigTierId": 2
+		},
+		{
+			"name": "Ranked/SilverIII",
+			"pointRange": [
+				850,
+				949
+			],
+			"icon": 561,
+			"rankingID": 8,
+			"bigTierId": 2
+		},
+		{
+			"name": "Ranked/SilverII",
+			"pointRange": [
+				950,
+				1049
+			],
+			"icon": 561,
+			"rankingID": 9,
+			"bigTierId": 2
+		},
+		{
+			"name": "Ranked/SilverI",
+			"pointRange": [
+				1050,
+				1149
+			],
+			"icon": 561,
+			"rankingID": 10,
+			"bigTierId": 2
+		},
+		{
+			"name": "Ranked/GoldV",
+			"pointRange": [
+				1150,
+				1299
+			],
+			"icon": 562,
+			"rankingID": 11,
+			"bigTierId": 3
+		},
+		{
+			"name": "Ranked/GoldIV",
+			"pointRange": [
+				1300,
+				1449
+			],
+			"icon": 562,
+			"rankingID": 12,
+			"bigTierId": 3
+		},
+		{
+			"name": "Ranked/GoldIII",
+			"pointRange": [
+				1450,
+				1599
+			],
+			"icon": 562,
+			"rankingID": 13,
+			"bigTierId": 3
+		},
+		{
+			"name": "Ranked/GoldII",
+			"pointRange": [
+				1600,
+				1749
+			],
+			"icon": 562,
+			"rankingID": 14,
+			"bigTierId": 3
+		},
+		{
+			"name": "Ranked/GoldI",
+			"pointRange": [
+				1750,
+				1899
+			],
+			"icon": 562,
+			"rankingID": 15,
+			"bigTierId": 3
+		},
+		{
+			"name": "Ranked/PlatinumV",
+			"pointRange": [
+				1900,
+				2199
+			],
+			"icon": 563,
+			"rankingID": 16,
+			"bigTierId": 4
+		},
+		{
+			"name": "Ranked/PlatinumIV",
+			"pointRange": [
+				2200,
+				2499
+			],
+			"icon": 563,
+			"rankingID": 17,
+			"bigTierId": 4
+		},
+		{
+			"name": "Ranked/PlatinumIII",
+			"pointRange": [
+				2500,
+				2799
+			],
+			"icon": 563,
+			"rankingID": 18,
+			"bigTierId": 4
+		},
+		{
+			"name": "Ranked/PlatinumII",
+			"pointRange": [
+				2800,
+				3099
+			],
+			"icon": 563,
+			"rankingID": 19,
+			"bigTierId": 4
+		},
+		{
+			"name": "Ranked/PlatinumI",
+			"pointRange": [
+				3100,
+				3399
+			],
+			"icon": 563,
+			"rankingID": 20,
+			"bigTierId": 4
+		},
+		{
+			"name": "Ranked/DiamondV",
+			"pointRange": [
+				3400,
+				3899
+			],
+			"icon": 564,
+			"rankingID": 21,
+			"bigTierId": 5
+		},
+		{
+			"name": "Ranked/DiamondIV",
+			"pointRange": [
+				3900,
+				4399
+			],
+			"icon": 564,
+			"rankingID": 22,
+			"bigTierId": 5
+		},
+		{
+			"name": "Ranked/DiamondIII",
+			"pointRange": [
+				4400,
+				4899
+			],
+			"icon": 564,
+			"rankingID": 23,
+			"bigTierId": 5
+		},
+		{
+			"name": "Ranked/DiamondII",
+			"pointRange": [
+				4900,
+				5399
+			],
+			"icon": 564,
+			"rankingID": 24,
+			"bigTierId": 5
+		},
+		{
+			"name": "Ranked/DiamondI",
+			"pointRange": [
+				5400,
+				5899
+			],
+			"icon": 564,
+			"rankingID": 25,
+			"bigTierId": 5
+		},
+		{
+			"name": "Ranked/MasterV",
+			"pointRange": [
+				5900,
+				6399
+			],
+			"icon": 565,
+			"rankingID": 26,
+			"bigTierId": 6
+		},
+		{
+			"name": "Ranked/MasterIV",
+			"pointRange": [
+				6400,
+				6899
+			],
+			"icon": 565,
+			"rankingID": 27,
+			"bigTierId": 6
+		},
+		{
+			"name": "Ranked/MasterIII",
+			"pointRange": [
+				6900,
+				7399
+			],
+			"icon": 565,
+			"rankingID": 28,
+			"bigTierId": 6
+		},
+		{
+			"name": "Ranked/MasterII",
+			"pointRange": [
+				7400,
+				7899
+			],
+			"icon": 565,
+			"rankingID": 29,
+			"bigTierId": 6
+		},
+		{
+			"name": "Ranked/MasterI",
+			"pointRange": [
+				7900,
+				8399
+			],
+			"icon": 565,
+			"rankingID": 30,
+			"bigTierId": 6
+		},
+		{
+			"name": "Ranked/Legend",
+			"pointRange": [
+				8400,
+				97249
+			],
+			"icon": 697,
+			"rankingID": 31,
+			"bigTierId": 7
+		}
+	],
+	"maxRankPoint": 9999999,
+	"rankingID": 32,
+	"rank2v2Base": 6000,
+	"heroRankingID": 40,
+	"charmRank": {
+		"name": "Charmlist/Charmlist",
+		"rewardWeekDay": 1,
+		"rewardTime": "5:00",
+		"charmRankID": 3000,
+		"rewards": [
+			{
+				"from": 1,
+				"to": 5,
+				"fanRewardMail": {
+					"titles": "Charmlist/fanRewardMail/title",
+					"contents": "Charmlist/fanRewardMail/contents",
+					"rewards": [
+						{
+							"id": 37060,
+							"count": 1
+						}
+					]
+				},
+				"rewardMail": {
+					"titles": "Charmlist/rewardMail/title",
+					"contents": "Charmlist/rewardMail/contents",
+					"rewards": [
+						{
+							"id": 35060,
+							"count": 1
+						}
+					]
+				}
+			},
+			{
+				"from": 6,
+				"to": 20,
+				"fanRewardMail": {
+					"titles": "Charmlist/fanRewardMail/title",
+					"contents": "Charmlist/fanRewardMail/contents02",
+					"rewards": [
+						{
+							"id": 37072,
+							"count": 1
+						}
+					]
+				},
+				"rewardMail": {
+					"titles": "Charmlist/rewardMail/title",
+					"contents": "Charmlist/rewardMail/contents02",
+					"rewards": [
+						{
+							"id": 90001,
+							"count": 1
+						}
+					]
+				}
+			},
+			{
+				"from": 21,
+				"to": 50,
+				"fanRewardMail": {
+					"titles": "Charmlist/fanRewardMail/title",
+					"contents": "Charmlist/fanRewardMail/contents03",
+					"rewards": [
+						{
+							"id": 37032,
+							"count": 1
+						}
+					]
+				},
+				"rewardMail": {
+					"titles": "Charmlist/rewardMail/title",
+					"contents": "Charmlist/rewardMail/contents03",
+					"rewards": [
+						{
+							"id": 10081,
+							"count": 1
+						}
+					]
+				}
+			},
+			{
+				"from": 51,
+				"to": 100,
+				"fanRewardMail": {
+					"titles": "Charmlist/fanRewardMail/title",
+					"contents": "Charmlist/fanRewardMail/contents04",
+					"rewards": [
+						{
+							"id": 61023,
+							"count": 1
+						}
+					]
+				},
+				"rewardMail": {
+					"titles": "Charmlist/rewardMail/title",
+					"contents": "Charmlist/rewardMail/contents04",
+					"rewards": [
+						{
+							"id": 90002,
+							"count": 1
+						}
+					]
+				}
+			},
+			{
+				"from": 101,
+				"to": 500,
+				"fanRewardMail": {
+					"titles": "Charmlist/fanRewardMail/title",
+					"contents": "Charmlist/fanRewardMail/contents05",
+					"rewards": [
+						{
+							"id": 9004,
+							"count": 300
+						}
+					]
+				},
+				"rewardMail": {
+					"titles": "Charmlist/rewardMail/title",
+					"contents": "Charmlist/rewardMail/contents05",
+					"rewards": [
+						{
+							"id": 9004,
+							"count": 1500
+						}
+					]
+				}
+			},
+			{
+				"from": 501,
+				"to": 2500,
+				"fanRewardMail": {
+					"titles": "Charmlist/fanRewardMail/title",
+					"contents": "Charmlist/fanRewardMail/contents06",
+					"rewards": [
+						{
+							"id": 9001,
+							"count": 666
+						}
+					]
+				},
+				"rewardMail": {
+					"titles": "Charmlist/rewardMail/title",
+					"contents": "Charmlist/rewardMail/contents06",
+					"rewards": [
+						{
+							"id": 90003,
+							"count": 1
+						}
+					]
+				}
+			},
+			{
+				"from": 2501,
+				"to": 10000,
+				"fanRewardMail": {
+					"titles": "Charmlist/fanRewardMail/title",
+					"contents": "Charmlist/fanRewardMail/contents07",
+					"rewards": [
+						{
+							"id": 9001,
+							"count": 200
+						}
+					]
+				},
+				"rewardMail": {
+					"titles": "Charmlist/rewardMail/title",
+					"contents": "Charmlist/rewardMail/contents07",
+					"rewards": [
+						{
+							"id": 9001,
+							"count": 888
+						}
+					]
+				}
+			}
+		]
+	},
+	"season": {
+		"topTier": 6,
+		"topTierTo": 5
+	},
+	"limitLevel": 1,
+	"limitHeroCount": 5
+}

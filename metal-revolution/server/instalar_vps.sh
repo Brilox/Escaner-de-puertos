@@ -88,6 +88,13 @@ else
   sudo -u "$USUARIO" git -C "$DESTINO" checkout -q "$RAMA"
 fi
 chmod +x "$SERVER_DIR"/bin/relay_go* 2>/dev/null || true
+# el OBB copiado con scp a /root o a la carpeta personal se pone solo en su lugar
+for f in /root/*.obb "$CASA"/*.obb; do
+  [ -f "$f" ] || continue
+  if ! ls "$SERVER_DIR"/*.obb >/dev/null 2>&1; then
+    mv "$f" "$SERVER_DIR/" && chown "$USUARIO": "$SERVER_DIR/$(basename "$f")" && echo "   OBB movido a $SERVER_DIR"
+  fi
+done
 echo "   version: $(git -C "$DESTINO" log -1 --format='%h %s' | cut -c1-90)"
 
 echo "== 4/6 IP publica"
